@@ -116,6 +116,32 @@
         "nombre": "ModernFix",
         "icono": "https://cdn.modrinth.com/data/nmDcB62a/2af94de5e08ae54567ee86b968fc7ce076d9fee5_96.webp"
       }
+    },
+    {
+      "ruta": "mods/appleskin-fabric-mc1.21-3.0.6.jar",
+      "url": "https://cdn.modrinth.com/data/EsAfCjCV/versions/b5ZiCjAr/appleskin-fabric-mc1.21-3.0.6.jar",
+      "sha1": "97452cfadfde1f8f8c67838643019eabafa58fbb",
+      "tamano": 1082585,
+      "modrinth": {
+        "proyecto": "EsAfCjCV",
+        "version": "b5ZiCjAr",
+        "numero": "3.0.6+mc1.21",
+        "nombre": "AppleSkin",
+        "icono": "https://cdn.modrinth.com/data/EsAfCjCV/icon.png"
+      }
+    },
+    {
+      "ruta": "mods/Jade-1.21.1-Fabric-15.10.6.jar",
+      "url": "https://cdn.modrinth.com/data/nvQzSEkH/versions/adpNvTZS/Jade-1.21.1-Fabric-15.10.6.jar",
+      "sha1": "bed67c605cbc991f474b270581cfa04ed48228df",
+      "tamano": 740746,
+      "modrinth": {
+        "proyecto": "nvQzSEkH",
+        "version": "adpNvTZS",
+        "numero": "15.10.6+fabric",
+        "nombre": "Jade 🔍",
+        "icono": "https://cdn.modrinth.com/data/nvQzSEkH/b04217bc2b7dc524c4d12f81ff42cc1cefb9b0fc_96.webp"
+      }
     }
   ],
   "packsActivos": []
