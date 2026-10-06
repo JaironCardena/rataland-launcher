@@ -4,6 +4,7 @@
 //      node tools/publicar.js otra/carpeta
 const fs = require('fs')
 const path = require('path')
+const crypto = require('crypto')
 const { sha1Archivo } = require('../src/main/descargas')
 
 const IGNORADOS = new Set(['modpack.json', 'manifest.json', 'readme.md', 'license', 'license.md'])
@@ -39,13 +40,24 @@ async function main () {
   const archivos = []
   for (const ruta of listar(carpeta).sort()) {
     const relativa = path.relative(carpeta, ruta).split(path.sep).join('/')
+    const contenido = fs.readFileSync(ruta)
     archivos.push({
       ruta: relativa,
       url: ajustes.urlBase + relativa.split('/').map(encodeURIComponent).join('/'),
       sha1: await sha1Archivo(ruta),
-      tamano: fs.statSync(ruta).size,
+      tamano: contenido.length,
+      // SHA de Git: el panel web lo usa para saber si el archivo cambió sin descargarlo.
+      git: crypto.createHash('sha1').update(`blob ${contenido.length}\0`).update(contenido).digest('hex'),
       ...(soloSiFalta.has(relativa) ? { soloSiFalta: true } : {})
     })
+  }
+
+  // Mods, packs y shaders añadidos desde Modrinth en el panel: se descargan de Modrinth, no están en la carpeta.
+  const rutas = new Set(archivos.map((a) => a.ruta))
+  for (const e of ajustes.externos || []) {
+    if (rutas.has(e.ruta)) throw new Error(`"${e.ruta}" está dos veces (en la carpeta y de Modrinth).`)
+    archivos.push({ ruta: e.ruta, url: e.url, sha1: e.sha1, tamano: e.tamano, ...(e.modrinth ? { modrinth: e.modrinth } : {}) })
+    rutas.add(e.ruta)
   }
 
   const evento = ajustes.evento?.fecha ? ajustes.evento : null
@@ -65,6 +77,7 @@ async function main () {
     noticias: ajustes.noticias || [],
     enlaces: ajustes.enlaces || {},
     evento,
+    packsActivos: (ajustes.packsActivos || []).filter((r) => rutas.has(r)),
     archivos
   }
   fs.writeFileSync(path.join(carpeta, 'manifest.json'), JSON.stringify(manifiesto, null, 2) + '\n')

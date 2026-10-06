@@ -18,7 +18,7 @@ const { leerJson, escribirJson } = require('./util')
 const { obtenerManifiesto, combinarPerfil } = require('./manifiesto')
 const { prepararJuego } = require('./minecraft')
 const { sincronizar } = require('./sincronizar')
-const { prepararPrimerArranque, escribirConfigMenu } = require('./extras')
+const { prepararPrimerArranque, escribirConfigMenu, activarPacks } = require('./extras')
 const { lanzarJuego } = require('./juego')
 const { consultarServidor } = require('./servidor')
 const { crearCuentas } = require('./cuentas')
@@ -73,6 +73,7 @@ async function jugar (reparar) {
     await sincronizar(manifiesto, raiz, { reportar, reparar })
     await prepararPrimerArranque(raiz, { nombre: config.nombre, ...perfil.servidor })
     await escribirConfigMenu(raiz, { nombre: config.nombre, ...perfil.servidor, discord: perfil.enlaces?.discord })
+    await activarPacks(raiz, manifiesto.packsActivos)
 
     const lanzar = () => {
       reportar({ etapa: 'iniciando', texto: 'Abriendo Minecraft', actual: 0, total: 0 })

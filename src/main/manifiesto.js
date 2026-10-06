@@ -19,7 +19,11 @@ async function manifiestoLocal (carpeta) {
     throw new Error(`No se encontró ${carpeta}/manifest.json. Ejecuta "npm run publicar" primero.`)
   }
   validar(manifiesto)
-  for (const a of manifiesto.archivos || []) a.url = pathToFileURL(path.join(dir, a.ruta)).href
+  for (const a of manifiesto.archivos || []) {
+    // Los de Modrinth no están en la carpeta: se siguen descargando de su URL.
+    const local = path.join(dir, a.ruta)
+    if (await fsp.access(local).then(() => true, () => false)) a.url = pathToFileURL(local).href
+  }
   return { manifiesto, origen: 'local' }
 }
 

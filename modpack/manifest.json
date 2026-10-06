@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T06:15:23.270Z",
+  "generado": "2026-10-06T06:45:45.488Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -24,24 +24,28 @@
     "discord": ""
   },
   "evento": null,
+  "packsActivos": [],
   "archivos": [
     {
       "ruta": "mods/fabric-api-0.116.17+1.21.1.jar",
       "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/fabric-api-0.116.17%2B1.21.1.jar",
       "sha1": "810b2b0195371a012906241d8b85a32a1d6de53c",
-      "tamano": 2452735
+      "tamano": 2452735,
+      "git": "16198017bcb3b6ed122ad87634a20498e3e9f76d"
     },
     {
       "ruta": "mods/journeymap-fabric-1.21.1-6.0.9.jar",
       "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/journeymap-fabric-1.21.1-6.0.9.jar",
       "sha1": "460c9aa666d8d71440c8263bcdae52ae0ad6c728",
-      "tamano": 4351143
+      "tamano": 4351143,
+      "git": "62ecc5f93ffe590d6ec510f148886ded7c6a24af"
     },
     {
       "ruta": "mods/rataland-menu-1.1.0.jar",
       "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-1.1.0.jar",
       "sha1": "df1a9543c8f418861dfb20bffe9f3aaf7b9792d8",
-      "tamano": 34474
+      "tamano": 34474,
+      "git": "e4775f3643be406a7d891586f1d30a7fe096783a"
     }
   ]
 }

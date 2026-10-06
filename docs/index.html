@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; connect-src https://api.github.com https://api.modrinth.com https://meta.fabricmc.net; img-src 'self' https: data:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Panel de RataLand</title>
+  <link rel="icon" href="img/icono.png">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header class="cabecera">
+    <img class="cabecera__logo" src="img/logo.png" alt="RataLand" width="134" height="46">
+    <span class="cabecera__titulo">Panel del modpack</span>
+    <div class="cabecera__cuenta" data-cuenta></div>
+    <div class="publicar">
+      <span class="publicar__estado" data-pendientes>Sin cambios</span>
+      <button class="boton boton--secundario" data-accion="descartar" hidden>Descartar</button>
+      <button class="boton boton--principal" data-accion="abrir-publicar" disabled>Publicar</button>
+    </div>
+  </header>
+
+  <div class="cuerpo">
+    <nav class="menu" aria-label="Secciones">
+      <button class="menu__opcion" data-seccion="mods">Mods <span class="menu__cuenta" data-contador="mods"></span></button>
+      <button class="menu__opcion" data-seccion="texturas">Packs de texturas <span class="menu__cuenta" data-contador="texturas"></span></button>
+      <button class="menu__opcion" data-seccion="shaders">Shaders <span class="menu__cuenta" data-contador="shaders"></span></button>
+      <button class="menu__opcion" data-seccion="servidor">Servidor y versión</button>
+      <button class="menu__opcion" data-seccion="noticias">Noticias</button>
+      <button class="menu__opcion" data-seccion="evento">Cuenta atrás</button>
+      <button class="menu__opcion" data-seccion="enlaces">Enlaces</button>
+    </nav>
+    <main class="contenido" data-contenido>
+      <p class="cargando">Cargando el modpack desde GitHub…</p>
+    </main>
+  </div>
+
+  <dialog class="dialogo" data-dialogo="llave" aria-labelledby="titulo-llave">
+    <form method="dialog" class="dialogo__caja" data-formulario-llave>
+      <h2 id="titulo-llave">Conectar con GitHub</h2>
+      <p>Para publicar, el panel necesita una llave de GitHub que solo sirve para el repositorio <strong>rataland-launcher</strong>. Se guarda en este navegador y no se envía a ningún otro sitio.</p>
+      <ol class="pasos">
+        <li>Abre <a href="https://github.com/settings/personal-access-tokens/new?name=Panel%20RataLand&description=Publicar%20el%20modpack%20desde%20el%20panel&target_name=JaironCardena&expires_in=365&contents=write" target="_blank" rel="noopener">Crear llave en GitHub</a>.</li>
+        <li>En <em>Repository access</em> elige <em>Only select repositories</em> y marca <em>rataland-launcher</em>.</li>
+        <li>En <em>Permissions</em>, pon <em>Contents</em> en <em>Read and write</em>.</li>
+        <li>Pulsa <em>Generate token</em> y pega la llave aquí.</li>
+      </ol>
+      <label class="campo">
+        <span class="campo__etiqueta">Llave de GitHub</span>
+        <input type="password" name="llave" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
+      </label>
+      <label class="casilla">
+        <input type="checkbox" name="recordar" checked>
+        Recordar en este navegador
+      </label>
+      <p class="error" data-error-llave hidden></p>
+      <div class="dialogo__botones">
+        <button type="button" class="boton boton--secundario" data-accion="cerrar-dialogo">Cancelar</button>
+        <button type="submit" class="boton boton--principal">Conectar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialogo" data-dialogo="publicar" aria-labelledby="titulo-publicar">
+    <form method="dialog" class="dialogo__caja" data-formulario-publicar>
+      <h2 id="titulo-publicar">Publicar cambios</h2>
+      <p>Los jugadores los recibirán la próxima vez que pulsen Jugar (GitHub puede tardar unos minutos en servirlos).</p>
+      <ul class="cambios" data-lista-cambios></ul>
+      <label class="campo">
+        <span class="campo__etiqueta">Descripción del cambio</span>
+        <input name="mensaje" maxlength="120" required>
+      </label>
+      <div class="progreso" data-progreso hidden>
+        <div class="progreso__barra"><div class="progreso__relleno" data-progreso-relleno></div></div>
+        <p class="progreso__texto" data-progreso-texto></p>
+      </div>
+      <p class="error" data-error-publicar hidden></p>
+      <div class="dialogo__botones">
+        <button type="button" class="boton boton--secundario" data-accion="cerrar-dialogo">Cancelar</button>
+        <button type="submit" class="boton boton--principal">Publicar ahora</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="avisos" aria-live="polite" data-avisos></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+          integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script type="module" src="js/panel.js"></script>
+</body>
+</html>

@@ -54,9 +54,25 @@ Para probar mods sin subirlos, cambia `"manifiesto"` en `launcher.config.json` p
 | `apariencia.logo`, `apariencia.fondo` | Imágenes de `src/renderer/assets/`. |
 | `enlaces` | `discord`, `web`, `youtube`, `twitch`, `tiktok`, `x`… Los que tengan URL aparecen abajo. |
 
-## Añadir, quitar o actualizar mods
+## Panel del modpack (la forma fácil)
 
-Los mods se sirven desde la carpeta `modpack/` de este repositorio de GitHub. Para cambiarlos:
+**https://jaironcardena.github.io/rataland-launcher/**
+
+Desde el navegador (también en el móvil) puedes:
+
+- Añadir **mods, packs de texturas y shaders** buscándolos en Modrinth (solo salen los compatibles con Fabric y tu versión de Minecraft) o subiendo tus archivos. Las dependencias se añaden solas, y un mod de Forge/NeoForge o para otra versión se rechaza o se avisa.
+- Quitar cosas, **buscar actualizaciones** y actualizarlas con un clic.
+- Marcar packs de texturas como **"Activado para todos"**: el launcher los activa solo en el juego de cada jugador.
+- Cambiar **servidor**, **versión de Minecraft y Fabric** (te dice qué mods tienen versión para la nueva), **noticias**, **cuenta atrás** y **enlaces**.
+- **Publicar**: sube todo y genera el manifiesto en un solo paso. Los jugadores lo reciben al pulsar Jugar.
+
+La primera vez pulsa **Conectar con GitHub** y sigue los pasos para crear una llave que solo sirve para este repositorio (Contents: Read and write). Se guarda en tu navegador. Sin llave, el panel solo deja mirar. La llave caduca como mucho al año; entonces crea otra igual.
+
+Si después usas la consola en tu PC, ejecuta antes `git pull` para traer lo que publicaste desde el panel.
+
+## Añadir, quitar o actualizar mods desde la consola
+
+Los mods se sirven desde la carpeta `modpack/` de este repositorio de GitHub (y los añadidos desde Modrinth en el panel, desde Modrinth). Para cambiarlos sin el panel:
 
 1. Cambia los archivos de `modpack/mods/`. Configuraciones, paquetes de recursos, etc. van en `modpack/config/`, `modpack/resourcepacks/`… con la misma estructura que en `.minecraft`. Las noticias y el servidor se cambian en `modpack/modpack.json`.
 2. Genera el manifiesto:
@@ -153,4 +169,5 @@ Copia `mod/build/libs/rataland-menu-1.0.0.jar` a `modpack/mods/` y ejecuta `npm 
 - `src/renderer/`: la interfaz. `demo.js` permite abrir `index.html` en un navegador para ver el diseño sin Electron.
 - `tools/publicar.js`: genera `manifest.json`.
 - `tools/arte.js`: genera el pixel-art.
+- `docs/`: el panel del modpack (GitHub Pages).
 - `mod/`: código del mod de Fabric (menú, pantalla de carga, título de la ventana).

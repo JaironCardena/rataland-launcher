@@ -58,4 +58,30 @@ async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, discord }) {
   await fsp.writeFile(ruta, JSON.stringify({ nombre, ip, puerto: Number(puerto) || 25565, discord: enlaceDiscord }, null, 2))
 }
 
-module.exports = { prepararPrimerArranque, escribirConfigMenu, serversDat }
+/**
+ * Activa en options.txt los packs de texturas marcados como "Activado para todos" en el panel.
+ * Se añaden al final (encima de los demás) y no se quitan los que el jugador ya tenga activos.
+ */
+async function activarPacks (dirJuego, rutas = []) {
+  const packs = rutas
+    .filter((r) => r.startsWith('resourcepacks/'))
+    .map((r) => `file/${r.slice('resourcepacks/'.length)}`)
+  if (!packs.length) return
+
+  const archivo = path.join(dirJuego, 'options.txt')
+  const lineas = (await fsp.readFile(archivo, 'utf8').catch(() => '')).split(/\r?\n/)
+  const i = lineas.findIndex((l) => l.startsWith('resourcePacks:'))
+  let activos = ['vanilla', 'fabric']
+  if (i >= 0) {
+    try { activos = JSON.parse(lineas[i].slice('resourcePacks:'.length)) } catch { /* línea rota: se rehace */ }
+  }
+  const faltan = packs.filter((p) => !activos.includes(p))
+  if (!faltan.length) return
+
+  const linea = `resourcePacks:${JSON.stringify([...activos, ...faltan])}`
+  if (i >= 0) lineas[i] = linea
+  else lineas.splice(lineas.at(-1) === '' ? lineas.length - 1 : lineas.length, 0, linea)
+  await fsp.writeFile(archivo, lineas.join('\n'))
+}
+
+module.exports = { prepararPrimerArranque, escribirConfigMenu, activarPacks, serversDat }
