@@ -670,8 +670,13 @@ $('[data-formulario-publicar]').addEventListener('submit', async (e) => {
   }
   try {
     if (ajustes.servidor && !ajustes.servidor.ip) throw new Error('Falta la dirección del servidor (en Servidor y versión).')
-    for (const [clave, url] of Object.entries(ajustes.enlaces || {})) {
-      if (!/^https:\/\//.test(url)) throw new Error(`El enlace de ${clave} tiene que empezar por https://`)
+    // Un enlace vacío es "sin enlace": no se comprueba y no se guarda.
+    ajustes.enlaces = Object.fromEntries(Object.entries(ajustes.enlaces || {})
+      .map(([clave, url]) => [clave, String(url || '').trim()])
+      .filter(([, url]) => url))
+    const NOMBRES_ENLACE = { discord: 'Discord', youtube: 'YouTube', tiktok: 'TikTok', twitch: 'Twitch', x: 'X', web: 'Web' }
+    for (const [clave, url] of Object.entries(ajustes.enlaces)) {
+      if (!/^https:\/\//.test(url)) throw new Error(`El enlace de ${NOMBRES_ENLACE[clave] || clave} tiene que empezar por https:// (o déjalo vacío en Enlaces).`)
     }
     if (ajustes.externos && !ajustes.externos.length) delete ajustes.externos
     alProgreso('Preparando el manifiesto', 0, 1)
