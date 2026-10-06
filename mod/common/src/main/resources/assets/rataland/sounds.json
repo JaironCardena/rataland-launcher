@@ -1,0 +1,42 @@
+{
+  "fondo.pesca": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/pesca",
+        "stream": true
+      }
+    ]
+  },
+  "fondo.noche": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/noche",
+        "stream": true
+      }
+    ]
+  },
+  "fondo.cloacas": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/cloacas",
+        "stream": true
+      }
+    ]
+  },
+  "fondo.amanecer": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/amanecer",
+        "stream": true
+      }
+    ]
+  },
+  "fondo.plop": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/plop",
+        "stream": false
+      }
+    ]
+  }
+}

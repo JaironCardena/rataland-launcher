@@ -349,6 +349,8 @@ h1, h2, h3 { margin: 0; }
 .escena-opcion input:checked ~ .escena-opcion__vista { border-color: var(--queso); box-shadow: 0 0 0 3px rgba(246, 196, 69, 0.18); }
 .escena-opcion input:checked ~ span { color: var(--queso); }
 .escena-opcion input:focus-visible ~ .escena-opcion__vista { outline: 2px solid var(--queso); outline-offset: 3px; }
+.escena-item { display: grid; gap: 4px; align-content: start; }
+.escena-item .escuchar { justify-self: start; font-size: 13px; }
 .etiqueta-animada { margin-left: 8px; padding: 1px 6px; border: 1px solid rgba(246, 196, 69, 0.5); border-radius: 4px; color: var(--queso); font-size: 11px; font-weight: 700; vertical-align: 1px; }
 .episodio-previa { display: grid; gap: 6px; max-width: 280px; font-weight: 600; font-size: 14px; }
 .episodio-previa img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-control); }

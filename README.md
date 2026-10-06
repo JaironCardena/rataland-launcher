@@ -2,15 +2,15 @@
 
 Launcher propio (Electron) para la serie RataLand:
 
-- Descarga **Minecraft 1.21.1**, **Fabric** y **Java** (el oficial de Mojang: el jugador no necesita instalar nada).
+- Descarga **Minecraft**, **Fabric** o **NeoForge** y **Java** (el oficial de Mojang: el jugador no necesita instalar nada).
 - Mantiene los **mods ocultos y sincronizados** en `%APPDATA%\.rataland` (carpeta oculta). Cada vez que se pulsa *Jugar* se descargan los mods nuevos, se restauran los que el jugador haya modificado y se borran los que sobran (mods viejos o puestos a mano).
 - Inicio de sesión con **Microsoft** (premium) y **sin premium**.
 - Muestra si el servidor está encendido, cuántos jugadores hay y las **novedades** que publiques.
-- Incluye el **mod de RataLand** (`mod/`), que dentro del juego:
+- Incluye el **mod de RataLand** (`mod/`, para Fabric y NeoForge), que dentro del juego:
   - cambia la pantalla de carga de Mojang por el logo de RataLand,
   - sustituye el menú principal por el de la serie: **Jugar** (entra al servidor), **Opciones** y **Salir**,
   - sustituye el menú de pausa (Esc): **Volver al juego**, **Progresos**, **Estadísticas**, **Opciones**, **Discord** y **Volver a RataLand**,
-  - usa el paisaje de RataLand como fondo en Opciones, al conectar, etc.,
+  - usa el paisaje de RataLand como fondo en Opciones, al conectar, etc. (algunos se mueven), con su sonido ambiente,
   - pone "RataLand" como título de la ventana.
 
 ## Instalarlo (jugadores)
@@ -140,17 +140,41 @@ El primero sube la versión (1.0.0 → 1.0.1). El segundo crea el instalador, **
 node tools/arte.js
 ```
 
-Si cambias las texturas del mod, vuelve a compilarlo (siguiente apartado).
+También genera los datos de los fondos animados (qué se mueve, dónde y a qué ritmo) para el launcher, el panel y el mod. Si cambias un fondo animado o su motor (`src/renderer/fondo-animado.js` o `MotorFondo.java`), guarda lo que dibuja el de JavaScript y compila el mod: su prueba falla si el de Java dibuja otra cosa.
+
+```bash
+node tools/comprobar-fondos.js --guardar
+```
+
+Los sonidos ambiente de los fondos (grillos, agua, gotas, pájaros…) no son grabaciones: los sintetiza `tools/sonidos.js`.
+
+```bash
+node tools/sonidos.js
+```
+
+Si cambias las texturas, los fondos o los sonidos del mod, vuelve a compilarlo (siguiente apartado).
 
 ## El mod de RataLand (`mod/`)
 
-El launcher escribe `config/rataland.json` con la IP del servidor antes de abrir el juego, así que si cambias de servidor no hace falta recompilar el mod. Para compilarlo tras cambiar el código o las texturas necesitas un JDK 25 (Gradle lo usa para compilar; el mod resultante funciona con el Java 21 de Minecraft):
+El launcher escribe `config/rataland.json` con la IP del servidor antes de abrir el juego, así que si cambias de servidor no hace falta recompilar el mod.
+
+El mod está hecho con Architectury: `mod/common` tiene todo (menús, fondos, sonidos, mixins) y `mod/fabric` y `mod/neoforge` solo el punto de entrada de cada cargador. Para compilarlo tras cambiar el código o las texturas necesitas un JDK 25 (Gradle lo usa para compilar; el mod resultante funciona con el Java 21 de Minecraft):
 
 ```bash
 cd mod && ./gradlew build
 ```
 
-Copia `mod/build/libs/rataland-menu-1.0.0.jar` a `modpack/mods/` y ejecuta `npm run publicar`.
+Luego coloca los jars y regenera el manifiesto:
+
+```bash
+node tools/publicar-mod.js
+```
+
+```bash
+npm run publicar
+```
+
+`publicar-mod.js` guarda un jar por cargador en `mod/builds/` (con `versiones.json`) y pone en `modpack/mods/` el del cargador que usa el modpack. Al cambiar de Fabric a NeoForge en el panel, este cambia el mod de RataLand por el del otro cargador. El mod toca el código del juego, así que cada versión de Minecraft necesita su propia compilación: si el panel no encuentra una para la versión nueva, lo quita (y salen los menús normales) hasta que se adapte.
 
 ## Sobre el servidor
 
@@ -168,6 +192,9 @@ Copia `mod/build/libs/rataland-menu-1.0.0.jar` a `modpack/mods/` y ejecuta `npm 
 - `src/main/servidor.js`: consulta si el servidor está encendido y cuántos jugadores hay.
 - `src/renderer/`: la interfaz. `demo.js` permite abrir `index.html` en un navegador para ver el diseño sin Electron.
 - `tools/publicar.js`: genera `manifest.json`.
-- `tools/arte.js`: genera el pixel-art.
+- `tools/arte.js`: genera el pixel-art y los datos de los fondos animados.
+- `tools/sonidos.js`: genera los sonidos ambiente de los fondos.
+- `tools/comprobar-fondos.js`: guarda lo que dibuja el motor de fondos de JavaScript para comprobar el de Java.
+- `tools/publicar-mod.js`: coloca los jars del mod de RataLand (`mod/builds/` y `modpack/mods/`).
 - `docs/`: el panel del modpack (GitHub Pages).
-- `mod/`: código del mod de Fabric (menú, pantalla de carga, título de la ventana).
+- `mod/`: código del mod de RataLand para Fabric y NeoForge (menús, pantalla de carga, fondos y su sonido, título de la ventana).

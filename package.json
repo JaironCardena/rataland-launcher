@@ -1,7 +1,7 @@
 {
   "name": "rataland-launcher",
   "productName": "RataLand",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "Launcher de Minecraft de la serie RataLand",
   "main": "src/main/index.js",
   "private": true,
@@ -23,7 +23,8 @@
     "@electron/asar": "^3.4.1",
     "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
-    "pngjs": "^7.0.0"
+    "pngjs": "^7.0.0",
+    "wasm-media-encoders": "^0.7.0"
   },
   "allowScripts": {
     "electron@44.5.1": true

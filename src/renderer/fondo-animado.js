@@ -1,20 +1,12 @@
 'use strict'
-// Animación del fondo «Noche de pesca»: estrellas que titilan, alguna estrella fugaz, nubes,
-// el reflejo de la luna en el lago, la barca que se mece, el corcho con sus ondas, el farol y las luciérnagas.
-// Se dibuja a 320×180 en un <canvas> que el CSS agranda sin suavizar.
-// El juego dibuja lo mismo en FondoAnimado.java (mod) y el panel usa una copia de este archivo
-// (docs/js/fondo-animado.js, la pone tools/arte.js): si cambias algo, cámbialo en los dos.
+// Motor de los fondos animados. Cada escena es una lista de elementos (estrellas, nubes, reflejos,
+// corcho, farol, luciérnagas…) con sus posiciones, colores y velocidades: esos datos los genera
+// tools/arte.js en fondo-escenas.js (launcher y panel) y en assets/rataland/escenas/*.json (juego).
+//
+// El juego dibuja lo mismo con MotorFondo.java. Para que no se separen, tools/comprobar-fondos.js
+// guarda lo que dibuja este motor y la compilación del mod falla si el de Java dibuja otra cosa.
+// Este archivo se copia a docs/js/ con tools/arte.js.
 ;(function () {
-  const W = 320
-  const H = 180
-  const ORILLA = 104
-  const LUNA_X = 200
-  const BARCA = [136, 78] // la capa de la barca mide 64×40
-  const AGUA_BARCA = 114
-  const CORCHO = [128, 109]
-  const AGUA_CORCHO = 112
-  const PUNTA = [140, 84] // punta de la caña (se mece con la barca)
-  const FAROL = [180, 97] // luz del farol (se mece con la barca)
   const VUELTA = 6.283
 
   function aleatorio (semilla) {
@@ -22,41 +14,52 @@
     return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646 }
   }
   const azar = (n) => { const x = Math.sin(n * 12.9898) * 43758.5453; return x - Math.floor(x) }
-  const orilla = (x) => x < 140 ? 146 + Math.floor((x / 140) ** 2 * 34) : 999
+  const dentro = (x, w, y, [rx, ry, rw, rh]) => x < rx + rw && x + w > rx && y >= ry && y < ry + rh
 
-  // Posiciones fijas: mismas semillas y mismo orden que en el juego
-  const rnd = aleatorio(91)
-  const estrellas = []
-  while (estrellas.length < 28) {
-    const x = Math.floor(rnd() * W)
-    const y = 2 + Math.floor(rnd() * 84)
-    const v = 0.6 + rnd() * 1.4
-    const f = rnd() * VUELTA
-    const grande = rnd() > 0.75
-    if ((x - LUNA_X) ** 2 + (y - 40) ** 2 < 900) continue
-    estrellas.push({ x, y, v, f, grande })
+  /** Precalcula las posiciones fijas (mismas semillas y mismo orden que en Java). */
+  function preparar (escena) {
+    const elementos = escena.elementos.map((e) => {
+      const rnd = aleatorio(e.semilla || 1)
+      const [zx, zy, zw, zh] = e.zona || [0, 0, 0, 0]
+      const datos = []
+      if (e.tipo === 'estrellas') {
+        for (let intento = 0; datos.length < e.n && intento < e.n * 50; intento++) {
+          const x = zx + Math.floor(rnd() * zw)
+          const y = zy + Math.floor(rnd() * zh)
+          const v = 0.6 + rnd() * 1.4
+          const f = rnd() * VUELTA
+          const grande = rnd() < e.grandes
+          if (e.evitar && (x - e.evitar[0]) * (x - e.evitar[0]) + (y - e.evitar[1]) * (y - e.evitar[1]) < e.evitar[2] * e.evitar[2]) continue
+          datos.push({ x, y, v, f, grande })
+        }
+      } else if (e.tipo === 'destellos') {
+        for (let intento = 0; datos.length < e.n && intento < e.n * 50; intento++) {
+          const x = zx + Math.floor(rnd() * zw)
+          const y = zy + Math.floor(rnd() * zh)
+          const w = 2 + Math.floor(rnd() * 4)
+          const v = 0.5 + rnd()
+          const f = rnd() * VUELTA
+          if ((e.evitar || []).some((r) => dentro(x, w, y, r))) continue
+          datos.push({ x, y, w, v, f })
+        }
+      } else if (e.tipo === 'luciernagas') {
+        for (let i = 0; i < e.n; i++) {
+          const x = zx + rnd() * zw
+          const y = zy + rnd() * zh
+          const v = 0.7 + rnd() * 0.6
+          const f = [rnd() * VUELTA, rnd() * VUELTA, rnd() * VUELTA, rnd() * VUELTA]
+          datos.push({ x, y, v, f })
+        }
+      }
+      return { e, datos }
+    })
+    return { escena, elementos }
   }
-  const destellos = []
-  while (destellos.length < 26) {
-    const x = Math.floor(rnd() * W)
-    const y = ORILLA + 3 + Math.floor(rnd() * (H - ORILLA - 4))
-    const w = 2 + Math.floor(rnd() * 4)
-    const v = 0.5 + rnd()
-    const f = rnd() * VUELTA
-    if (y >= orilla(x) - 2 || y >= orilla(x + w) - 2) continue // la orilla
-    if (x + w >= 264 && y <= 146) continue // el muelle y sus postes
-    if (x + w >= 148 && x <= 190 && y <= 124) continue // la barca y su reflejo
-    if (Math.abs(x - CORCHO[0]) < 14 && y <= 118) continue // las ondas del corcho
-    if (Math.abs(x - LUNA_X) < 14) continue // ahí va el reflejo de la luna
-    destellos.push({ x, y, w, v, f })
-  }
-  const luciernagas = []
-  for (let i = 0; i < 12; i++) {
-    const x = 8 + rnd() * 150
-    const y = 112 + rnd() * 52
-    const v = 0.7 + rnd() * 0.6
-    const f = [rnd() * VUELTA, rnd() * VUELTA, rnd() * VUELTA, rnd() * VUELTA]
-    luciernagas.push({ x, y, v, f })
+
+  /** Cuánto baja (0 o 1 píxel) lo que se mece con el agua. */
+  function vaiven (motor, nombre, t) {
+    const v = nombre && motor.escena.vaivenes && motor.escena.vaivenes[nombre]
+    return v && Math.sin(t * v.velocidad) > v.umbral ? 1 : 0
   }
 
   function circulo (p, cx, cy, r, color, alfa) {
@@ -66,106 +69,149 @@
     }
   }
 
-  /** Lo que se mueve, encima del fondo fijo. `p` sabe pintar rectángulos y las capas (nubes y barca). */
-  function dibujar (p, t) {
-    // Estrellas que titilan
-    for (const e of estrellas) {
-      const k = 0.5 + 0.5 * Math.sin(t * e.v + e.f)
-      p.rect(e.x, e.y, 1, 1, '#e9efff', 0.15 + 0.85 * k * k)
-      if (e.grande && k > 0.85) {
-        const a = (k - 0.85) / 0.15 * 0.5
-        p.rect(e.x - 1, e.y, 1, 1, '#e9efff', a)
-        p.rect(e.x + 1, e.y, 1, 1, '#e9efff', a)
-        p.rect(e.x, e.y - 1, 1, 1, '#e9efff', a)
-        p.rect(e.x, e.y + 1, 1, 1, '#e9efff', a)
+  const DIBUJAR = {
+    estrellas (p, t, e, datos) {
+      for (const s of datos) {
+        const k = 0.5 + 0.5 * Math.sin(t * s.v + s.f)
+        p.rect(s.x, s.y, 1, 1, e.color, 0.15 + 0.85 * k * k)
+        if (s.grande && k > 0.85) {
+          const a = (k - 0.85) / 0.15 * 0.5
+          p.rect(s.x - 1, s.y, 1, 1, e.color, a)
+          p.rect(s.x + 1, s.y, 1, 1, e.color, a)
+          p.rect(s.x, s.y - 1, 1, 1, e.color, a)
+          p.rect(s.x, s.y + 1, 1, 1, e.color, a)
+        }
       }
-    }
+    },
 
-    // Una estrella fugaz cada 13 segundos, cada vez en un sitio
-    const n = Math.floor((t + 4) / 13)
-    const u = ((t + 4) - n * 13) / 1.1
-    if (u < 1) {
-      const cx = 90 + azar(n) * 200 - u * 64
-      const cy = 4 + azar(n + 0.5) * 30 + u * 30
+    // Una estrella fugaz cada `cada` segundos, cada vez en un sitio
+    fugaz (p, t, e) {
+      const n = Math.floor((t + e.desfase) / e.cada)
+      const u = ((t + e.desfase) - n * e.cada) / e.dura
+      if (u >= 1) return
+      const [zx, zy, zw, zh] = e.zona
+      const [dx, dy] = e.recorrido
+      const largo = Math.sqrt(dx * dx + dy * dy)
+      const cx = zx + azar(n) * zw + u * dx
+      const cy = zy + azar(n + 0.5) * zh + u * dy
       const brillo = Math.sin(Math.PI * u)
-      for (let i = 0; i < 10; i++) p.rect(Math.round(cx + i * 0.905), Math.round(cy - i * 0.424), 1, 1, '#fff3d6', brillo * (1 - i / 10))
-    }
+      for (let i = 0; i < e.estela; i++) {
+        p.rect(Math.round(cx - dx / largo * i), Math.round(cy - dy / largo * i), 1, 1, e.color, brillo * (1 - i / e.estela))
+      }
+    },
 
-    // Nubes que cruzan despacio (la capa se repite sin costuras)
-    const desp = Math.floor(t * 2.5) % W
-    p.capa('nubes', -desp, 6, W, 48)
-    p.capa('nubes', W - desp, 6, W, 48)
+    // Una capa de imagen: se desliza en horizontal (y se repite) o se mece con el agua
+    capa (p, t, e, datos, motor) {
+      const { ancho, alto } = motor.escena.capas[e.nombre]
+      if (e.desliza) {
+        const desp = Math.floor(t * e.desliza) % motor.escena.ancho
+        p.capa(e.nombre, e.x - desp, e.y, ancho, alto)
+        p.capa(e.nombre, e.x - desp + motor.escena.ancho, e.y, ancho, alto)
+      } else {
+        p.capa(e.nombre, e.x, e.y + vaiven(motor, e.mece, t), ancho, alto)
+      }
+    },
 
     // Reflejo de la luna, roto por las olas
-    for (let y = ORILLA + 2; y < 160; y += 2) {
-      if (Math.sin(t * 1.9 + y * 1.7) > 0.8) continue
-      const d = (y - ORILLA) / 56
-      const media = Math.max(1, Math.round(7 - d * 4 + 1.6 * Math.sin(t * 1.6 + y * 0.8)))
-      const cx = LUNA_X + Math.round(1.5 * Math.sin(t * 1.1 + y * 0.45))
-      const a = 0.5 * (1 - d * 0.75)
-      p.rect(cx - media, y, media * 2, 1, '#f6c445', a)
-      if (media > 3) p.rect(cx - 1 + Math.round(Math.sin(t * 2.3 + y)), y, 2, 1, '#fff0a8', a)
-    }
-
-    // Destellos en el agua
-    for (const g of destellos) {
-      const k = 0.5 + 0.5 * Math.sin(t * g.v + g.f)
-      p.rect(g.x + Math.round(Math.sin(t * 0.6 + g.f) * 1.5), g.y, g.w, 1, '#5d6b9a', 0.1 + 0.35 * k)
-    }
-
-    // La barca se mece: su reflejo, tembloroso
-    const mece = Math.sin(t * 1.3) > 0.2 ? 1 : 0
-    for (let k = 0; k < 5; k++) {
-      const x = 154 + k + Math.round(Math.sin(t * 1.5 + k * 1.3))
-      p.rect(x, AGUA_BARCA + mece + k, 30 - k * 2, 1, '#0a0f1c', 0.3 * (1 - k / 5))
-    }
-
-    // El corcho flota; de vez en cuando pica un pez y se hunde
-    const pica = (t + 9) % 19 < 0.9
-    const baja = pica ? 2 : Math.sin(t * 2.4) > 0.4 ? 1 : 0
-    const vistos = new Set()
-    for (const desfase of [0, 1.5]) {
-      const edad = ((t + desfase) % 3) / 3
-      const r = 2 + edad * 9
-      const pasos = Math.round(r * 5)
-      for (let i = 0; i < pasos; i++) {
-        const x = Math.round(CORCHO[0] + 0.5 + r * Math.cos(i / pasos * VUELTA))
-        const y = Math.round(AGUA_CORCHO + r * 0.3 * Math.sin(i / pasos * VUELTA))
-        const clave = desfase * 100000 + x * 1000 + y
-        if (vistos.has(clave)) continue
-        vistos.add(clave)
-        p.rect(x, y, 1, 1, '#8fa0cc', (1 - edad) * 0.45)
+    reflejo (p, t, e) {
+      for (let y = e.desde; y < e.hasta; y += 2) {
+        if (Math.sin(t * 1.9 + y * 1.7) > 0.8) continue
+        const d = (y - e.desde) / (e.hasta - e.desde)
+        const media = Math.max(1, Math.round(e.ancho - d * 4 + 1.6 * Math.sin(t * 1.6 + y * 0.8)))
+        const cx = e.x + Math.round(1.5 * Math.sin(t * 1.1 + y * 0.45))
+        const a = 0.5 * (1 - d * 0.75)
+        p.rect(cx - media, y, media * 2, 1, e.color, a)
+        if (media > 3) p.rect(cx - 1 + Math.round(Math.sin(t * 2.3 + y)), y, 2, 1, e.brillo, a)
       }
-    }
-    const punta = [PUNTA[0], PUNTA[1] + mece]
-    const fin = [CORCHO[0], CORCHO[1] + baja]
-    const tramos = Math.max(Math.abs(fin[0] - punta[0]), Math.abs(fin[1] - punta[1]))
-    for (let i = 1; i < tramos; i++) {
-      p.rect(Math.round(punta[0] + (fin[0] - punta[0]) * i / tramos), Math.round(punta[1] + (fin[1] - punta[1]) * i / tramos), 1, 1, '#c7cfe0', 0.4)
-    }
-    if (fin[1] < AGUA_CORCHO) p.rect(fin[0], fin[1], 2, 1, '#e0533f', 1)
-    if (fin[1] + 1 < AGUA_CORCHO) p.rect(fin[0], fin[1] + 1, 2, 1, '#f2f2f2', 1)
+    },
 
-    p.capa('barca', BARCA[0], BARCA[1] + mece, 64, 40)
+    destellos (p, t, e, datos) {
+      for (const g of datos) {
+        const k = 0.5 + 0.5 * Math.sin(t * g.v + g.f)
+        p.rect(g.x + Math.round(Math.sin(t * 0.6 + g.f) * 1.5), g.y, g.w, 1, e.color, 0.1 + 0.35 * k)
+      }
+    },
+
+    // Reflejo oscuro de algo que flota, tembloroso
+    sombra (p, t, e, datos, motor) {
+      const baja = vaiven(motor, e.mece, t)
+      for (let k = 0; k < e.filas; k++) {
+        const x = e.x + k + Math.round(Math.sin(t * 1.5 + k * 1.3))
+        p.rect(x, e.y + baja + k, e.ancho - k * 2, 1, e.color, 0.3 * (1 - k / e.filas))
+      }
+    },
+
+    // El corcho flota con sus ondas; de vez en cuando pica un pez y se hunde
+    corcho (p, t, e, datos, motor) {
+      const pica = (t + e.desfase) % e.cada < e.pica
+      const baja = pica ? 2 : Math.sin(t * 2.4) > 0.4 ? 1 : 0
+      const o = e.ondas
+      const vistos = new Set()
+      for (const desfase of [0, o.cada / 2]) {
+        const edad = ((t + desfase) % o.cada) / o.cada
+        const r = 2 + edad * o.radio
+        const pasos = Math.round(r * 5)
+        for (let i = 0; i < pasos; i++) {
+          const x = Math.round(e.x + 0.5 + r * Math.cos(i / pasos * VUELTA))
+          const y = Math.round(e.agua + r * o.aplasta * Math.sin(i / pasos * VUELTA))
+          const clave = desfase * 100000 + x * 1000 + y
+          if (vistos.has(clave)) continue
+          vistos.add(clave)
+          p.rect(x, y, 1, 1, o.color, (1 - edad) * o.alfa)
+        }
+      }
+      const s = e.sedal
+      const px = s.desde[0]
+      const py = s.desde[1] + vaiven(motor, s.mece, t)
+      const fy = e.y + baja
+      const tramos = Math.max(Math.abs(e.x - px), Math.abs(fy - py))
+      for (let i = 1; i < tramos; i++) {
+        p.rect(Math.round(px + (e.x - px) * i / tramos), Math.round(py + (fy - py) * i / tramos), 1, 1, s.color, s.alfa)
+      }
+      if (fy < e.agua) p.rect(e.x, fy, 2, 1, e.colores[0], 1)
+      if (fy + 1 < e.agua) p.rect(e.x, fy + 1, 2, 1, e.colores[1], 1)
+    },
 
     // Farol que parpadea, con su reflejo en el agua
-    const llama = 0.5 + 0.25 * Math.sin(t * 7.3) + 0.25 * Math.sin(t * 11.1 + 1)
-    circulo(p, FAROL[0] + 1, FAROL[1] + 2 + mece, 16, '#f6c445', 0.04 + 0.03 * llama)
-    circulo(p, FAROL[0] + 1, FAROL[1] + 2 + mece, 8, '#f6c445', 0.06 + 0.05 * llama)
-    p.rect(FAROL[0], FAROL[1] + mece, 2, 4, llama > 0.6 ? '#fff0a8' : '#ffd36b', 1)
-    for (let y = AGUA_BARCA + 6; y < AGUA_BARCA + 22; y += 2) {
-      const ancho = Math.sin(t * 2 + y) > 0 ? 3 : 2
-      p.rect(FAROL[0] + Math.round(Math.sin(t * 1.7 + y * 0.9)), y, ancho, 1, '#f6c445', 0.3 * (1 - (y - AGUA_BARCA - 6) / 16) * (0.6 + 0.4 * llama))
-    }
+    farol (p, t, e, datos, motor) {
+      const baja = vaiven(motor, e.mece, t)
+      const llama = 0.5 + 0.25 * Math.sin(t * 7.3) + 0.25 * Math.sin(t * 11.1 + 1)
+      circulo(p, e.x + 1, e.y + 2 + baja, e.radios[0], e.color, 0.04 + 0.03 * llama)
+      circulo(p, e.x + 1, e.y + 2 + baja, e.radios[1], e.color, 0.06 + 0.05 * llama)
+      p.rect(e.x, e.y + baja, 2, 4, llama > 0.6 ? e.llama[1] : e.llama[0], 1)
+      const [desde, hasta] = e.reflejo
+      for (let y = desde; y < hasta; y += 2) {
+        const ancho = Math.sin(t * 2 + y) > 0 ? 3 : 2
+        p.rect(e.x + Math.round(Math.sin(t * 1.7 + y * 0.9)), y, ancho, 1, e.color, 0.3 * (1 - (y - desde) / (hasta - desde)) * (0.6 + 0.4 * llama))
+      }
+    },
 
-    // Luciérnagas
-    for (const l of luciernagas) {
-      const x = Math.round(l.x + 7 * Math.sin(t * 0.37 * l.v + l.f[0]) + 3 * Math.sin(t * 0.9 * l.v + l.f[1]))
-      const y = Math.round(l.y + 4 * Math.sin(t * 0.53 * l.v + l.f[2]))
-      const b = Math.max(0, Math.sin(t * 1.1 * l.v + l.f[3])) ** 2
-      p.rect(x - 1, y - 1, 3, 3, '#f6c445', 0.22 * b)
-      p.rect(x, y, 1, 1, '#fff0a8', 0.12 + 0.88 * b)
+    luciernagas (p, t, e, datos) {
+      for (const l of datos) {
+        const x = Math.round(l.x + 7 * Math.sin(t * 0.37 * l.v + l.f[0]) + 3 * Math.sin(t * 0.9 * l.v + l.f[1]))
+        const y = Math.round(l.y + 4 * Math.sin(t * 0.53 * l.v + l.f[2]))
+        const s = Math.max(0, Math.sin(t * 1.1 * l.v + l.f[3]))
+        const b = s * s
+        p.rect(x - 1, y - 1, 3, 3, e.color, 0.22 * b)
+        p.rect(x, y, 1, 1, e.brillo, 0.12 + 0.88 * b)
+      }
     }
+  }
+
+  /** Dibuja lo que se mueve en el instante `t` (segundos). `p` sabe pintar rectángulos y capas. */
+  function dibujar (motor, p, t) {
+    for (const { e, datos } of motor.elementos) DIBUJAR[e.tipo](p, t, e, datos, motor)
+  }
+
+  /** Sonidos que tocan entre t0 (sin incluir) y t1: por ahora, el «plop» cuando pica el pez. */
+  function eventos (motor, t0, t1) {
+    const lista = []
+    for (const { e } of motor.elementos) {
+      if (e.tipo !== 'corcho' || !e.evento) continue
+      // Pica cuando (t + desfase) es múltiplo de `cada`
+      for (let k = Math.floor((t0 + e.desfase) / e.cada) + 1; k * e.cada - e.desfase <= t1; k++) lista.push(e.evento)
+    }
+    return lista
   }
 
   const cargar = (src) => new Promise((resolve, reject) => {
@@ -177,20 +223,24 @@
 
   /**
    * Anima la escena en `lienzo` hasta que se quite de la página o se llame a parar().
+   * Las imágenes son `${ruta}fondo-${clave}.png` y `${ruta}fondo-${clave}-${capa}.png`.
    * Con "reducir movimiento" activado en el sistema, se queda quieta.
    */
-  function animar (lienzo, { base, nubes, barca }) {
-    lienzo.width = W
-    lienzo.height = H
+  function animar (lienzo, { escena, ruta, alEvento }) {
+    const motor = preparar(escena)
+    lienzo.width = escena.ancho
+    lienzo.height = escena.alto
     const ctx = lienzo.getContext('2d')
     ctx.imageSmoothingEnabled = false
     const quieto = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null
     const inicio = performance.now()
     let parado = false
     let ultimo = -Infinity
+    let tAnterior = 0
 
-    Promise.all([cargar(base), cargar(nubes), cargar(barca)]).then(([imgBase, imgNubes, imgBarca]) => {
-      const capas = { nubes: imgNubes, barca: imgBarca }
+    const nombres = Object.keys(escena.capas)
+    Promise.all([cargar(`${ruta}fondo-${escena.clave}.png`), ...nombres.map((n) => cargar(`${ruta}fondo-${escena.clave}-${n}.png`))]).then(([base, ...imagenes]) => {
+      const capas = Object.fromEntries(nombres.map((n, i) => [n, imagenes[i]]))
       const p = {
         rect (x, y, w, h, color, alfa) {
           if (alfa < 0.004) return
@@ -205,8 +255,8 @@
       }
       const pintar = (t) => {
         ctx.globalAlpha = 1
-        ctx.drawImage(imgBase, 0, 0, W, H)
-        dibujar(p, t)
+        ctx.drawImage(base, 0, 0, escena.ancho, escena.alto)
+        dibujar(motor, p, t)
       }
       const fotograma = (ahora) => {
         if (parado || !lienzo.isConnected) return
@@ -217,7 +267,10 @@
         // 24 fotogramas por segundo bastan para el pixel art
         if (ahora - ultimo >= 41) {
           ultimo = ahora
-          pintar((ahora - inicio) / 1000)
+          const t = (ahora - inicio) / 1000
+          if (alEvento && t - tAnterior < 1) for (const nombre of eventos(motor, tAnterior, t)) alEvento(nombre)
+          tAnterior = t
+          pintar(t)
         }
         requestAnimationFrame(fotograma)
       }
@@ -228,5 +281,7 @@
     return { parar () { parado = true } }
   }
 
-  window.FondoAnimado = { animar, ANCHO: W, ALTO: H }
+  const api = { preparar, dibujar, eventos, animar }
+  if (typeof window !== 'undefined') window.FondoAnimado = api
+  if (typeof module === 'object' && module.exports) module.exports = api
 })()

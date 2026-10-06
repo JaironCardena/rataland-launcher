@@ -7,8 +7,8 @@ const $$ = (s) => document.querySelectorAll(s)
 const NOMBRE_LOADER = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge' }
 const NOMBRE_ENLACE = { discord: 'Discord', web: 'Web', youtube: 'YouTube', twitch: 'Twitch', tiktok: 'TikTok', x: 'X', twitter: 'X' }
 const FONDO_ESCENA = { cloacas: 'assets/fondo-cloacas.png', amanecer: 'assets/fondo-amanecer.png', pesca: 'assets/fondo-pesca.png' }
-// Escenas que se mueven: se dibujan en un <canvas> encima de la imagen fija
-const FONDO_ANIMADO = { pesca: { base: 'assets/fondo-pesca.png', nubes: 'assets/fondo-pesca-nubes.png', barca: 'assets/fondo-pesca-barca.png' } }
+// Sonido ambiente del fondo (grillos, agua, goteo…): se calla con la ventana escondida y al jugar
+const ambiente = window.crearAmbiente('assets/sonidos/')
 // Iconos pixel (8×8) de los enlaces en la barra lateral
 const ICONO_ENLACE = {
   discord: 'M1 1h6v1h-6zM0 2h8v1h-8zM0 3h2v1h-2zM3 3h2v1h-2zM6 3h2v1h-2zM0 4h8v1h-8zM0 5h8v1h-8zM1 6h1v1h-1zM6 6h1v1h-1z',
@@ -65,16 +65,23 @@ function pintarFondo () {
   const fondo = FONDO_ESCENA[escena] || estado.launcher.apariencia?.fondo
   if (fondo) document.documentElement.style.setProperty('--imagen-fondo', `url("${fondo}")`)
 
-  const capas = window.FondoAnimado && FONDO_ANIMADO[escena]
-  if (fondoAnimado?.escena === escena && capas) return
+  ambiente.escena(escena || null)
+
+  // Las escenas animadas se dibujan en un <canvas> encima de la imagen fija
+  const animada = window.FondoAnimado && window.ESCENAS_FONDO?.[escena]
+  if (fondoAnimado?.escena === escena && animada) return
   fondoAnimado?.animacion.parar()
   fondoAnimado?.lienzo.remove()
   fondoAnimado = null
-  if (!capas) return
+  if (!animada) return
   const lienzo = document.createElement('canvas')
   lienzo.className = 'fondo__lienzo'
   $('.fondo').append(lienzo)
-  fondoAnimado = { escena, lienzo, animacion: window.FondoAnimado.animar(lienzo, capas) }
+  fondoAnimado = { escena, lienzo, animacion: window.FondoAnimado.animar(lienzo, { escena: animada, ruta: 'assets/', alEvento: ambiente.evento }) }
+}
+
+function actualizarAmbiente () {
+  ambiente.activo(!document.hidden && !estado.jugando)
 }
 
 function pintarCuenta () {
@@ -287,6 +294,10 @@ function pintarAjustes () {
   ram.value = estado.ajustes.ram
   $('.ajuste__valor').textContent = gb(Number(ram.value))
   $('[data-ayuda-ram]').textContent = `Tu equipo tiene ${gb(total)}. Con muchos mods, entre 4 y 6 GB suele ir bien.`
+  const sonido = estado.ajustes.sonido ?? 40
+  $('#sonido').value = sonido
+  $('[data-valor-sonido]').textContent = sonido ? `${sonido} %` : 'Sin sonido'
+  ambiente.volumen(sonido)
   for (const clave of ['alJugar', 'alCerrar']) {
     const valor = estado.ajustes[clave]
     const radio = document.querySelector(`input[name="${clave}"][value="${valor}"]`)
@@ -932,6 +943,13 @@ document.addEventListener('keydown', (e) => {
 $('.sin-premium').addEventListener('submit', loginSinPremium)
 $('#ram').addEventListener('input', (e) => { $('.ajuste__valor').textContent = gb(Number(e.target.value)) })
 $('#ram').addEventListener('change', (e) => guardarAjustes({ ram: Number(e.target.value) }))
+$('#sonido').addEventListener('input', (e) => {
+  const valor = Number(e.target.value)
+  $('[data-valor-sonido]').textContent = valor ? `${valor} %` : 'Sin sonido'
+  ambiente.volumen(valor)
+})
+$('#sonido').addEventListener('change', (e) => guardarAjustes({ sonido: Number(e.target.value) }))
+document.addEventListener('visibilitychange', actualizarAmbiente)
 $('[data-archivo-skin]').addEventListener('change', (e) => { elegirSkin(e.target.files[0]); e.target.value = '' })
 document.querySelectorAll('input[name="modeloSkin"]').forEach((r) => r.addEventListener('change', pintarSkin))
 const panelSkin = $('.panel-skin')
@@ -962,12 +980,14 @@ api.alJuego(({ estado: fase, error }) => {
     mostrarProgreso({ texto: 'Abriendo Minecraft', actual: 0, total: 0 })
   } else if (fase === 'abierto') {
     estado.jugando = true
+    actualizarAmbiente()
     if (estado.actualizacion) pintarActualizacion(estado.actualizacion)
     ocultarProgreso()
     actualizarBoton()
   } else if (fase === 'cerrado') {
     estado.ocupado = false
     estado.jugando = false
+    actualizarAmbiente()
     if (estado.actualizacion) pintarActualizacion(estado.actualizacion)
     ocultarProgreso()
     actualizarBoton()

@@ -1,0 +1,31 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "Todos los derechos reservados"
+
+[[mods]]
+modId = "rataland"
+version = "${version}"
+displayName = "RataLand"
+description = '''Pantalla de carga y menú principal de la serie RataLand.'''
+authors = "RataLand"
+logoFile = "assets/rataland/icon.png"
+# Solo del cliente: no hace falta en el servidor
+displayTest = "IGNORE_ALL_VERSION"
+
+[[mixins]]
+config = "rataland.mixins.json"
+
+[[dependencies.rataland]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "CLIENT"
+
+# Toca el código del juego: solo vale para la versión con la que se compiló
+[[dependencies.rataland]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1]"
+ordering = "NONE"
+side = "CLIENT"

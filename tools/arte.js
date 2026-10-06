@@ -576,6 +576,63 @@ function barcaPesca () {
   return lz
 }
 
+/**
+ * La animación de «Noche de pesca» como datos: qué se mueve, dónde, de qué color y a qué ritmo.
+ * La leen fondo-animado.js (launcher y panel) y MotorFondo.java (juego).
+ */
+function escenaPesca (capas) {
+  const { lunaX, lunaY, orilla, muelleX, cubierta, barca } = PESCA
+  const [bx, by] = barca
+  const aguaBarca = by + 36
+  const corcho = [128, 109]
+  // Los destellos del agua no salen sobre la orilla, el muelle, la barca, el corcho ni el reflejo de la luna
+  const orillaRects = []
+  for (let x = 0; x < 140; x += 20) {
+    const y = orillaPesca(x) - 2
+    orillaRects.push([x, y, 20, 180 - y])
+  }
+  return {
+    clave: 'pesca',
+    ancho: 320,
+    alto: 180,
+    escala: 2,
+    sonido: 'pesca',
+    capas: Object.fromEntries(Object.entries(capas).map(([nombre, lz]) => [nombre, { ancho: lz.ancho, alto: lz.alto }])),
+    vaivenes: { barca: { velocidad: 1.3, umbral: 0.2 } },
+    elementos: [
+      { tipo: 'estrellas', n: 28, semilla: 91, zona: [0, 2, 320, 84], evitar: [lunaX, lunaY, 30], grandes: 0.25, color: '#e9efff' },
+      { tipo: 'fugaz', cada: 13, desfase: 4, dura: 1.1, zona: [90, 4, 200, 30], recorrido: [-64, 30], estela: 10, color: '#fff3d6' },
+      { tipo: 'capa', nombre: 'nubes', x: 0, y: 6, desliza: 2.5 },
+      { tipo: 'reflejo', x: lunaX, desde: orilla + 2, hasta: 160, ancho: 7, color: '#f6c445', brillo: '#fff0a8' },
+      {
+        tipo: 'destellos',
+        n: 26,
+        semilla: 37,
+        zona: [0, orilla + 3, 320, 180 - orilla - 4],
+        evitar: [...orillaRects, [muelleX - 2, 0, 320, cubierta + 23], [bx + 12, 0, 43, aguaBarca + 11], [corcho[0] - 13, 0, 27, corcho[1] + 10], [lunaX - 13, 0, 27, 180]],
+        color: '#5d6b9a'
+      },
+      { tipo: 'sombra', x: bx + 18, y: aguaBarca, ancho: 30, filas: 5, color: '#0a0f1c', mece: 'barca' },
+      {
+        tipo: 'corcho',
+        x: corcho[0],
+        y: corcho[1],
+        agua: corcho[1] + 3,
+        cada: 19,
+        desfase: 9,
+        pica: 0.9,
+        evento: 'plop',
+        colores: ['#e0533f', '#f2f2f2'],
+        sedal: { desde: [bx + 4, by + 6], mece: 'barca', color: '#c7cfe0', alfa: 0.4 },
+        ondas: { cada: 3, radio: 9, aplasta: 0.3, color: '#8fa0cc', alfa: 0.45 }
+      },
+      { tipo: 'capa', nombre: 'barca', x: bx, y: by, mece: 'barca' },
+      { tipo: 'farol', x: bx + 44, y: by + 19, mece: 'barca', color: '#f6c445', llama: ['#ffd36b', '#fff0a8'], radios: [16, 8], reflejo: [aguaBarca + 6, aguaBarca + 22] },
+      { tipo: 'luciernagas', n: 12, semilla: 53, zona: [8, 112, 150, 52], color: '#f6c445', brillo: '#fff0a8' }
+    ]
+  }
+}
+
 /** Nubes que cruzan el cielo (se repiten en horizontal sin costuras). */
 function nubesPesca () {
   const W = 320
@@ -647,7 +704,8 @@ function texturaCarga (lg) {
 
 const lg = logo()
 const renderer = path.join(RAIZ, 'src', 'renderer', 'assets')
-const texturas = path.join(RAIZ, 'mod', 'src', 'main', 'resources', 'assets', 'rataland', 'textures', 'gui')
+const recursosMod = path.join(RAIZ, 'mod', 'common', 'src', 'main', 'resources', 'assets', 'rataland')
+const texturas = path.join(recursosMod, 'textures', 'gui')
 
 lg.guardar(path.join(renderer, 'logo.png'), 5)
 fondo({ lunaX: 182, lunaY: 58, rataX: 168 }).guardar(path.join(renderer, 'fondo.png'), 4)
@@ -656,11 +714,11 @@ icono().guardar(path.join(RAIZ, 'build', 'icon.png'), 8)
 lg.guardar(path.join(texturas, 'logo.png'), 1)
 fondo({ lunaX: 258, lunaY: 52, rataX: 244, semilla: 11 }).guardar(path.join(texturas, 'fondo.png'), 2)
 texturaCarga(lg).guardar(path.join(texturas, 'carga.png'), 12)
-icono().guardar(path.join(RAIZ, 'mod', 'src', 'main', 'resources', 'assets', 'rataland', 'icon.png'), 4)
+icono().guardar(path.join(recursosMod, 'icon.png'), 4)
 
 // Iconos de la ventana del juego y de la ventana del launcher
 for (const escala of [1, 2, 4, 8]) {
-  icono().guardar(path.join(RAIZ, 'mod', 'src', 'main', 'resources', 'assets', 'rataland', 'icons', `icono_${32 * escala}.png`), escala)
+  icono().guardar(path.join(recursosMod, 'icons', `icono_${32 * escala}.png`), escala)
 }
 icono().guardar(path.join(renderer, 'icono.png'), 8)
 
@@ -680,7 +738,18 @@ for (const [nombre, lz] of Object.entries(capasPesca)) {
   lz.guardar(path.join(texturas, `${nombre.replace(/-/g, '_')}.png`), 2)
   lz.guardar(path.join(RAIZ, 'docs', 'img', `${nombre}.png`), 2)
 }
-// La animación es la misma en el launcher y en el panel
+// Datos de las escenas animadas: para el launcher y el panel (fondo-escenas.js) y para el juego (escenas/*.json)
+const escenasAnimadas = { pesca: escenaPesca({ nubes: capasPesca['fondo-pesca-nubes'], barca: capasPesca['fondo-pesca-barca'] }) }
+const datosEscenas = `// Lo genera tools/arte.js a partir de las mismas posiciones que el dibujo: no lo cambies a mano.
+window.ESCENAS_FONDO = ${JSON.stringify(escenasAnimadas, null, 2)}
+`
+fs.writeFileSync(path.join(RAIZ, 'src', 'renderer', 'fondo-escenas.js'), datosEscenas)
+fs.writeFileSync(path.join(RAIZ, 'docs', 'js', 'fondo-escenas.js'), datosEscenas)
+fs.mkdirSync(path.join(recursosMod, 'escenas'), { recursive: true })
+for (const [clave, escena] of Object.entries(escenasAnimadas)) {
+  fs.writeFileSync(path.join(recursosMod, 'escenas', `${clave}.json`), JSON.stringify(escena, null, 2) + '\n')
+}
+// El motor es el mismo en el launcher y en el panel
 fs.copyFileSync(path.join(RAIZ, 'src', 'renderer', 'fondo-animado.js'), path.join(RAIZ, 'docs', 'js', 'fondo-animado.js'))
 
 // Barra de carga y botones del juego

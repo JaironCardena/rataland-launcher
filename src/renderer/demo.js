@@ -13,7 +13,7 @@ if (!window.launcher) {
     actualizacion = { ...actualizacion, ...cambios }
     oyentesActualizacion.forEach((f) => f(actualizacion))
   }
-  let ajustes = { ram: 4096, alJugar: 'segundoPlano', alCerrar: params.get('al-cerrar') || 'preguntar' }
+  let ajustes = { ram: 4096, alJugar: 'segundoPlano', alCerrar: params.get('al-cerrar') || 'preguntar', sonido: 40 }
   let cuenta = params.has('sin-cuenta') ? null
     : params.has('no-premium') ? { tipo: 'sinPremium', nombre: 'JaironEc', uuid: '0' }
       : { tipo: 'microsoft', nombre: 'Steve', uuid: '8667ba71b85a4004af54457a9734eed7' }

@@ -901,6 +901,8 @@ async function planificarCambio (mc, tipo) {
 
     const cambiaLoader = tipo !== actual.tipo
     const cache = leerCacheMods()
+    // Versiones del mod de RataLand que hay compiladas (una por cargador y versión de Minecraft)
+    const builds = await buildsRataLand().catch(() => [])
     const elementos = Object.keys(n.CATEGORIAS).flatMap((c) => elementosDe(c).map((e) => ({ e, categoria: c })))
     let i = 0
     for (const { e, categoria } of elementos) {
@@ -919,8 +921,11 @@ async function planificarCambio (mc, tipo) {
       } else if (categoria !== 'mods') {
         fila = { accion: 'mantener' }
       } else if (rataland) {
-        // Dice "~1.21.1" (cualquier 1.21.x), pero toca el código del juego: solo vale para la versión con la que se hizo
-        fila = { accion: 'quitar', motivo: `está hecho para Minecraft ${actual.mc} con ${n.nombreLoader(actual.tipo)}` }
+        // Toca el código del juego: solo vale para la versión con la que se compiló
+        const build = builds.find((b) => b.cargador === tipo && b.minecraft === mc)
+        if (build && build.sha1 === e.sha1) fila = { accion: 'mantener', motivo: 'ya es el de esta versión' }
+        else if (build) fila = { accion: 'cambiar', build }
+        else fila = { accion: 'quitar', motivo: `aún no hay versión para Minecraft ${mc} con ${n.nombreLoader(tipo)}` }
       } else if (cambiaLoader) {
         fila = { accion: 'quitar', motivo: `es para ${n.nombreLoader(actual.tipo)}` }
       } else {
@@ -972,7 +977,7 @@ function vistaCompatibilidad () {
       quedan.length ? h('details', {}, h('summary', {}, `Se quedan como están (${quedan.length})`), lista(quedan, true)) : null,
       sinRataland
         ? h('p', { class: 'aviso-caja aviso-caja--mal' },
-          `El mod de RataLand (menús, pantalla de carga, skin sin premium, sin aviso de chat) está hecho para Minecraft ${plan.anterior.mc} con ${n.nombreLoader(plan.anterior.tipo)}; para otra versión hay que adaptarlo y volver a subirlo. Mientras, los jugadores verán los menús normales de Minecraft. `,
+          `El mod de RataLand (menús, pantalla de carga, skin sin premium, sin aviso de chat) todavía no está hecho para Minecraft ${plan.mc} con ${n.nombreLoader(plan.tipo)}: hay que adaptarlo. Mientras, los jugadores verán los menús normales de Minecraft. `,
           servidor.entrarDirecto
             ? 'Tienes activado "Entrar al servidor nada más abrir el juego", así que entrarán directos.'
             : h('button', { class: 'enlace-boton', onclick: () => { servidor.entrarDirecto = true; ajustes.servidor = servidor; pintar() } }, 'Activar "Entrar al servidor nada más abrir el juego"'))
@@ -980,18 +985,57 @@ function vistaCompatibilidad () {
       h('p', {}, `Cambia también el servidor de Aternos a ${destino} y haz antes una copia del mundo: un mundo abierto en una versión más nueva ya no se puede abrir en una más vieja.`),
       h('p', { class: 'campo__ayuda' }, 'Los jugadores no tienen que hacer nada: al pulsar Jugar, el launcher instala la nueva versión y deja solo los mods de la lista.'),
       h('p', { class: 'acciones-cambio' },
-        h('button', { class: 'boton boton--principal boton--pequeno', onclick: aplicarCambioVersion }, 'Aplicar el cambio'),
+        h('button', { class: 'boton boton--principal boton--pequeno', disabled: plan.aplicando, onclick: aplicarCambioVersion }, plan.aplicando ? 'Aplicando…' : 'Aplicar el cambio'),
         ' ', cancelar)
     ]
   }
   return h('div', { class: 'aviso-caja', 'data-compatibilidad': '' }, contenido)
 }
 
+/** Versiones compiladas del mod de RataLand (mod/builds/versiones.json, lo escribe tools/publicar-mod.js). */
+async function buildsRataLand () {
+  const res = await fetch(urlRepo('mod/builds/versiones.json'))
+  if (!res.ok) return []
+  return res.json()
+}
+
+/** Archivo del repositorio tal y como está en el último commit. */
+function urlRepo (ruta) {
+  const { propietario, repositorio } = n.CONFIG
+  return `https://raw.githubusercontent.com/${propietario}/${repositorio}/${base.head}/${ruta}`
+}
+
 /** Aplica el plan: cambia o quita cada elemento y pone la nueva versión (queda pendiente de publicar). */
-function aplicarCambioVersion () {
+async function aplicarCambioVersion () {
   const plan = compatibilidad
+  // Primero baja el mod de RataLand para el cargador nuevo (si falla, no se toca nada)
+  plan.aplicando = true
+  pintarCompatibilidad()
+  try {
+    for (const f of plan.filas.filter((x) => x.build)) {
+      const res = await fetch(urlRepo(`mod/builds/${n.codificarRuta(f.build.archivo)}`))
+      if (!res.ok) throw new Error(`No se pudo descargar ${f.build.archivo}.`)
+      f.bytes = new Uint8Array(await res.arrayBuffer())
+      if (await n.sha1Hex(f.bytes) !== f.build.sha1) throw new Error(`${f.build.archivo} llegó dañado; vuelve a intentarlo.`)
+    }
+  } catch (err) {
+    plan.aplicando = false
+    avisar(err.message, 'error')
+    pintarCompatibilidad()
+    return
+  }
+  if (compatibilidad !== plan) return
   for (const f of plan.filas) {
-    if (f.accion === 'cambiar') {
+    if (f.build) {
+      // El mod de RataLand se sube al modpack en su versión para el cargador nuevo
+      quitarElemento(f.e)
+      const ruta = `mods/${f.build.archivo}`
+      nuevos.set(ruta, {
+        ruta, bytes: f.bytes, sha1: f.build.sha1, git: await n.shaGit(f.bytes), tamano: f.bytes.length,
+        nombre: 'RataLand (menús y pantalla de carga)', version: f.build.version, reemplaza: base.archivos.has(ruta)
+      })
+      borrados.delete(ruta)
+    } else if (f.accion === 'cambiar') {
       actualizaciones.set(f.e.ruta, { entrada: f.nueva, origen: f.e.tipo })
       aplicarActualizacion(f.e.ruta)
     } else if (f.accion === 'quitar') {
@@ -1386,13 +1430,43 @@ async function descargarZip (boton) {
 
 /* ---------- Temporada y fondo ---------- */
 
+/** Escena animada (sus datos los genera tools/arte.js en js/fondo-escenas.js), o null. */
+const escenaAnimada = (clave) => (window.FondoAnimado && window.ESCENAS_FONDO?.[clave]) || null
+
 /** Miniatura de un fondo; los animados se ven moviéndose. */
 function vistaEscena (clave) {
-  const capas = n.ESCENAS_ANIMADAS[clave]
-  if (!capas || !window.FondoAnimado) return h('img', { class: 'escena-opcion__vista', src: `img/fondo-${clave}.png`, alt: '', width: 640, height: 360 })
+  const escena = escenaAnimada(clave)
+  if (!escena) return h('img', { class: 'escena-opcion__vista', src: `img/fondo-${clave}.png`, alt: '', width: 640, height: 360 })
   const lienzo = h('canvas', { class: 'escena-opcion__vista', width: 320, height: 180 })
-  window.FondoAnimado.animar(lienzo, capas)
+  window.FondoAnimado.animar(lienzo, { escena, ruta: 'img/' })
   return lienzo
+}
+
+/** Sonido ambiente de un fondo, para oírlo antes de elegirlo (solo suena uno a la vez). */
+let escuchando = null
+function botonEscuchar (clave) {
+  const boton = h('button', { type: 'button', class: 'enlace-boton escuchar', 'aria-pressed': 'false' }, 'Escuchar')
+  const pintar = (si) => {
+    boton.textContent = si ? 'Parar' : 'Escuchar'
+    boton.setAttribute('aria-pressed', String(si))
+  }
+  boton.addEventListener('click', () => {
+    const era = escuchando?.clave === clave
+    if (escuchando) { escuchando.audio.pause(); escuchando.pintar(false) }
+    escuchando = null
+    if (era) return
+    const audio = new Audio(`sonidos/${clave}.ogg`)
+    audio.loop = true
+    audio.volume = 0.5
+    audio.play().catch(() => {})
+    escuchando = { clave, audio, pintar }
+    pintar(true)
+  })
+  if (escuchando?.clave === clave) {
+    escuchando.pintar = pintar
+    pintar(true)
+  }
+  return boton
 }
 
 function vistaTemporada () {
@@ -1400,7 +1474,7 @@ function vistaTemporada () {
   const escenaActual = n.ESCENAS[ajustes.escena] ? ajustes.escena : 'noche'
 
   const escenas = h('div', { class: 'escenas', role: 'radiogroup', 'aria-label': 'Fondo' },
-    Object.entries(n.ESCENAS).map(([clave, nombre]) => h('label', { class: 'escena-opcion' },
+    Object.entries(n.ESCENAS).map(([clave, nombre]) => h('div', { class: 'escena-item' }, h('label', { class: 'escena-opcion' },
       h('input', {
         type: 'radio',
         name: 'escena',
@@ -1409,7 +1483,8 @@ function vistaTemporada () {
         onchange: () => { ajustes.escena = clave; pintarMarco() }
       }),
       vistaEscena(clave),
-      h('span', {}, nombre, n.ESCENAS_ANIMADAS[clave] ? h('span', { class: 'etiqueta-animada' }, 'Animado') : null))))
+      h('span', {}, nombre, escenaAnimada(clave) ? h('span', { class: 'etiqueta-animada' }, 'Animado') : null)),
+    botonEscuchar(clave))))
 
   const previa = h('div', { class: 'episodio-previa' })
   const error = h('span', { class: 'campo__ayuda error' }, 'No parece un enlace de un vídeo de YouTube.')
@@ -1441,7 +1516,7 @@ function vistaTemporada () {
         }), 'Sale encima del logo en el launcher y abajo a la derecha en el menú del juego. Déjalo vacío para no mostrarlo.'))),
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('texturas'), 'Fondo'),
-      h('p', { class: 'campo__ayuda' }, 'Se usa en el launcher, en el menú principal y en el menú de pausa. Los animados también se mueven allí.'),
+      h('p', { class: 'campo__ayuda' }, 'Se usa en el launcher, en el menú principal y en el menú de pausa, con su sonido ambiente. Los animados también se mueven allí.'),
       escenas),
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('noticias'), 'Último episodio'),

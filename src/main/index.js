@@ -18,7 +18,7 @@ const { leerJson, escribirJson } = require('./util')
 const { obtenerManifiesto, combinarPerfil } = require('./manifiesto')
 const { prepararJuego } = require('./minecraft')
 const { sincronizar } = require('./sincronizar')
-const { prepararPrimerArranque, escribirConfigMenu, activarPacks } = require('./extras')
+const { prepararPrimerArranque, escribirConfigMenu, activarPacks, prepararNeoForge } = require('./extras')
 const { lanzarJuego } = require('./juego')
 const { consultarServidor, direccionDeJuego } = require('./servidor')
 const { crearCuentas } = require('./cuentas')
@@ -43,7 +43,7 @@ const AL_CERRAR = ['preguntar', 'cerrar', 'segundoPlano']
 
 function ajustesPorDefecto () {
   const ram = Math.max(2048, Math.min(config.ramPredeterminada || 4096, ramTotalMB - 2048))
-  return { ram, alJugar: 'segundoPlano', alCerrar: 'preguntar' }
+  return { ram, alJugar: 'segundoPlano', alCerrar: 'preguntar', sonido: 40 }
 }
 
 /** Ajustes guardados, pasando el antiguo "cerrarAlJugar" a la opción nueva. */
@@ -153,6 +153,7 @@ async function jugar (reparar) {
       ? { ...perfil.servidor, ...await direccionDeJuego(perfil.servidor.ip, Number(perfil.servidor.puerto) || 25565) }
       : perfil.servidor
     await prepararPrimerArranque(raiz, { nombre: config.nombre, ...perfil.servidor })
+    if (perfil.loader?.tipo === 'neoforge') await prepararNeoForge(raiz)
     // Tu skin, para el personaje del menú del juego (premium o la que pondrá SkinRestorer)
     const skinJuego = await skins.actual().catch(() => null)
     await escribirConfigMenu(raiz, {
@@ -282,6 +283,8 @@ function registrarIpc () {
     if (Number.isFinite(ram)) ajustes.ram = Math.max(1024, Math.min(ram, ramTotalMB))
     if (AL_JUGAR.includes(nuevos?.alJugar)) ajustes.alJugar = nuevos.alJugar
     if (AL_CERRAR.includes(nuevos?.alCerrar)) ajustes.alCerrar = nuevos.alCerrar
+    const sonido = Math.round(Number(nuevos?.sonido))
+    if (Number.isFinite(sonido)) ajustes.sonido = Math.max(0, Math.min(100, sonido))
     await escribirJson(rutaAjustes, ajustes)
     return ajustes
   })

@@ -109,4 +109,21 @@ async function activarPacks (dirJuego, rutas = []) {
   await fsp.writeFile(archivo, lineas.join('\n'))
 }
 
-module.exports = { prepararPrimerArranque, escribirConfigMenu, activarPacks, serversDat }
+/**
+ * Con NeoForge, quita su ventana de carga propia (la de las barras de progreso): así se ve la
+ * pantalla de carga de RataLand, igual que con Fabric. Solo cambia esa línea de config/fml.toml.
+ */
+async function prepararNeoForge (dirJuego) {
+  const ruta = path.join(dirJuego, 'config', 'fml.toml')
+  let texto = ''
+  try { texto = await fsp.readFile(ruta, 'utf8') } catch { /* aún no existe: NeoForge completa el resto */ }
+  const linea = 'earlyWindowControl = false'
+  const nuevo = /^\s*earlyWindowControl\s*=.*$/m.test(texto)
+    ? texto.replace(/^\s*earlyWindowControl\s*=.*$/m, linea)
+    : `${linea}\n${texto}`
+  if (nuevo === texto) return
+  await fsp.mkdir(path.dirname(ruta), { recursive: true })
+  await fsp.writeFile(ruta, nuevo)
+}
+
+module.exports = { prepararPrimerArranque, escribirConfigMenu, activarPacks, serversDat, prepararNeoForge }

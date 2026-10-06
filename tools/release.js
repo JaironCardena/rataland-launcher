@@ -13,6 +13,9 @@ const raiz = path.join(__dirname, '..')
 const { version } = JSON.parse(fs.readFileSync(path.join(raiz, 'package.json'), 'utf8'))
 const ejecutar = (cmd, args, opciones = {}) => execFileSync(cmd, args, { cwd: raiz, stdio: 'inherit', ...opciones })
 
+// Los fondos animados del launcher tienen que dibujar lo mismo que los del mod
+ejecutar('node', ['tools/comprobar-fondos.js'])
+
 // npx es un .cmd en Windows y necesita shell (sus argumentos no llevan espacios).
 ejecutar('npx', ['electron-builder', '--win', '--publish', 'never'], { shell: process.platform === 'win32' })
 

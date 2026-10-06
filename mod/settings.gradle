@@ -1,9 +1,14 @@
 pluginManagement {
     repositories {
         maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+        maven { name = 'Architectury'; url = 'https://maven.architectury.dev/' }
+        maven { name = 'NeoForged'; url = 'https://maven.neoforged.net/releases/' }
         mavenCentral()
         gradlePluginPortal()
     }
 }
 
 rootProject.name = 'rataland-menu'
+
+// common: todo el mod (menús, fondos, mixins). fabric y neoforge: solo el punto de entrada de cada cargador.
+include 'common', 'fabric', 'neoforge'

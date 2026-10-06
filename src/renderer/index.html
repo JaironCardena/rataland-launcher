@@ -178,6 +178,12 @@
           <p class="ajuste__ayuda" data-ayuda-ram></p>
         </div>
 
+        <div class="ajuste">
+          <label class="ajuste__titulo" for="sonido">Sonido del fondo <output class="ajuste__valor" data-valor-sonido for="sonido"></output></label>
+          <input type="range" id="sonido" class="deslizador" min="0" max="100" step="5">
+          <p class="ajuste__ayuda">Grillos, agua, gotas… según el fondo de la temporada. Se calla mientras juegas.</p>
+        </div>
+
         <fieldset class="ajuste">
           <legend class="ajuste__titulo">Al entrar al juego</legend>
           <div class="opciones">
@@ -315,6 +321,8 @@
   </div>
 
   <script src="fondo-animado.js"></script>
+  <script src="fondo-escenas.js"></script>
+  <script src="ambiente.js"></script>
   <script src="demo.js"></script>
   <script src="app.js"></script>
 </body>
