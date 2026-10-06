@@ -61,7 +61,7 @@ function pintarCuenta () {
   $('.cuenta').hidden = !cuenta
 
   const { cuentas = {} } = estado.launcher
-  $('.boton-microsoft').hidden = cuentas.microsoft === false
+  $('.login-opciones').hidden = cuentas.microsoft === false
   $('.sin-premium').hidden = !cuentas.noPremium
 
   if (!cuenta) {
@@ -409,6 +409,41 @@ async function loginMicrosoft () {
   }
 }
 
+/** Inicio de sesión en el navegador con un código (ahí funcionan las llaves de acceso). */
+async function loginNavegador () {
+  const error = $('[data-error-login]')
+  const opciones = $('.login-opciones')
+  const formulario = $('.sin-premium')
+  const caja = $('.login-codigo')
+  const formularioVisible = !formulario.hidden
+  error.hidden = true
+  opciones.hidden = true
+  formulario.hidden = true
+  caja.querySelector('.login-codigo__valor').textContent = '…'
+  caja.hidden = false
+
+  const r = await api.loginNavegador()
+  caja.hidden = true
+  opciones.hidden = estado.launcher.cuentas?.microsoft === false
+  formulario.hidden = !formularioVisible
+  if (r.ok) {
+    estado.cuenta = r.cuenta
+    pintarCuenta()
+  } else if (!r.cancelado) {
+    error.textContent = r.error
+    error.hidden = false
+  }
+}
+
+async function copiarCodigo () {
+  const boton = $('[data-accion="copiar-codigo"]')
+  try {
+    await navigator.clipboard.writeText($('.login-codigo__valor').textContent)
+    boton.textContent = 'Copiado'
+    setTimeout(() => { boton.textContent = 'Copiar' }, 2000)
+  } catch { /* se puede seleccionar a mano */ }
+}
+
 async function loginSinPremium (evento) {
   evento.preventDefault()
   const error = $('[data-error-login]')
@@ -536,6 +571,10 @@ document.addEventListener('click', (e) => {
   if (accion === 'reparar') jugar(true)
   if (accion === 'registros') api.abrirRegistros()
   if (accion === 'login-microsoft') loginMicrosoft()
+  if (accion === 'login-navegador') loginNavegador()
+  if (accion === 'copiar-codigo') copiarCodigo()
+  if (accion === 'abrir-login-navegador') api.abrirLoginNavegador()
+  if (accion === 'cancelar-login') api.cancelarLogin()
   if (accion === 'cerrar-sesion') cerrarSesion()
   if (accion === 'ajustes') $('.ajustes').hidden ? abrirAjustes() : cerrarAjustes()
   if (accion === 'cerrar-ajustes') cerrarAjustes()
@@ -565,6 +604,7 @@ $('.cuenta__cabeza').addEventListener('error', (e) => { e.target.removeAttribute
 api.alProgreso(mostrarProgreso)
 api.alActualizacionLauncher(pintarActualizacion)
 api.alSincronizacion(pintarResumen)
+api.alCodigoLogin(({ codigo }) => { $('.login-codigo__valor').textContent = codigo })
 api.alPedirCierre(pedirCierre)
 api.alPerfil((perfil) => {
   estado.perfil = perfil

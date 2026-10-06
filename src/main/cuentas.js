@@ -5,6 +5,10 @@ const { Auth } = require('msmc')
 const { leerJson, escribirJson } = require('./util')
 const fsp = require('fs').promises
 
+// Mismo identificador y permisos que usa msmc (el del launcher oficial), así la sesión se renueva igual.
+const CLIENTE_MICROSOFT = '00000000402b5328'
+const PERMISOS_MICROSOFT = 'XboxLive.signin offline_access'
+
 const ERRORES_MSMC = {
   'error.gui.closed': null, // el jugador cerró la ventana: no es un error
   'error.auth.xsts.userNotFound': 'Esa cuenta de Microsoft no tiene perfil de Xbox. Entra una vez en xbox.com y vuelve a intentarlo.',
@@ -30,9 +34,33 @@ function uuidSinPremium (nombre) {
   return h.toString('hex')
 }
 
+async function pedirMicrosoft (url, campos) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(campos),
+    signal: AbortSignal.timeout(20000)
+  })
+  return { ok: res.ok, json: await res.json().catch(() => ({})) }
+}
+
+const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 function crearCuentas (dirDatos) {
   const archivo = path.join(dirDatos, 'cuenta.json')
+  const registro = path.join(dirDatos, 'cuenta.log')
+  // Solo códigos de error, nunca tokens: para saber por qué falló un inicio de sesión
+  const anotar = (texto) => fsp.appendFile(registro, `${new Date().toISOString()} ${texto}\n`).catch(() => {})
   let sesion = null // { tipo, nombre, uuid, token, xuid, caduca }
+  let loginEnCurso = null // { cancelado }
+
+  /** De la cuenta de Microsoft a Minecraft (Xbox Live, XSTS y perfil), y se guarda. */
+  async function terminarLogin (xbox) {
+    const mc = await xbox.getMinecraft()
+    if (!mc.profile || mc.isDemo()) throw new Error('error.auth.minecraft.profile')
+    await guardarMicrosoft(xbox, mc)
+    return { ok: true, cuenta: { tipo: 'microsoft', nombre: sesion.nombre, uuid: sesion.uuid } }
+  }
 
   const cifrar = (texto) => safeStorage.isEncryptionAvailable()
     ? { cifrado: true, valor: safeStorage.encryptString(texto).toString('base64') }
@@ -77,14 +105,64 @@ function crearCuentas (dirDatos) {
           title: 'Iniciar sesión con Microsoft',
           backgroundColor: '#ffffff'
         })
-        const mc = await xbox.getMinecraft()
-        if (!mc.profile || mc.isDemo()) throw new Error('error.auth.minecraft.profile')
-        await guardarMicrosoft(xbox, mc)
-        return { ok: true, cuenta: { tipo: 'microsoft', nombre: sesion.nombre, uuid: sesion.uuid } }
+        return await terminarLogin(xbox)
       } catch (e) {
+        anotar(`ventana: ${e?.message || e?.ts || e}`)
         const mensaje = traducirError(e)
         return mensaje ? { ok: false, error: mensaje } : { ok: false, cancelado: true }
       }
+    },
+
+    /**
+     * Inicio de sesión en el navegador del jugador (ahí sí funcionan las llaves de acceso, Windows
+     * Hello y las sesiones ya abiertas). Microsoft da un código; el jugador lo confirma en
+     * microsoft.com/link y aquí se espera hasta que lo haga.
+     */
+    async loginNavegador (alCodigo) {
+      if (loginEnCurso) loginEnCurso.cancelado = true
+      const intento = { cancelado: false }
+      loginEnCurso = intento
+      try {
+        const pedido = await pedirMicrosoft('https://login.live.com/oauth20_connect.srf', {
+          client_id: CLIENTE_MICROSOFT, scope: PERMISOS_MICROSOFT, response_type: 'device_code'
+        })
+        if (!pedido.ok || !pedido.json.device_code) throw new Error(`código: ${pedido.json.error || 'sin respuesta'}`)
+        const { device_code: dispositivo, user_code: codigo, verification_uri: pagina } = pedido.json
+        let intervalo = (Number(pedido.json.interval) || 5) * 1000
+        const caduca = Date.now() + (Number(pedido.json.expires_in) || 900) * 1000
+        alCodigo({ codigo, pagina, enlace: `${pagina}?otc=${encodeURIComponent(codigo)}`, caduca })
+
+        while (true) {
+          await esperar(intervalo)
+          if (intento.cancelado) return { ok: false, cancelado: true }
+          if (Date.now() > caduca) return { ok: false, error: 'El código caducó. Vuelve a pulsar "Iniciar sesión con Microsoft".' }
+          const r = await pedirMicrosoft('https://login.live.com/oauth20_token.srf', {
+            client_id: CLIENTE_MICROSOFT, grant_type: 'urn:ietf:params:oauth:grant-type:device_code', device_code: dispositivo
+          }).catch(() => ({ ok: false, json: { error: 'authorization_pending' } })) // un fallo de red suelto: se sigue esperando
+          if (intento.cancelado) return { ok: false, cancelado: true }
+          if (r.ok && r.json.refresh_token) {
+            // msmc hace el resto (Xbox Live y Minecraft) a partir de la sesión de Microsoft
+            const xbox = await new Auth('none').refresh(r.json.refresh_token)
+            return await terminarLogin(xbox)
+          }
+          const error = r.json.error
+          if (error === 'authorization_pending') continue
+          if (error === 'slow_down') { intervalo += 5000; continue }
+          if (error === 'expired_token') return { ok: false, error: 'El código caducó. Vuelve a pulsar "Iniciar sesión con Microsoft".' }
+          if (error === 'access_denied' || error === 'authorization_declined') return { ok: false, error: 'Se canceló el inicio de sesión en el navegador.' }
+          throw new Error(`token: ${error || 'respuesta inesperada'}`)
+        }
+      } catch (e) {
+        anotar(`navegador: ${e?.message || e?.ts || e}`)
+        const mensaje = traducirError(e)
+        return mensaje ? { ok: false, error: mensaje } : { ok: false, cancelado: true }
+      } finally {
+        if (loginEnCurso === intento) loginEnCurso = null
+      }
+    },
+
+    cancelarLogin () {
+      if (loginEnCurso) loginEnCurso.cancelado = true
     },
 
     async loginSinPremium (nombre) {

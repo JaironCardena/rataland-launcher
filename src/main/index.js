@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage, Notification } = require('electron')
+const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage, Notification, clipboard } = require('electron')
 const path = require('path')
 const os = require('os')
 const fs = require('fs')
@@ -241,6 +241,16 @@ function registrarIpc () {
   })
 
   ipcMain.handle('login-microsoft', () => cuentas.loginMicrosoft(ventana))
+  let enlaceLogin = null
+  ipcMain.handle('login-navegador', () => cuentas.loginNavegador((datos) => {
+    // Se abre la página de Microsoft en el navegador del jugador, con el código ya puesto y copiado
+    enlaceLogin = datos.enlace
+    clipboard.writeText(datos.codigo)
+    shell.openExternal(datos.enlace)
+    enviar('codigo-login', { codigo: datos.codigo, pagina: datos.pagina })
+  }))
+  ipcMain.on('abrir-login-navegador', () => { if (enlaceLogin) shell.openExternal(enlaceLogin) })
+  ipcMain.on('cancelar-login', () => cuentas.cancelarLogin())
   ipcMain.handle('login-sin-premium', (_e, nombre) => config.cuentas?.noPremium
     ? cuentas.loginSinPremium(nombre)
     : { ok: false, error: 'Este servidor solo admite cuentas de Microsoft.' })

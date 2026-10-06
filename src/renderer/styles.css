@@ -215,6 +215,37 @@ button { cursor: pointer; }
 .boton-microsoft:hover { background: #e9edf3; }
 .boton-microsoft:disabled { opacity: 0.6; cursor: default; }
 
+.login-nota { max-width: 420px; margin: 10px 0 0; color: var(--tenue); font-size: 13px; }
+.login-nota .enlace { margin-top: 2px; text-align: left; }
+
+/* Código para confirmar en el navegador: un cartel como el de la cuenta atrás */
+.login-codigo {
+  max-width: 430px;
+  padding: 14px 18px;
+  border: 3px solid var(--tierra-borde);
+  background: rgba(13, 20, 36, 0.86);
+  box-shadow: inset 0 0 0 2px var(--antorcha), 0 8px 0 rgba(0, 0, 0, 0.35);
+}
+.login-codigo p { margin: 0; }
+.login-codigo__texto { color: var(--tenue); font-size: 13.5px; }
+.login-codigo__fila { display: flex; align-items: center; gap: 14px; margin: 6px 0 10px; }
+.login-codigo__valor {
+  /* Letra normal, no la pixelada: en un código que se copia, el 2 y el 8 no pueden confundirse */
+  font: 700 32px/1.1 var(--texto-ui);
+  color: var(--antorcha);
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+  user-select: text;
+}
+.login-codigo__espera { display: flex; align-items: center; gap: 10px; color: var(--tenue); font-size: 13px; }
+.login-codigo__punto { width: 8px; height: 8px; background: var(--antorcha); }
+.login-codigo .ajuste__botones { margin-top: 10px; }
+@media (prefers-reduced-motion: no-preference) {
+  .login-codigo__punto { animation: parpadeo 1.2s steps(2, jump-none) infinite; }
+  @keyframes parpadeo { 50% { opacity: 0.2; } }
+}
+
 .sin-premium { margin-top: 22px; }
 .sin-premium__etiqueta { display: block; margin-bottom: 8px; color: var(--tenue); font-size: 13.5px; }
 .sin-premium__fila { display: flex; gap: 8px; max-width: 380px; }

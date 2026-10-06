@@ -51,7 +51,8 @@
       <!-- Sin cuenta -->
       <div class="zona zona--login" hidden>
         <h2 class="zona__titulo">Inicia sesión para jugar</h2>
-        <button class="boton-microsoft" data-accion="login-microsoft">
+        <div class="login-opciones">
+        <button class="boton-microsoft" data-accion="login-navegador">
           <svg viewBox="0 0 16 16" aria-hidden="true">
             <rect x="0" y="0" width="7.5" height="7.5" fill="#f25022" />
             <rect x="8.5" y="0" width="7.5" height="7.5" fill="#7fba00" />
@@ -60,6 +61,25 @@
           </svg>
           Iniciar sesión con Microsoft
         </button>
+        <p class="login-nota">
+          Se abre en tu navegador, donde puedes usar tus llaves de acceso o Windows Hello.
+          <button class="enlace enlace--tenue" data-accion="login-microsoft">Prefiero hacerlo en una ventana del launcher</button>
+        </p>
+        </div>
+
+        <div class="login-codigo" hidden aria-live="polite">
+          <p class="login-codigo__texto">Termina en tu navegador. Si Microsoft te pide un código, pega este (ya está copiado):</p>
+          <div class="login-codigo__fila">
+            <output class="login-codigo__valor">…</output>
+            <button class="boton-secundario boton-secundario--pequeno" data-accion="copiar-codigo">Copiar</button>
+          </div>
+          <p class="login-codigo__espera"><span class="login-codigo__punto" aria-hidden="true"></span>Esperando a que confirmes en el navegador…</p>
+          <div class="ajuste__botones">
+            <button class="enlace" data-accion="abrir-login-navegador">Abrir la página otra vez</button>
+            <button class="enlace enlace--tenue" data-accion="cancelar-login">Cancelar</button>
+          </div>
+        </div>
+
         <form class="sin-premium" hidden>
           <label class="sin-premium__etiqueta" for="nombre-jugador">¿Sin Minecraft premium? Elige tu nombre</label>
           <div class="sin-premium__fila">

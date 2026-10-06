@@ -2,7 +2,8 @@
 // Parámetros: ?sin-cuenta  ?error  ?cerrado  ?apagado  ?escena=cloacas|amanecer  ?sin-episodio  ?al-cerrar=cerrar
 if (!window.launcher) {
   const espera = (ms) => new Promise((r) => setTimeout(r, ms))
-  const oyentes = { progreso: [], juego: [], perfil: [], sincronizacion: [], cierre: [] }
+  const oyentes = { progreso: [], juego: [], perfil: [], sincronizacion: [], cierre: [], codigo: [] }
+  let loginCancelado = false
   const emitir = (canal, datos) => oyentes[canal].forEach((f) => f(datos))
   const params = new URLSearchParams(location.search)
   const oyentesActualizacion = []
@@ -52,6 +53,18 @@ if (!window.launcher) {
       cuenta = { tipo: 'microsoft', nombre: 'Steve', uuid: '8667ba71b85a4004af54457a9734eed7' }
       return { ok: true, cuenta }
     },
+    loginNavegador: async () => {
+      loginCancelado = false
+      await espera(400)
+      emitir('codigo', { codigo: 'RQ7KM2XD', pagina: 'https://www.microsoft.com/link' })
+      for (let i = 0; i < 40; i++) { await espera(100); if (loginCancelado) return { ok: false, cancelado: true } }
+      if (params.has('login-error')) return { ok: false, error: 'Esa cuenta no tiene Minecraft: Java Edition.' }
+      cuenta = { tipo: 'microsoft', nombre: 'Steve', uuid: '8667ba71b85a4004af54457a9734eed7' }
+      return { ok: true, cuenta }
+    },
+    abrirLoginNavegador () {},
+    cancelarLogin () { loginCancelado = true },
+    alCodigoLogin: (f) => oyentes.codigo.push(f),
     loginSinPremium: async (nombre) => /^[A-Za-z0-9_]{3,16}$/.test(nombre)
       ? { ok: true, cuenta: (cuenta = { tipo: 'sinPremium', nombre, uuid: '0' }) }
       : { ok: false, error: 'El nombre debe tener entre 3 y 16 letras, números o guiones bajos.' },
