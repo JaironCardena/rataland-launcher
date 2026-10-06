@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T06:45:45.488Z",
+  "generado": "2026-10-06T07:08:00.042Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -17,12 +17,10 @@
     {
       "fecha": "2026-10-06",
       "titulo": "Bienvenidos a RataLand",
-      "texto": "Pulsa Jugar: el launcher descarga todo lo necesario. Dentro del juego, el botón Jugar del menú te lleva directo al servidor."
+      "texto": "Pulsa Jugar: el launcher descarga todo lo necesario. Dentro del juego, el botón Jugar del menú te lleva directo al servidor. :3"
     }
   ],
-  "enlaces": {
-    "discord": ""
-  },
+  "enlaces": {},
   "evento": null,
   "packsActivos": [],
   "archivos": [
