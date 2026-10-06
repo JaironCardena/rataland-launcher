@@ -51,6 +51,72 @@
         "nombre": "Sodium",
         "icono": "https://cdn.modrinth.com/data/AANobbMI/295862f4724dc3f78df3447ad6072b2dcd3ef0c9_96.webp"
       }
+    },
+    {
+      "ruta": "mods/lithium-fabric-0.15.4+mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/gvQqBUqZ/versions/N08Z8wog/lithium-fabric-0.15.4%2Bmc1.21.1.jar",
+      "sha1": "7d82a004403b7780d4443d8e40361a55cfd0ae63",
+      "tamano": 797454,
+      "modrinth": {
+        "proyecto": "gvQqBUqZ",
+        "version": "N08Z8wog",
+        "numero": "mc1.21.1-0.15.4-fabric",
+        "nombre": "Lithium",
+        "icono": "https://cdn.modrinth.com/data/gvQqBUqZ/bcc8686c13af0143adf4285d741256af824f70b7_96.webp"
+      }
+    },
+    {
+      "ruta": "mods/ferritecore-7.0.3-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/uXXizFIs/versions/sOzRw3CG/ferritecore-7.0.3-fabric.jar",
+      "sha1": "a8a6a34fcda177da2828cedef44e0e538cf78aad",
+      "tamano": 123450,
+      "modrinth": {
+        "proyecto": "uXXizFIs",
+        "version": "sOzRw3CG",
+        "numero": "7.0.3-fabric",
+        "nombre": "FerriteCore",
+        "icono": "https://cdn.modrinth.com/data/uXXizFIs/222a126f26f8f9ae1eb339f3b767677f18bff31f_96.webp"
+      }
+    },
+    {
+      "ruta": "mods/ImmediatelyFast-Fabric-1.6.14+1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/5ZwdcRci/versions/7XKnsIC8/ImmediatelyFast-Fabric-1.6.14%2B1.21.1.jar",
+      "sha1": "023805be7d701b9769e987449d217c557de5f848",
+      "tamano": 340166,
+      "modrinth": {
+        "proyecto": "5ZwdcRci",
+        "version": "7XKnsIC8",
+        "numero": "1.6.14+1.21.1-fabric",
+        "nombre": "ImmediatelyFast",
+        "icono": "https://cdn.modrinth.com/data/5ZwdcRci/e57b6b451425692ac17ad322d5e14bea686a383a_96.webp"
+      }
+    },
+    {
+      "ruta": "mods/entityculling-fabric-1.11.2-mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/NNAgCjsB/versions/AaC52CuD/entityculling-fabric-1.11.2-mc1.21.1.jar",
+      "sha1": "c400f3fb5f8668f99cdb52b5d4f92d11b4e3edf1",
+      "tamano": 1519213,
+      "modrinth": {
+        "proyecto": "NNAgCjsB",
+        "version": "AaC52CuD",
+        "numero": "1.11.2",
+        "nombre": "Entity Culling",
+        "icono": "https://cdn.modrinth.com/data/NNAgCjsB/7873452d6cede4daed12da3d7d8c193ab88b4fd6_96.webp"
+      }
+    },
+    {
+      "ruta": "mods/modernfix-fabric-5.25.1+mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/nmDcB62a/versions/NnNX8LBn/modernfix-fabric-5.25.1%2Bmc1.21.1.jar",
+      "sha1": "4ab39e9c736e7204146792c545ec5b29fc0a3872",
+      "tamano": 471258,
+      "modrinth": {
+        "proyecto": "nmDcB62a",
+        "version": "NnNX8LBn",
+        "numero": "5.25.1+mc1.21.1",
+        "nombre": "ModernFix",
+        "icono": "https://cdn.modrinth.com/data/nmDcB62a/2af94de5e08ae54567ee86b968fc7ce076d9fee5_96.webp"
+      }
     }
-  ]
+  ],
+  "packsActivos": []
 }
