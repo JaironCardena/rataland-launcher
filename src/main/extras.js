@@ -53,7 +53,7 @@ async function prepararPrimerArranque (dirJuego, { nombre, ip, puerto }) {
 const ESCENAS = ['noche', 'cloacas', 'amanecer']
 
 /** Servidor, Discord, fondo, temporada y frases para los menús del mod de la serie (config/rataland.json). */
-async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, discord, escena, temporada, frases }) {
+async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, discord, escena, temporada, frases }) {
   const ruta = path.join(dirJuego, 'config', 'rataland.json')
   await fsp.mkdir(path.dirname(ruta), { recursive: true })
   const enlaceDiscord = /^https?:\/\//.test(discord || '') ? discord : ''
@@ -61,6 +61,8 @@ async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, discord, esce
     nombre,
     ip,
     puerto: Number(puerto) || 25565,
+    // Dirección real al abrir el juego (host:puerto del registro SRV); el mod la vuelve a buscar al pulsar Jugar
+    destino: typeof destino === 'string' ? destino : '',
     discord: enlaceDiscord,
     escena: ESCENAS.includes(escena) ? escena : 'noche',
     temporada: typeof temporada === 'string' ? temporada.trim() : ''

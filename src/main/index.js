@@ -20,7 +20,7 @@ const { prepararJuego } = require('./minecraft')
 const { sincronizar } = require('./sincronizar')
 const { prepararPrimerArranque, escribirConfigMenu, activarPacks } = require('./extras')
 const { lanzarJuego } = require('./juego')
-const { consultarServidor } = require('./servidor')
+const { consultarServidor, direccionDeJuego } = require('./servidor')
 const { crearCuentas } = require('./cuentas')
 const { crearActualizador } = require('./actualizador')
 
@@ -98,17 +98,6 @@ const ERRORES_ARCHIVOS = {
   BadVersionJson: 'La instalación de esta versión está dañada.'
 }
 
-/**
- * Servidor del modpack. Si el puerto configurado no contesta pero la dirección sin puerto sí
- * (el puerto dinámico de Aternos cambia al reiniciar), se usa la que funciona.
- */
-let puertoAprendido = null
-function servidorActual () {
-  const s = { ...perfil.servidor }
-  if (puertoAprendido && puertoAprendido.ip === s.ip && puertoAprendido.de === Number(s.puerto)) s.puerto = puertoAprendido.puerto
-  return s
-}
-
 function mensajeError (e) {
   if (e instanceof Error) return e.message
   if (e && typeof e.error === 'string') return ERRORES_ARCHIVOS[e.error] || `Error del juego: ${e.error}`
@@ -132,11 +121,15 @@ async function jugar (reparar) {
     let instalacion = await prepararJuego(perfil, raiz, { reportar, reparar })
     const resumen = await sincronizar(manifiesto, raiz, { reportar, reparar })
     enviar('sincronizacion', resumen)
-    const servidor = servidorActual()
-    await prepararPrimerArranque(raiz, { nombre: config.nombre, ...servidor })
+    // Dirección real del servidor ahora mismo (en Aternos el puerto cambia al reiniciarlo)
+    const servidor = perfil.servidor?.ip
+      ? { ...perfil.servidor, ...await direccionDeJuego(perfil.servidor.ip, Number(perfil.servidor.puerto) || 25565) }
+      : perfil.servidor
+    await prepararPrimerArranque(raiz, { nombre: config.nombre, ...perfil.servidor })
     await escribirConfigMenu(raiz, {
       nombre: config.nombre,
-      ...servidor,
+      ...perfil.servidor,
+      destino: servidor?.ip ? `${servidor.ip}:${servidor.puerto}` : '',
       discord: perfil.enlaces?.discord,
       escena: perfil.escena,
       temporada: perfil.temporada,
@@ -213,10 +206,6 @@ function registrarIpc () {
     const { ip, puerto } = perfil.servidor || {}
     if (!ip) return { enLinea: false }
     const r = await consultarServidor(ip, Number(puerto) || 25565)
-    if (r.puertoCorrecto) {
-      puertoAprendido = { ip, de: Number(puerto), puerto: r.puertoCorrecto }
-      fs.appendFile(path.join(dirDatos, 'servidor.log'), `${new Date().toISOString()} ${ip}:${puerto} no contesta; se usa ${ip} sin puerto\n`, () => {})
-    }
     if (!r.enLinea) {
       // Registro para poder ver por qué el launcher creyó que el servidor estaba apagado.
       const linea = `${new Date().toISOString()} ${ip}:${puerto} ${r.apagado ? 'apagado según el host' : r.motivo}\n`

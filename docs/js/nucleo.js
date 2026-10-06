@@ -340,7 +340,47 @@ export async function versionesFabric () {
  * Estado del servidor de Minecraft usando mcstatus.io (el navegador no puede hablar con el servidor directamente).
  * Aternos contesta aunque esté apagado, con la versión "● Offline": eso cuenta como apagado.
  */
+const sinColores = (texto) => String(texto || '').replace(/§./g, '').trim()
+
+/**
+ * Pregunta a mcapi.us, que sí llega a los servidores de Aternos (mcstatus.io los da siempre por apagados).
+ * Sin puerto, mcapi.us usa el registro SRV: en Aternos es el puerto de ahora aunque haya cambiado.
+ */
+async function estadoMcapi (ip, puerto) {
+  const url = new URL('https://mcapi.us/server/status')
+  url.searchParams.set('ip', ip)
+  if (puerto && puerto !== 25565) url.searchParams.set('port', puerto)
+  const res = await fetch(url, { cache: 'no-store' })
+  if (!res.ok) throw new Error('No se pudo consultar el estado del servidor.')
+  const j = await res.json()
+  if (j.status !== 'success') throw new Error(j.error || 'No se pudo consultar el estado del servidor.')
+  const version = sinColores(j.server?.name)
+  const motd = typeof j.motd_json === 'string' ? j.motd_json : j.motd
+  return {
+    encendido: Boolean(j.online) && (j.server?.protocol ?? 0) >= 0 && !/offline/i.test(version),
+    version,
+    versionMinecraft: (/\d+\.\d+(?:\.\d+)?/.exec(version) || [])[0] || null,
+    jugadores: j.players?.now ?? 0,
+    maximo: j.players?.max ?? 0,
+    lista: (j.players?.sample || []).filter((p) => /^[A-Za-z0-9_]{3,16}$/.test(p.name || '')).map((p) => ({ nombre: p.name, uuid: p.id })),
+    motd: sinColores(motd)
+  }
+}
+
 export async function estadoServidor (ip, puerto) {
+  puerto = Number(puerto) || 25565
+  try {
+    const r = await estadoMcapi(ip, puerto)
+    // Con un puerto fijo que ya no vale (Aternos lo cambia al reiniciar), se prueba la dirección sin puerto.
+    if (r.encendido || puerto === 25565) return r
+    const sinPuerto = await estadoMcapi(ip, 25565).catch(() => null)
+    return sinPuerto?.encendido ? sinPuerto : r
+  } catch {
+    return estadoMcstatus(ip, puerto)
+  }
+}
+
+async function estadoMcstatus (ip, puerto) {
   const res = await fetch(`https://api.mcstatus.io/v2/status/java/${encodeURIComponent(ip)}:${Number(puerto) || 25565}`)
   if (!res.ok) throw new Error('No se pudo consultar el estado del servidor.')
   const j = await res.json()

@@ -38,18 +38,65 @@ const paquete = (id, ...partes) => {
   return Buffer.concat([varint(cuerpo.length), cuerpo])
 }
 
-async function resolverDestino (ip, puerto) {
-  // Igual que el juego: el registro SRV solo se consulta si no se indicó puerto.
-  if (net.isIP(ip) || puerto !== 25565) return { host: ip, puerto }
+// DNS públicos por HTTPS, para cuando el DNS del equipo o del router rechaza las consultas SRV.
+const DNS_HTTPS = [
+  (nombre) => `https://dns.google/resolve?name=${encodeURIComponent(nombre)}&type=SRV`,
+  (nombre) => `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(nombre)}&type=SRV`
+]
+
+const conLimite = (promesa, ms) => Promise.race([
+  promesa,
+  new Promise((_resolve, reject) => setTimeout(() => reject(Object.assign(new Error('tiempo agotado'), { code: 'ETIMEOUT' })), ms))
+])
+
+/**
+ * Registro SRV de Minecraft (_minecraft._tcp.<host>): dice dónde está de verdad el servidor.
+ * Aternos lo usa para su puerto "dinámico", que cambia al reiniciar. Hay routers que rechazan
+ * estas consultas, así que si el DNS del equipo falla se pregunta a un DNS público por HTTPS.
+ * Devuelve { host, puerto } o null si el servidor no tiene registro SRV.
+ */
+async function buscarSrv (host) {
+  if (!host || net.isIP(host)) return null
+  const nombre = `_minecraft._tcp.${host}`
   try {
-    const [srv] = await dns.resolveSrv(`_minecraft._tcp.${ip}`)
-    if (srv) return { host: srv.name, puerto: srv.port }
-  } catch { /* sin SRV */ }
-  return { host: ip, puerto }
+    const [srv] = await conLimite(dns.resolveSrv(nombre), 3000)
+    if (srv) return { host: srv.name.replace(/\.$/, '').toLowerCase(), puerto: srv.port }
+  } catch { /* se prueba por HTTPS */ }
+  for (const url of DNS_HTTPS) {
+    try {
+      const res = await fetch(url(nombre), { headers: { accept: 'application/dns-json' }, signal: AbortSignal.timeout(4000) })
+      if (!res.ok) continue
+      const json = await res.json()
+      if (json.Status !== 0) return null
+      const registro = (json.Answer || []).find((a) => a.type === 33)
+      if (!registro) return null
+      const [, , puerto, destino] = String(registro.data).trim().split(/\s+/)
+      if (!Number(puerto) || !destino) return null
+      return { host: destino.replace(/\.$/, '').toLowerCase(), puerto: Number(puerto) }
+    } catch { /* siguiente */ }
+  }
+  return null
 }
 
-async function consultarUnaVez (ip, puerto, espera) {
-  const destino = await resolverDestino(ip, puerto)
+/** Dónde preguntar: primero donde diga el SRV (el puerto de ahora), luego la dirección configurada. */
+async function destinosDe (ip, puerto) {
+  const srv = await buscarSrv(ip)
+  const lista = srv ? [srv] : []
+  if (!srv || srv.puerto !== puerto) lista.push({ host: ip, puerto })
+  return lista
+}
+
+/**
+ * Dirección con la que debe conectarse el juego: la del SRV si lo hay (así el puerto de Aternos
+ * siempre es el actual), o la configurada.
+ */
+async function direccionDeJuego (ip, puerto = 25565) {
+  const srv = await buscarSrv(ip)
+  if (srv) return { ip: srv.host, puerto: srv.puerto }
+  return { ip, puerto }
+}
+
+async function consultarUnaVez (ip, destino, espera) {
   return new Promise((resolve) => {
     const inicio = Date.now()
     let datos = Buffer.alloc(0)
@@ -108,16 +155,13 @@ async function consultarUnaVez (ip, puerto, espera) {
 async function consultarServidor (ip, puerto = 25565, { intentos = 3, espera = 6000 } = {}) {
   let r
   for (let i = 1; i <= intentos; i++) {
-    r = await consultarUnaVez(ip, puerto, espera).catch((e) => ({ enLinea: false, motivo: e.code || e.message }))
-    if (r.enLinea || r.apagado) return r
+    for (const destino of await destinosDe(ip, puerto)) {
+      r = await consultarUnaVez(ip, destino, espera).catch((e) => ({ enLinea: false, motivo: e.code || e.message }))
+      if (r.enLinea || r.apagado) return { ...r, puertoReal: destino.puerto }
+    }
     if (i < intentos) await new Promise((res) => setTimeout(res, 1500))
-  }
-  // Hosts como Aternos cambian el puerto "dinámico" al reiniciar; la dirección sin puerto (SRV) es la fija.
-  if (puerto !== 25565) {
-    const fija = await consultarUnaVez(ip, 25565, espera).catch((e) => ({ enLinea: false, motivo: e.code || e.message }))
-    if (fija.enLinea || fija.apagado) return { ...fija, puertoCorrecto: 25565 }
   }
   return r
 }
 
-module.exports = { consultarServidor }
+module.exports = { consultarServidor, direccionDeJuego, buscarSrv }

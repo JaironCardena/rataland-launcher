@@ -52,6 +52,8 @@ public class RataLand implements ClientModInitializer {
 	public static String nombre = "RataLand";
 	public static String ip = "Rataland-8RN6.aternos.me";
 	public static int puerto = 25565;
+	/** Dirección real ("host:puerto") que encontró el launcher al abrir el juego ("" = no la hay). */
+	public static String destino = "";
 	/** Enlace de Discord para los menús ("" = sin botón). */
 	public static String discord = "";
 	public static String escena = "noche";
@@ -71,6 +73,7 @@ public class RataLand implements ClientModInitializer {
 			if (json.has("nombre")) nombre = json.get("nombre").getAsString();
 			if (json.has("ip")) ip = json.get("ip").getAsString();
 			if (json.has("puerto")) puerto = json.get("puerto").getAsInt();
+			if (json.has("destino")) destino = json.get("destino").getAsString().trim();
 			if (json.has("discord")) {
 				String enlace = json.get("discord").getAsString();
 				discord = enlace.startsWith("https://") || enlace.startsWith("http://") ? enlace : "";
@@ -88,6 +91,9 @@ public class RataLand implements ClientModInitializer {
 		} catch (Exception e) {
 			LOG.warn("No se pudo leer {}: {}", archivo, e.toString());
 		}
+		if (MODO_CAPTURA) {
+			java.util.concurrent.CompletableFuture.runAsync(() -> LOG.info("Prueba: al pulsar Jugar se conectaría a {}", direccionParaConectar()));
+		}
 	}
 
 	public static Identifier fondoActual() {
@@ -96,5 +102,16 @@ public class RataLand implements ClientModInitializer {
 
 	public static String direccion() {
 		return puerto == 25565 ? ip : ip + ":" + puerto;
+	}
+
+	/**
+	 * Dónde conectarse al pulsar Jugar: lo que diga ahora el registro SRV (en Aternos el puerto
+	 * cambia al reiniciar el servidor), o lo que encontró el launcher, o la dirección configurada.
+	 * Consulta la red: no llamarlo desde el hilo del juego.
+	 */
+	public static String direccionParaConectar() {
+		String srv = DireccionServidor.buscar(ip);
+		if (srv != null) return srv;
+		return destino.isEmpty() ? direccion() : destino;
 	}
 }

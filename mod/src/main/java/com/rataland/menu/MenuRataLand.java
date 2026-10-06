@@ -14,12 +14,16 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 
+import java.util.concurrent.CompletableFuture;
+
 /** Menú principal de RataLand: sustituye a la pantalla de título de Minecraft. */
 public class MenuRataLand extends Screen {
 	private static final int MARGEN = 28;
 	private static final int ANCHO_BOTONES = 200;
 
 	private final String frase;
+	private BotonRataLand botonJugar;
+	private boolean conectando;
 	private int fotogramas;
 
 	public MenuRataLand() {
@@ -47,7 +51,8 @@ public class MenuRataLand extends Screen {
 		int y = arribaLogo() + MathHelper.ceil(RataLand.LOGO_ALTO * escalaLogo()) + 26;
 		int medio = (ANCHO_BOTONES - 4) / 2;
 
-		this.addDrawableChild(new BotonRataLand(MARGEN, y, ANCHO_BOTONES, 30, Text.literal("Jugar"), b -> jugar(), BotonRataLand.Estilo.HIERBA, 2f));
+		this.botonJugar = this.addDrawableChild(new BotonRataLand(MARGEN, y, ANCHO_BOTONES, 30, Text.literal(conectando ? "Conectando..." : "Jugar"),
+				b -> jugar(), BotonRataLand.Estilo.HIERBA, 2f));
 		this.addDrawableChild(new BotonRataLand(MARGEN, y + 36, medio, 20, Text.translatable("menu.options"),
 				b -> this.client.setScreen(new OptionsScreen(this, this.client.options)), BotonRataLand.Estilo.PIEDRA));
 		this.addDrawableChild(new BotonRataLand(MARGEN + medio + 4, y + 36, medio, 20, Text.literal("Salir"),
@@ -58,10 +63,20 @@ public class MenuRataLand extends Screen {
 		}
 	}
 
+	/** Busca la dirección actual del servidor (sin congelar el juego) y se conecta. */
 	private void jugar() {
-		String direccion = RataLand.direccion();
-		ServerInfo info = new ServerInfo(RataLand.nombre, direccion, ServerInfo.ServerType.OTHER);
-		ConnectScreen.connect(this, this.client, ServerAddress.parse(direccion), info, false, null);
+		if (conectando) return;
+		conectando = true;
+		this.botonJugar.setMessage(Text.literal("Conectando..."));
+		CompletableFuture.supplyAsync(RataLand::direccionParaConectar).whenComplete((encontrada, error) -> this.client.execute(() -> {
+			conectando = false;
+			this.botonJugar.setMessage(Text.literal("Jugar"));
+			if (this.client.currentScreen != this) return;
+			String direccion = encontrada != null ? encontrada : RataLand.direccion();
+			RataLand.LOG.info("Conectando a {}", direccion);
+			ServerInfo info = new ServerInfo(RataLand.nombre, direccion, ServerInfo.ServerType.OTHER);
+			ConnectScreen.connect(this, this.client, ServerAddress.parse(direccion), info, false, null);
+		}));
 	}
 
 	@Override

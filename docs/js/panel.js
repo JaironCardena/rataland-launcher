@@ -781,7 +781,6 @@ function vistaServidor () {
         h('div', { class: 'fila' },
           campo('Dirección del servidor', h('input', { value: s.ip || '', onchange: alCambiar((t) => { s.ip = t.value.trim(); servidor.hora = 0 }) })),
           campo('Puerto', h('input', { type: 'number', min: 1, max: 65535, value: s.puerto || 25565, onchange: (e) => { s.puerto = Number(e.target.value) || 25565; servidor.hora = 0; pintar() } }))),
-        avisoPuertoAternos(s),
         h('label', { class: 'casilla' },
           h('input', { type: 'checkbox', checked: s.entrarDirecto === true, onchange: alCambiar((t) => { s.entrarDirecto = t.checked }) }),
           h('span', {}, 'Entrar al servidor nada más abrir el juego', h('br'), h('span', { class: 'campo__ayuda' }, 'Si está desmarcado, los jugadores ven el menú de RataLand y entran con su botón Jugar.'))))),
@@ -795,18 +794,6 @@ function vistaServidor () {
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('resumen'), 'Comparar mods con el servidor'),
       vistaComparacion()))
-}
-
-/**
- * Aternos da a cada servidor un puerto "dinámico" (p. ej. 47702) que cambia al reiniciarlo.
- * La dirección sin puerto (25565) siempre apunta al bueno.
- */
-function avisoPuertoAternos (s) {
-  if (!/\.aternos\.me$/i.test(s.ip || '') || !s.puerto || Number(s.puerto) === 25565) return null
-  return h('div', { class: 'aviso-caja aviso-caja--mal' },
-    h('strong', {}, 'Este puerto cambiará'),
-    h('p', {}, `Aternos cambia el puerto ${s.puerto} cada vez que se reinicia el servidor, y entonces el launcher lo daría por apagado. La dirección sin puerto siempre funciona.`),
-    h('p', {}, h('button', { class: 'boton boton--pequeno', onclick: () => { s.puerto = 25565; servidor.hora = 0; pintar(); consultarServidor(true) } }, 'Usar la dirección sin puerto')))
 }
 
 async function cargarVersiones () {

@@ -6,7 +6,7 @@
 
   "minecraft": "1.21.1",
   "loader": { "tipo": "fabric", "version": "0.19.5" },
-  "servidor": { "ip": "Rataland-8RN6.aternos.me", "puerto": 25565, "entrarDirecto": false },
+  "servidor": { "ip": "Rataland-8RN6.aternos.me", "puerto": 47702, "entrarDirecto": false },
 
   "cuentas": { "microsoft": true, "noPremium": true },
   "ramPredeterminada": 4096,
