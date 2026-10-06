@@ -138,8 +138,12 @@ export async function cargarModpack (gh) {
 export const ESCENAS = {
   noche: 'Noche de queso',
   cloacas: 'Las Cloacas',
-  amanecer: 'Amanecer de queso'
+  amanecer: 'Amanecer de queso',
+  pesca: 'Noche de pesca'
 }
+
+/** Escenas que se mueven (estrellas, nubes, agua, luciérnagas…): capas de la animación. */
+export const ESCENAS_ANIMADAS = { pesca: { base: 'img/fondo-pesca.png', nubes: 'img/fondo-pesca-nubes.png', barca: 'img/fondo-pesca-barca.png' } }
 
 /** Id del vídeo de un enlace de YouTube (watch, youtu.be, shorts o live), o null si no lo es. */
 export function idYoutube (url) {

@@ -452,6 +452,162 @@ function amanecer () {
   return lz
 }
 
+/* ---------- Noche de pesca: escena animada ---------- */
+// Lo que se mueve (estrellas, nubes, reflejos, la barca, el corcho, el farol, las luciérnagas) lo
+// dibuja fondo-animado.js en el launcher y en el panel, y FondoAnimado.java en el juego.
+// Las posiciones de aquí tienen que coincidir con las de esos archivos.
+// La barca va a la izquierda del centro: a la derecha están el personaje del jugador
+// (en el launcher y en el menú del juego) y las novedades del launcher.
+const PESCA = { lunaX: 200, lunaY: 40, radio: 18, orilla: 104, muelleX: 266, cubierta: 124, barca: [136, 78] }
+
+/** Altura de la orilla de cañas (abajo a la izquierda) en la columna x. */
+const orillaPesca = (x) => x < 140 ? 146 + Math.floor((x / 140) ** 2 * 34) : 999
+
+function pesca () {
+  const W = 320
+  const H = 180
+  const { lunaX, lunaY, radio, orilla, muelleX, cubierta } = PESCA
+  const lz = new Lienzo(W, H)
+  const rnd = aleatorio(23)
+
+  const cielo = ['#0c1222', '#0f172b', '#121c34', '#16223e', '#1b2948', '#213052', '#28385c', '#304066', '#3a466e', '#454c74']
+  cielo.forEach((c, i) => lz.rect(0, i * 11, W, 12, c))
+  for (let i = 0; i < 70; i++) lz.pintar(Math.floor(rnd() * W), Math.floor(rnd() * 88), '#e9efff', 0.15 + rnd() * 0.3)
+
+  // Luna de queso
+  lz.circulo(lunaX, lunaY, radio + 12, C.queso, 0.04)
+  lz.circulo(lunaX, lunaY, radio + 6, C.queso, 0.06)
+  lz.circulo(lunaX, lunaY, radio, C.quesoMedio)
+  lz.circulo(lunaX - 2, lunaY - 2, radio - 3, C.queso)
+  lz.circulo(lunaX - 5, lunaY - 6, radio - 10, C.quesoLuz, 0.5)
+  for (const [dx, dy, r] of [[-8, -4, 3], [6, -9, 2.2], [7, 5, 3.8], [-3, 8, 2.4], [-11, 6, 1.6], [11, -2, 1.5]]) {
+    lz.circulo(lunaX + dx, lunaY + dy, r, C.agujero)
+    lz.circulo(lunaX + dx + 0.6, lunaY + dy + 0.6, r * 0.65, '#a35f14')
+  }
+
+  // Montes y bosque al otro lado del lago (y su reflejo en el agua)
+  const relieve = (min, max, paso, color, cambio) => {
+    let y = min + rnd() * (max - min)
+    for (let x = 0; x < W; x += paso) {
+      y = Math.max(min, Math.min(max, y + (rnd() - 0.5) * cambio))
+      lz.rect(x, Math.round(y), paso, orilla - Math.round(y), color)
+    }
+  }
+  relieve(72, 92, 4, '#26335a', 12)
+  relieve(90, 100, 3, '#1b2644', 6)
+  const pinos = []
+  for (let x = 2; x < W; x += 5 + Math.floor(rnd() * 9)) pinos.push([x, 8 + Math.floor(rnd() * 10)])
+  for (const [px, alto] of pinos) {
+    for (let j = 0; j < alto; j++) {
+      const mitad = Math.floor(j / 2.6)
+      lz.rect(px - mitad, orilla - alto + j, mitad * 2 + 1, 1, '#141c33')
+    }
+  }
+
+  // Lago
+  const agua = ['#232f55', '#1d284a', '#182242', '#141d3a', '#111933', '#0f162d']
+  for (let y = orilla; y < H; y++) lz.rect(0, y, W, 1, agua[Math.min(agua.length - 1, Math.floor((y - orilla) / 12))])
+  lz.rect(0, orilla, W, 1, '#0f1629')
+  for (const [px, alto] of pinos) {
+    for (let j = 0; j < Math.floor(alto * 0.6); j++) {
+      const mitad = Math.floor((alto - j) / 2.6 * 0.8)
+      lz.rect(px - mitad, orilla + 1 + j, mitad * 2 + 1, 1, '#141c33', 0.45)
+    }
+  }
+
+  // Muelle de madera a la derecha, con sus postes reflejados
+  for (const px of [270, 294, 316]) {
+    lz.rect(px, cubierta + 4, 2, 12, '#2e1f12')
+    lz.rect(px, cubierta + 16, 2, 8, '#2e1f12', 0.35)
+  }
+  lz.rect(muelleX, cubierta, W - muelleX, 4, '#5a3d24')
+  lz.rect(muelleX, cubierta, W - muelleX, 1, '#7a5534')
+  for (let x = muelleX + 5; x < W; x += 7) lz.rect(x, cubierta + 1, 1, 3, '#3b2716')
+  lz.rect(muelleX, cubierta + 4, W - muelleX, 1, '#24180d')
+
+  // Orilla con cañas y nenúfares
+  for (const [nx, ny, r] of [[132, 158, 4], [150, 168, 5], [118, 172, 3], [168, 176, 4]]) {
+    for (let j = -1; j <= 1; j++) lz.rect(nx - r + Math.abs(j), ny + j, (r - Math.abs(j)) * 2, 1, '#21402e')
+    lz.pintar(nx + r - 2, ny, '#0f162d')
+  }
+  for (let x = 0; x < 140; x++) {
+    const y = orillaPesca(x)
+    lz.rect(x, y, 1, H - y, '#1b140f')
+    lz.rect(x, y, 1, 2, '#2c4a2b')
+  }
+  for (let i = 0; i < 12; i++) {
+    const cx = 4 + Math.floor(rnd() * 104)
+    const base = orillaPesca(cx) + 1
+    const alto = 14 + Math.floor(rnd() * 18)
+    const lado = rnd() > 0.5 ? 1 : -1
+    lz.rect(cx, base - alto, 1, alto, '#1f3a26')
+    lz.rect(cx, base - alto + 2, 2, 5, '#4a3020')
+    lz.pintar(cx, base - alto - 1, '#1f3a26')
+    linea(lz, cx, base - 3, cx + lado * 4, base - 9 - Math.floor(rnd() * 5), '#244a2e')
+  }
+  return lz
+}
+
+/**
+ * La barca con la rata pescando (64×40, se pinta en PESCA.barca y se mece con el agua):
+ * caña hacia la izquierda y un farol colgado de un palo en la popa.
+ */
+function barcaPesca () {
+  const lz = new Lienzo(64, 40)
+  const silueta = '#0a0f1c'
+  // Rata mirando al corcho (a la izquierda), con la cola por fuera de la barca
+  const espejo = RATA_SILUETA.map((f) => [...f].reverse().join(''))
+  lz.sprite(20, 14, espejo, { '#': silueta, q: silueta })
+  for (const [cx, cy] of COLA) lz.pintar(20 + 25 - cx, 14 + cy - 4, silueta)
+  // Caña
+  linea(lz, 23, 25, 4, 6, '#6b4a2b')
+  lz.pintar(4, 6, '#a37a4f')
+  // Palo y farol en la popa
+  lz.rect(47, 16, 1, 16, '#2e1f12')
+  lz.rect(44, 16, 4, 1, '#2e1f12')
+  lz.rect(44, 17, 1, 1, '#0b0f1a')
+  lz.rect(43, 18, 4, 6, '#0b0f1a')
+  lz.rect(44, 19, 2, 4, '#ffd36b')
+  // Casco: borde claro, madera y quilla oscura
+  const filas = [[16, 50], [17, 49], [18, 48], [19, 47], [21, 45]]
+  filas.forEach(([x0, x1], j) => lz.rect(x0, 31 + j, x1 - x0, 1, j === 0 ? '#7a5534' : j === 4 ? '#2e1f12' : '#4a3020'))
+  lz.rect(17, 32, 32, 1, '#5a3d24')
+  for (const x of [24, 33, 42]) lz.rect(x, 32, 1, 3, '#3b2716')
+  return lz
+}
+
+/** Nubes que cruzan el cielo (se repiten en horizontal sin costuras). */
+function nubesPesca () {
+  const W = 320
+  const lz = new Lienzo(W, 48)
+  const rnd = aleatorio(5)
+  // Cada nube son óvalos aplastados; se pintan sobre una máscara para que el conjunto sea
+  // un poco transparente (la luna se adivina detrás) sin que se noten los solapes.
+  const forma = new Map()
+  const ovalo = (x, y, rx, ry, color) => {
+    for (const dx of [-W, 0, W]) {
+      for (let py = Math.floor(y - ry); py <= y + ry; py++) {
+        for (let px = Math.floor(x + dx - rx); px <= x + dx + rx; px++) {
+          if (px < 0 || px >= W || py < 0 || py >= 48) continue
+          if (((px - x - dx + 0.5) / rx) ** 2 + ((py - y + 0.5) / ry) ** 2 <= 1) forma.set(`${px},${py}`, color)
+        }
+      }
+    }
+  }
+  for (const [x, y, ancho] of [[30, 28, 50], [140, 16, 36], [226, 30, 60]]) {
+    const bolas = []
+    for (let i = 0; i < 7; i++) bolas.push([x + rnd() * ancho, y + (rnd() - 0.5) * 5, 5 + rnd() * 6])
+    for (const [bx, by, r] of bolas) ovalo(bx, by + 2, r * 1.5, r * 0.75, '#1c2544')
+    for (const [bx, by, r] of bolas) ovalo(bx, by, r * 1.4, r * 0.7, '#283359')
+    for (const [bx, by, r] of bolas) ovalo(bx - 1, by - 2, r * 0.9, r * 0.4, '#36426c')
+  }
+  for (const [k, color] of forma) {
+    const [px, py] = k.split(',').map(Number)
+    lz.pintar(px, py, color, 0.86)
+  }
+  return lz
+}
+
 /** La rata que corre por la barra de carga. */
 function rataCarga () {
   const lz = new Lienzo(16, 10)
@@ -516,6 +672,16 @@ for (const [nombre, lz] of Object.entries(escenas)) {
   lz.guardar(path.join(RAIZ, 'docs', 'img', `fondo-${nombre}.png`), 2)
 }
 fondo({ lunaX: 182, lunaY: 58, rataX: 168 }).guardar(path.join(RAIZ, 'docs', 'img', 'fondo-noche.png'), 2)
+
+// Noche de pesca: fondo fijo y capa de nubes; lo demás se anima en vivo
+const capasPesca = { 'fondo-pesca': pesca(), 'fondo-pesca-nubes': nubesPesca(), 'fondo-pesca-barca': barcaPesca() }
+for (const [nombre, lz] of Object.entries(capasPesca)) {
+  lz.guardar(path.join(renderer, `${nombre}.png`), 2)
+  lz.guardar(path.join(texturas, `${nombre.replace(/-/g, '_')}.png`), 2)
+  lz.guardar(path.join(RAIZ, 'docs', 'img', `${nombre}.png`), 2)
+}
+// La animación es la misma en el launcher y en el panel
+fs.copyFileSync(path.join(RAIZ, 'src', 'renderer', 'fondo-animado.js'), path.join(RAIZ, 'docs', 'js', 'fondo-animado.js'))
 
 // Barra de carga y botones del juego
 rataCarga().guardar(path.join(texturas, 'rata.png'), 1)

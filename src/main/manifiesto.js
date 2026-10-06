@@ -134,7 +134,7 @@ function combinarPerfil (config, manifiesto) {
     evento: manifiesto.evento?.fecha ? manifiesto.evento : null,
     // Ambientación de la temporada: fondo del launcher y del juego, nombre, episodio y frases del menú
     temporada: typeof manifiesto.temporada === 'string' ? manifiesto.temporada : '',
-    escena: ['noche', 'cloacas', 'amanecer'].includes(manifiesto.escena) ? manifiesto.escena : 'noche',
+    escena: ['noche', 'cloacas', 'amanecer', 'pesca'].includes(manifiesto.escena) ? manifiesto.escena : 'noche',
     episodio: episodioValido(manifiesto.episodio),
     frases: Array.isArray(manifiesto.frases) ? manifiesto.frases.filter((f) => typeof f === 'string' && f.trim()) : []
   }

@@ -2,7 +2,7 @@ package com.rataland.menu;
 
 import net.minecraft.client.gui.DrawContext;
 
-/** Dibuja el paisaje de la temporada cubriendo toda la pantalla (como background-size: cover). */
+/** Dibuja el paisaje de la temporada cubriendo toda la pantalla (como background-size: cover). La escena «pesca» además se mueve. */
 public final class Fondo {
 	private Fondo() {}
 
@@ -14,6 +14,7 @@ public final class Fondo {
 		int y = alto - h;
 		context.drawTexture(RataLand.fondoActual(), x, y, w, h, 0, 0,
 				RataLand.FONDO_ANCHO, RataLand.FONDO_ALTO, RataLand.FONDO_ANCHO, RataLand.FONDO_ALTO);
+		if (FondoAnimado.ESCENA.equals(RataLand.escena)) FondoAnimado.dibujar(context, x, y, w, h);
 	}
 
 	/** Oscurece la parte izquierda (donde van el logo y los botones) para que se lean bien. */

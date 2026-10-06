@@ -41,7 +41,8 @@ public class RataLand implements ClientModInitializer {
 	public static final Map<String, Identifier> FONDOS = Map.of(
 			"noche", Identifier.of(MOD_ID, "textures/gui/fondo.png"),
 			"cloacas", Identifier.of(MOD_ID, "textures/gui/fondo_cloacas.png"),
-			"amanecer", Identifier.of(MOD_ID, "textures/gui/fondo_amanecer.png"));
+			"amanecer", Identifier.of(MOD_ID, "textures/gui/fondo_amanecer.png"),
+			FondoAnimado.ESCENA, Identifier.of(MOD_ID, "textures/gui/fondo_pesca.png"));
 
 	/** Color de fondo de la pantalla de carga (ARGB). */
 	public static final int COLOR_CARGA = 0xFF0F1626;

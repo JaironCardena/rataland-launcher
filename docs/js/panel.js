@@ -1386,6 +1386,15 @@ async function descargarZip (boton) {
 
 /* ---------- Temporada y fondo ---------- */
 
+/** Miniatura de un fondo; los animados se ven moviéndose. */
+function vistaEscena (clave) {
+  const capas = n.ESCENAS_ANIMADAS[clave]
+  if (!capas || !window.FondoAnimado) return h('img', { class: 'escena-opcion__vista', src: `img/fondo-${clave}.png`, alt: '', width: 640, height: 360 })
+  const lienzo = h('canvas', { class: 'escena-opcion__vista', width: 320, height: 180 })
+  window.FondoAnimado.animar(lienzo, capas)
+  return lienzo
+}
+
 function vistaTemporada () {
   const ep = ajustes.episodio || (ajustes.episodio = { titulo: '', url: '' })
   const escenaActual = n.ESCENAS[ajustes.escena] ? ajustes.escena : 'noche'
@@ -1399,8 +1408,8 @@ function vistaTemporada () {
         checked: clave === escenaActual,
         onchange: () => { ajustes.escena = clave; pintarMarco() }
       }),
-      h('img', { src: `img/fondo-${clave}.png`, alt: '', width: 640, height: 360 }),
-      h('span', {}, nombre))))
+      vistaEscena(clave),
+      h('span', {}, nombre, n.ESCENAS_ANIMADAS[clave] ? h('span', { class: 'etiqueta-animada' }, 'Animado') : null))))
 
   const previa = h('div', { class: 'episodio-previa' })
   const error = h('span', { class: 'campo__ayuda error' }, 'No parece un enlace de un vídeo de YouTube.')
@@ -1432,7 +1441,7 @@ function vistaTemporada () {
         }), 'Sale encima del logo en el launcher y abajo a la derecha en el menú del juego. Déjalo vacío para no mostrarlo.'))),
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('texturas'), 'Fondo'),
-      h('p', { class: 'campo__ayuda' }, 'Se usa en el launcher, en el menú principal y en el menú de pausa.'),
+      h('p', { class: 'campo__ayuda' }, 'Se usa en el launcher, en el menú principal y en el menú de pausa. Los animados también se mueven allí.'),
       escenas),
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('noticias'), 'Último episodio'),

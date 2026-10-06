@@ -6,7 +6,9 @@ const $$ = (s) => document.querySelectorAll(s)
 
 const NOMBRE_LOADER = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge' }
 const NOMBRE_ENLACE = { discord: 'Discord', web: 'Web', youtube: 'YouTube', twitch: 'Twitch', tiktok: 'TikTok', x: 'X', twitter: 'X' }
-const FONDO_ESCENA = { cloacas: 'assets/fondo-cloacas.png', amanecer: 'assets/fondo-amanecer.png' }
+const FONDO_ESCENA = { cloacas: 'assets/fondo-cloacas.png', amanecer: 'assets/fondo-amanecer.png', pesca: 'assets/fondo-pesca.png' }
+// Escenas que se mueven: se dibujan en un <canvas> encima de la imagen fija
+const FONDO_ANIMADO = { pesca: { base: 'assets/fondo-pesca.png', nubes: 'assets/fondo-pesca-nubes.png', barca: 'assets/fondo-pesca-barca.png' } }
 // Iconos pixel (8×8) de los enlaces en la barra lateral
 const ICONO_ENLACE = {
   discord: 'M1 1h6v1h-6zM0 2h8v1h-8zM0 3h2v1h-2zM3 3h2v1h-2zM6 3h2v1h-2zM0 4h8v1h-8zM0 5h8v1h-8zM1 6h1v1h-1zM6 6h1v1h-1z',
@@ -56,9 +58,23 @@ function pintarMarca () {
   pintarFondo()
 }
 
+let fondoAnimado = null
+
 function pintarFondo () {
-  const fondo = FONDO_ESCENA[estado.perfil?.escena] || estado.launcher.apariencia?.fondo
+  const escena = estado.perfil?.escena
+  const fondo = FONDO_ESCENA[escena] || estado.launcher.apariencia?.fondo
   if (fondo) document.documentElement.style.setProperty('--imagen-fondo', `url("${fondo}")`)
+
+  const capas = window.FondoAnimado && FONDO_ANIMADO[escena]
+  if (fondoAnimado?.escena === escena && capas) return
+  fondoAnimado?.animacion.parar()
+  fondoAnimado?.lienzo.remove()
+  fondoAnimado = null
+  if (!capas) return
+  const lienzo = document.createElement('canvas')
+  lienzo.className = 'fondo__lienzo'
+  $('.fondo').append(lienzo)
+  fondoAnimado = { escena, lienzo, animacion: window.FondoAnimado.animar(lienzo, capas) }
 }
 
 function pintarCuenta () {

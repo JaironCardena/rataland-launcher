@@ -332,10 +332,10 @@ h1, h2, h3 { margin: 0; }
 .casilla input { margin-top: 4px; accent-color: var(--hierba); }
 .tarjetas { display: grid; gap: 14px; }
 /* Temporada y fondo */
-.escenas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.escenas { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 14px; }
 .escena-opcion { position: relative; display: grid; gap: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
 .escena-opcion input { position: absolute; opacity: 0; pointer-events: none; }
-.escena-opcion img {
+.escena-opcion__vista {
   display: block;
   width: 100%;
   height: auto;
@@ -345,10 +345,11 @@ h1, h2, h3 { margin: 0; }
   border-radius: var(--r-control);
   image-rendering: pixelated;
 }
-.escena-opcion:hover img { border-color: rgba(246, 196, 69, 0.45); }
-.escena-opcion input:checked ~ img { border-color: var(--queso); box-shadow: 0 0 0 3px rgba(246, 196, 69, 0.18); }
+.escena-opcion:hover .escena-opcion__vista { border-color: rgba(246, 196, 69, 0.45); }
+.escena-opcion input:checked ~ .escena-opcion__vista { border-color: var(--queso); box-shadow: 0 0 0 3px rgba(246, 196, 69, 0.18); }
 .escena-opcion input:checked ~ span { color: var(--queso); }
-.escena-opcion input:focus-visible ~ img { outline: 2px solid var(--queso); outline-offset: 3px; }
+.escena-opcion input:focus-visible ~ .escena-opcion__vista { outline: 2px solid var(--queso); outline-offset: 3px; }
+.etiqueta-animada { margin-left: 8px; padding: 1px 6px; border: 1px solid rgba(246, 196, 69, 0.5); border-radius: 4px; color: var(--queso); font-size: 11px; font-weight: 700; vertical-align: 1px; }
 .episodio-previa { display: grid; gap: 6px; max-width: 280px; font-weight: 600; font-size: 14px; }
 .episodio-previa img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-control); }
 /* Revisión de dependencias */
@@ -486,7 +487,6 @@ h1, h2, h3 { margin: 0; }
   .elemento { grid-template-columns: 44px minmax(0, 1fr); }
   .elemento__acciones { grid-column: 1 / -1; justify-content: flex-start; }
   .fila { grid-template-columns: 1fr; }
-  .escenas { grid-template-columns: 1fr; }
   .datos { grid-template-columns: 1fr; gap: 2px 0; }
   .datos dd { margin-bottom: 8px; }
 }

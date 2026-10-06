@@ -40,6 +40,8 @@ public class TexturaDelMod extends ResourceTexture {
 	public static void registrar(TextureManager texturas, Identifier logoCarga) {
 		texturas.registerTexture(logoCarga, new TexturaDelMod(logoCarga, "/assets/rataland/textures/gui/carga.png", true));
 		for (Identifier id : RataLand.FONDOS.values()) registrarPropia(texturas, id);
+		registrarPropia(texturas, FondoAnimado.NUBES);
+		registrarPropia(texturas, FondoAnimado.BARCA);
 		for (Identifier id : new Identifier[] {RataLand.LOGO, RataLand.RATA, RataLand.BOTON_TIERRA, RataLand.BOTON_HIERBA}) {
 			registrarPropia(texturas, id);
 		}
