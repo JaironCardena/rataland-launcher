@@ -310,6 +310,102 @@ export async function versionesFabric () {
   return (await res.json()).slice(0, 25).map((v) => ({ version: v.version, estable: v.stable }))
 }
 
+/* ---------- Estado del servidor y del repositorio ---------- */
+
+/**
+ * Estado del servidor de Minecraft usando mcstatus.io (el navegador no puede hablar con el servidor directamente).
+ * Aternos contesta aunque esté apagado, con la versión "● Offline": eso cuenta como apagado.
+ */
+export async function estadoServidor (ip, puerto) {
+  const res = await fetch(`https://api.mcstatus.io/v2/status/java/${encodeURIComponent(ip)}:${Number(puerto) || 25565}`)
+  if (!res.ok) throw new Error('No se pudo consultar el estado del servidor.')
+  const j = await res.json()
+  const version = j.version?.name_clean || ''
+  const encendido = Boolean(j.online) && (j.version?.protocol ?? 0) >= 0 && !/offline/i.test(version)
+  return {
+    encendido,
+    version,
+    versionMinecraft: (/\d+\.\d+(?:\.\d+)?/.exec(version) || [])[0] || null,
+    jugadores: j.players?.online ?? 0,
+    maximo: j.players?.max ?? 0,
+    lista: (j.players?.list || []).map((p) => ({ nombre: p.name_clean, uuid: p.uuid })),
+    motd: j.motd?.clean || ''
+  }
+}
+
+/** Último cambio publicado del modpack (fecha, mensaje y autor). */
+export async function ultimaPublicacion (gh) {
+  const [c] = await gh.get(`/commits?path=${CONFIG.carpeta}/manifest.json&per_page=1`)
+  return c ? { fecha: c.commit.committer.date, mensaje: c.commit.message.split('\n')[0], autor: c.author?.login || c.commit.author.name, url: c.html_url } : null
+}
+
+/** Última versión publicada del launcher y cuántas veces se ha descargado su instalador. */
+export async function ultimaVersionLauncher (gh) {
+  const r = await gh.get('/releases/latest')
+  const instalador = r.assets.find((a) => a.name.endsWith('.exe'))
+  return { version: r.tag_name.replace(/^v/, ''), fecha: r.published_at, descargas: instalador?.download_count ?? 0, url: r.html_url }
+}
+
+/* ---------- Comparar con los mods del servidor ---------- */
+
+const NO_SON_MODS = new Set(['java', 'minecraft', 'fabricloader'])
+
+/**
+ * Lee la lista "Loading N mods:" del registro de arranque de un servidor Fabric.
+ * Solo los mods de primer nivel (no los que van dentro de otros, marcados con |-- o \--).
+ */
+export function modsDelRegistro (texto) {
+  const lineas = texto.split(/\r?\n/)
+  const inicio = lineas.findIndex((l) => /Loading \d+ mods:/.test(l))
+  if (inicio < 0) return null
+  const mods = []
+  let loader = null
+  let minecraft = null
+  for (let i = inicio + 1; i < lineas.length; i++) {
+    const l = lineas[i]
+    if (!l.trim() || /^\s*[|\\]/.test(l) || /[|\\]--/.test(l)) continue
+    const m = /(?:^|\s)- ([A-Za-z0-9_.-]+) (\S+)\s*$/.exec(l)
+    if (!m) break
+    if (m[1] === 'fabricloader') loader = m[2]
+    if (m[1] === 'minecraft') minecraft = m[2]
+    if (!NO_SON_MODS.has(m[1])) mods.push({ id: m[1], version: m[2] })
+  }
+  return { mods, loader, minecraft }
+}
+
+/** Datos de fabric.mod.json: id, nombre, versión y si es solo para el cliente. */
+export async function infoDeMod (JSZip, bytes) {
+  const zip = await JSZip.loadAsync(bytes)
+  const fmj = zip.file('fabric.mod.json')
+  if (!fmj) return null
+  const info = JSON.parse(await fmj.async('string'))
+  return { id: info.id, nombre: info.name || info.id, version: info.version, entorno: info.environment || '*' }
+}
+
+/**
+ * Compara los mods del modpack (con su fabric.mod.json) con los del servidor.
+ * Devuelve grupos: faltanEnModpack, otraVersion, faltanEnServidor, soloCliente, coinciden.
+ */
+export function compararMods (cliente, servidor) {
+  const delServidor = new Map(servidor.map((m) => [m.id, m]))
+  const delCliente = new Map(cliente.filter((m) => m.id).map((m) => [m.id, m]))
+  const r = { faltanEnModpack: [], otraVersion: [], faltanEnServidor: [], soloCliente: [], coinciden: [] }
+  for (const m of cliente) {
+    if (!m.id) continue
+    const s = delServidor.get(m.id)
+    if (s) {
+      if (s.version !== m.version) r.otraVersion.push({ ...m, versionServidor: s.version })
+      else r.coinciden.push(m)
+    } else if (m.entorno === 'client') {
+      r.soloCliente.push(m)
+    } else {
+      r.faltanEnServidor.push(m)
+    }
+  }
+  for (const s of servidor) if (!delCliente.has(s.id)) r.faltanEnModpack.push(s)
+  return r
+}
+
 /* ---------- Análisis de archivos subidos ---------- */
 
 function compararVersion (a, b) {

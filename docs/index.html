@@ -5,37 +5,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; connect-src https://api.github.com https://api.modrinth.com https://meta.fabricmc.net; img-src 'self' https: data:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+        content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; connect-src https://api.github.com https://raw.githubusercontent.com https://api.modrinth.com https://cdn.modrinth.com https://meta.fabricmc.net https://api.mcstatus.io; img-src 'self' https: data:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Panel de RataLand</title>
   <link rel="icon" href="img/icono.png">
   <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
-  <header class="cabecera">
-    <img class="cabecera__logo" src="img/logo.png" alt="RataLand" width="134" height="46">
-    <span class="cabecera__titulo">Panel del modpack</span>
-    <div class="publicar">
-      <span class="publicar__estado" data-pendientes>Sin cambios</span>
-      <button class="boton boton--secundario" data-accion="descartar" hidden>Descartar</button>
-      <button class="boton boton--principal" data-accion="abrir-publicar" disabled>Publicar</button>
-    </div>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+  <header class="barra">
+    <a class="barra__marca" href="#resumen">
+      <img src="img/logo.png" alt="RataLand" width="117" height="40">
+      <span class="barra__titulo">Panel del modpack</span>
+    </a>
+    <span class="barra__estado" data-estado-cambios></span>
     <div class="cabecera__cuenta" data-cuenta></div>
   </header>
 
-  <div class="cuerpo">
-    <nav class="menu" aria-label="Secciones">
-      <button class="menu__opcion" data-seccion="mods">Mods <span class="menu__cuenta" data-contador="mods"></span></button>
-      <button class="menu__opcion" data-seccion="texturas">Packs de texturas <span class="menu__cuenta" data-contador="texturas"></span></button>
-      <button class="menu__opcion" data-seccion="shaders">Shaders <span class="menu__cuenta" data-contador="shaders"></span></button>
-      <button class="menu__opcion" data-seccion="servidor">Servidor y versión</button>
-      <button class="menu__opcion" data-seccion="noticias">Noticias</button>
-      <button class="menu__opcion" data-seccion="evento">Cuenta atrás</button>
-      <button class="menu__opcion" data-seccion="enlaces">Enlaces</button>
-    </nav>
-    <main class="contenido" data-contenido>
+  <div class="marco">
+    <nav class="lateral" aria-label="Secciones" data-lateral></nav>
+    <main class="contenido" id="contenido" tabindex="-1" data-contenido>
       <p class="cargando">Cargando el modpack desde GitHub…</p>
     </main>
   </div>
+
+  <div class="dock" role="region" aria-label="Cambios sin publicar" data-dock hidden>
+    <div class="dock__fila">
+      <p class="dock__info">
+        <span class="dock__punto" aria-hidden="true"></span>
+        <span data-dock-texto></span>
+        <button class="enlace-boton" data-accion="ver-cambios" aria-expanded="false" aria-controls="dock-lista">Ver cuáles</button>
+      </p>
+      <div class="dock__botones">
+        <button class="boton boton--fantasma" data-accion="descartar">Descartar</button>
+        <button class="boton boton--principal" data-accion="abrir-publicar">Publicar</button>
+      </div>
+    </div>
+    <ul class="dock__lista" id="dock-lista" data-dock-lista hidden></ul>
+  </div>
+
+  <dialog class="cajon" data-dialogo="anadir" aria-labelledby="titulo-anadir">
+    <div class="cajon__cabecera">
+      <h2 id="titulo-anadir" data-anadir-titulo>Añadir desde Modrinth</h2>
+      <button class="boton-icono" data-accion="cerrar-dialogo" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="buscador" data-anadir-buscador>
+      <input type="search" name="texto" autocomplete="off" aria-label="Buscar en Modrinth">
+      <button class="boton" type="submit">Buscar</button>
+    </form>
+    <p class="cajon__nota" data-anadir-nota></p>
+    <div class="cajon__resultados" data-anadir-resultados aria-live="polite"></div>
+  </dialog>
 
   <dialog class="dialogo" data-dialogo="llave" aria-labelledby="titulo-llave">
     <form method="dialog" class="dialogo__caja" data-formulario-llave>
@@ -57,7 +77,7 @@
       </label>
       <p class="error" data-error-llave hidden></p>
       <div class="dialogo__botones">
-        <button type="button" class="boton boton--secundario" data-accion="cerrar-dialogo">Cancelar</button>
+        <button type="button" class="boton boton--fantasma" data-accion="cerrar-dialogo">Cancelar</button>
         <button type="submit" class="boton boton--principal">Conectar</button>
       </div>
     </form>
@@ -78,7 +98,7 @@
       </div>
       <p class="error" data-error-publicar hidden></p>
       <div class="dialogo__botones">
-        <button type="button" class="boton boton--secundario" data-accion="cerrar-dialogo">Cancelar</button>
+        <button type="button" class="boton boton--fantasma" data-accion="cerrar-dialogo">Cancelar</button>
         <button type="submit" class="boton boton--principal">Publicar ahora</button>
       </div>
     </form>
@@ -90,7 +110,7 @@
       <p id="texto-confirmar" data-confirmar-texto></p>
       <ul class="cambios" data-confirmar-lista hidden></ul>
       <div class="dialogo__botones">
-        <button type="button" class="boton boton--secundario" data-confirmar-cancelar></button>
+        <button type="button" class="boton boton--fantasma" data-confirmar-cancelar></button>
         <button type="button" class="boton boton--peligro-lleno" data-confirmar-aceptar></button>
       </div>
     </div>

@@ -2,8 +2,9 @@ import * as n from './nucleo.js'
 
 const $ = (selector, raiz = document) => raiz.querySelector(selector)
 const CLAVE_LLAVE = 'rataland-panel-llave'
-const NOMBRES_SECCION = { mods: 'Mods', texturas: 'Packs de texturas', shaders: 'Shaders' }
+const CLAVE_INFO_MODS = 'rataland-panel-info-mods'
 const IRIS = 'YL57xq9U'
+const PAGINA_ATERNOS = 'https://aternos.org/servers/'
 
 /** Crea elementos sin usar innerHTML (los textos de Modrinth no son de fiar). */
 function h (etiqueta, props = {}, ...hijos) {
@@ -16,14 +17,84 @@ function h (etiqueta, props = {}, ...hijos) {
     else if (k === 'checked') el.checked = v
     else el.setAttribute(k, v === true ? '' : v)
   }
-  for (const hijo of hijos.flat()) {
+  for (const hijo of hijos.flat(Infinity)) {
     if (hijo == null || hijo === false) continue
     el.append(hijo instanceof Node ? hijo : String(hijo))
   }
   return el
 }
 
+/* ---------- Iconos pixel-art (8x8) ---------- */
+
+const ICONOS = {
+  resumen: ['##....##', '###..###', '.######.', '.#.##.#.', '.######.', '..####..', '...##...', '........'],
+  mods: ['########', '#......#', '#.####.#', '#.#..#.#', '#.#..#.#', '#.####.#', '#......#', '########'],
+  texturas: ['......##', '.....###', '....###.', '...###..', '..###...', '.##.....', '###.....', '##......'],
+  shaders: ['#..##..#', '.#....#.', '..####..', '#.####.#', '#.####.#', '..####..', '.#....#.', '#..##..#'],
+  servidor: ['########', '#.....##', '########', '........', '########', '#.....##', '########', '........'],
+  noticias: ['#######.', '#.....##', '#.###..#', '#......#', '#.####.#', '#......#', '#.###..#', '########'],
+  evento: ['########', '.#....#.', '..#..#..', '...##...', '...##...', '..####..', '.######.', '########'],
+  enlaces: ['.....##.', '....#..#', '....#..#', '...#.##.', '.##.#...', '#..#....', '#..#....', '.##.....'],
+  launcher: ['..####..', '.#....#.', '#......#', '#.#..#.#', '#......#', '#.####.#', '.#....#.', '..####..']
+}
+
+function pixel (nombre) {
+  const NS = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(NS, 'svg')
+  svg.setAttribute('viewBox', '0 0 8 8')
+  svg.setAttribute('class', 'pixel')
+  svg.setAttribute('aria-hidden', 'true')
+  ICONOS[nombre].forEach((fila, y) => [...fila].forEach((c, x) => {
+    if (c !== '#') return
+    const r = document.createElementNS(NS, 'rect')
+    r.setAttribute('x', x)
+    r.setAttribute('y', y)
+    r.setAttribute('width', 1)
+    r.setAttribute('height', 1)
+    svg.append(r)
+  }))
+  return svg
+}
+
+const SECCIONES = [
+  { id: 'resumen', nombre: 'Resumen' },
+  { grupo: 'Modpack' },
+  { id: 'mods', nombre: 'Mods', categoria: true },
+  { id: 'texturas', nombre: 'Packs de texturas', categoria: true },
+  { id: 'shaders', nombre: 'Shaders', categoria: true },
+  { grupo: 'Servidor' },
+  { id: 'servidor', nombre: 'Servidor y versión' },
+  { grupo: 'En el launcher' },
+  { id: 'noticias', nombre: 'Noticias' },
+  { id: 'evento', nombre: 'Cuenta atrás' },
+  { id: 'enlaces', nombre: 'Enlaces' }
+]
+const IDS = new Set(SECCIONES.filter((s) => s.id).map((s) => s.id))
+const NOMBRE_CATEGORIA = { mods: 'mods', texturas: 'packs de texturas', shaders: 'shaders' }
+const NOMBRES_ENLACE = { discord: 'Discord', youtube: 'YouTube', tiktok: 'TikTok', twitch: 'Twitch', x: 'X', web: 'Web' }
+
+/* ---------- Formatos ---------- */
+
 const tamano = (bytes) => bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
+const descargas = (x) => x >= 1e6 ? `${(x / 1e6).toFixed(1).replace('.', ',')} M` : x >= 1000 ? `${Math.round(x / 1000)} mil` : String(x)
+const fecha = (iso) => new Date(iso).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' })
+
+function haceCuanto (iso) {
+  const s = (new Date(iso).getTime() - Date.now()) / 1000
+  const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' })
+  for (const [unidad, seg] of [['day', 86400], ['hour', 3600], ['minute', 60]]) {
+    if (Math.abs(s) >= seg) return rtf.format(Math.round(s / seg), unidad)
+  }
+  return 'hace un momento'
+}
+
+function cuentaAtras (ev) {
+  const ms = new Date(ev?.fecha).getTime() - Date.now()
+  if (!ev?.fecha || Number.isNaN(ms)) return null
+  if (ms <= 0) return `${ev.titulo || 'El evento'}: ¡Ya empezó!`
+  const s = Math.floor(ms / 1000)
+  return `${ev.titulo || 'El próximo evento'} empieza en ${Math.floor(s / 86400)}d ${String(Math.floor(s / 3600) % 24).padStart(2, '0')}h ${String(Math.floor(s / 60) % 60).padStart(2, '0')}m`
+}
 
 /* ---------- Estado ---------- */
 
@@ -35,10 +106,16 @@ let nuevos = new Map() // ruta -> archivo subido sin publicar
 let borrados = new Set() // rutas del repositorio que se quitarán
 let identificados = new Map() // sha1 -> datos del proyecto en Modrinth
 let actualizaciones = new Map() // ruta -> { entrada, origen }
-let seccion = 'mods'
+let seccion = IDS.has(location.hash.slice(1)) ? location.hash.slice(1) : 'resumen'
 let versionesMc = []
 let versionesLoader = []
 let compatibilidad = null
+let servidor = { cargando: false, datos: null, error: null, hora: 0 }
+let historia = { publicacion: undefined, launcher: undefined }
+let comparacion = { texto: '', cargando: false, progreso: '', resultado: null, registro: null, error: null }
+let cajon = { categoria: 'mods', texto: '', resultados: null, cargando: false }
+let menuCuentaAbierto = false
+let listaCambiosAbierta = false
 
 function leerLlave () {
   try { return localStorage.getItem(CLAVE_LLAVE) || sessionStorage.getItem(CLAVE_LLAVE) || '' } catch { return '' }
@@ -52,7 +129,11 @@ function guardarLlave (llave, recordar) {
   } catch { /* almacenamiento no disponible: la llave dura lo que la pestaña */ }
 }
 
-/* ---------- Avisos ---------- */
+function llaveRecordada () {
+  try { return Boolean(localStorage.getItem(CLAVE_LLAVE)) } catch { return false }
+}
+
+/* ---------- Avisos y confirmaciones ---------- */
 
 function avisar (texto, tipo = 'ok') {
   const el = h('div', { class: `aviso${tipo === 'error' ? ' aviso--error' : ''}`, role: tipo === 'error' ? 'alert' : 'status' }, texto)
@@ -96,6 +177,12 @@ function confirmar ({ titulo, texto, lista = [], aceptar, cancelar = 'Cancelar' 
   })
 }
 
+function abrirDialogo (nombre) {
+  const d = $(`[data-dialogo="${nombre}"]`)
+  if (!d.open) d.showModal()
+  return d
+}
+
 /* ---------- Datos derivados ---------- */
 
 function sha1DeRepo (ruta) {
@@ -109,17 +196,18 @@ function elementosDe (categoria) {
   const lista = []
   for (const a of base.archivos.values()) {
     if (!a.ruta.startsWith(prefijo) || borrados.has(a.ruta) || nuevos.has(a.ruta)) continue
-    const info = identificados.get(sha1DeRepo(a.ruta))
-    lista.push({ tipo: 'repo', ruta: a.ruta, tamano: a.tamano, nombre: info?.nombre, icono: info?.icono, numero: info?.numero, proyecto: info?.proyecto })
+    const sha1 = sha1DeRepo(a.ruta)
+    const info = identificados.get(sha1)
+    lista.push({ tipo: 'repo', ruta: a.ruta, tamano: a.tamano, sha1, nombre: info?.nombre, icono: info?.icono, numero: info?.numero, proyecto: info?.proyecto })
   }
   for (const nn of nuevos.values()) {
     if (!nn.ruta.startsWith(prefijo)) continue
     const info = identificados.get(nn.sha1)
-    lista.push({ tipo: 'nuevo', ruta: nn.ruta, tamano: nn.tamano, nombre: info?.nombre || nn.nombre, icono: info?.icono, numero: info?.numero || nn.version, aviso: nn.aviso, reemplaza: nn.reemplaza, proyecto: info?.proyecto })
+    lista.push({ tipo: 'nuevo', ruta: nn.ruta, tamano: nn.tamano, sha1: nn.sha1, nombre: info?.nombre || nn.nombre, icono: info?.icono, numero: info?.numero || nn.version, aviso: nn.aviso, reemplaza: nn.reemplaza, proyecto: info?.proyecto })
   }
   for (const e of ajustes.externos || []) {
     if (!e.ruta.startsWith(prefijo)) continue
-    lista.push({ tipo: 'modrinth', ruta: e.ruta, tamano: e.tamano, nombre: e.modrinth?.nombre, icono: e.modrinth?.icono, numero: e.modrinth?.numero, proyecto: e.modrinth?.proyecto })
+    lista.push({ tipo: 'modrinth', ruta: e.ruta, url: e.url, tamano: e.tamano, sha1: e.sha1, nombre: e.modrinth?.nombre, icono: e.modrinth?.icono, numero: e.modrinth?.numero, proyecto: e.modrinth?.proyecto })
   }
   for (const x of lista) {
     if (!x.nombre && /rataland-menu/i.test(x.ruta)) {
@@ -149,17 +237,9 @@ function archivosFinales () {
   return m
 }
 
-function nombreDeRuta (ruta) {
-  for (const c of Object.keys(n.CATEGORIAS)) {
-    const e = elementosDe(c).find((x) => x.ruta === ruta)
-    if (e?.nombre) return e.nombre
-  }
-  const info = identificados.get(sha1DeRepo(ruta))
-  return info?.nombre || (base.ajustes.externos || []).find((e) => e.ruta === ruta)?.modrinth?.nombre || ruta.split('/').pop()
-}
-
 /** Lista legible de lo que se va a publicar. */
 function cambios () {
+  if (!base) return []
   const quitados = []
   const anadidos = []
   for (const r of borrados) {
@@ -205,13 +285,7 @@ function cambios () {
   return lista
 }
 
-/* ---------- Cabecera y menú ---------- */
-
-let menuCuentaAbierto = false
-
-function llaveRecordada () {
-  try { return Boolean(localStorage.getItem(CLAVE_LLAVE)) } catch { return false }
-}
+/* ---------- Cuenta de GitHub (cabecera) ---------- */
 
 /** Sin conexión: botón para conectar. Conectado: tu foto y nombre, con un menú donde está "Desconectar". */
 function pintarCuenta () {
@@ -231,7 +305,7 @@ function pintarCuenta () {
     'aria-label': `Cuenta de GitHub: ${usuario}`,
     onclick: () => alternarMenuCuenta()
   },
-  h('img', { class: 'cuenta-boton__foto', src: `https://github.com/${encodeURIComponent(usuario)}.png?size=56`, alt: '' }),
+  h('img', { class: 'cuenta-boton__foto', src: `https://github.com/${encodeURIComponent(usuario)}.png?size=60`, alt: '' }),
   h('span', {}, usuario),
   h('span', { class: 'cuenta-boton__flecha', 'aria-hidden': 'true' }))
 
@@ -241,7 +315,7 @@ function pintarCuenta () {
       ? 'La llave está guardada en este navegador, así que puedes publicar desde aquí.'
       : 'La llave solo dura mientras esta pestaña esté abierta.'),
     h('div', { class: 'menu-cuenta__separador' }),
-    h('button', { class: 'boton boton--pequeno boton--peligro', onclick: pedirDesconectar }, 'Desconectar este navegador'))
+    h('button', { class: 'boton-quitar', onclick: pedirDesconectar }, 'Desconectar este navegador'))
   cuenta.replaceChildren(boton, menu)
 }
 
@@ -254,7 +328,7 @@ function alternarMenuCuenta (abrir = !menuCuentaAbierto) {
 
 async function pedirDesconectar () {
   alternarMenuCuenta(false)
-  const pendientes = base ? cambios().length : 0
+  const pendientes = cambios().length
   const si = await confirmar({
     titulo: '¿Desconectar este navegador?',
     texto: 'Se borrará la llave de GitHub de este navegador y el panel quedará en solo lectura. ' +
@@ -268,145 +342,291 @@ async function pedirDesconectar () {
   avisar('Desconectado. El panel está en modo solo lectura.')
 }
 
-// El menú de la cuenta se cierra al pulsar fuera o con Escape.
-// (composedPath, porque el botón se redibuja al pulsarlo y deja de estar dentro de [data-cuenta])
-document.addEventListener('click', (e) => {
-  if (menuCuentaAbierto && !e.composedPath().includes($('[data-cuenta]'))) alternarMenuCuenta(false)
-})
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && menuCuentaAbierto) {
-    alternarMenuCuenta(false)
-    $('.cuenta-boton')?.focus()
-  }
-})
+/* ---------- Marco: cabecera, menú lateral y barra de cambios ---------- */
 
-function pintarCabecera () {
+function pintarMarco () {
   pintarCuenta()
-  const total = base ? cambios().length : 0
-  const estado = $('[data-pendientes]')
-  estado.textContent = total ? `${total} ${total === 1 ? 'cambio' : 'cambios'} sin publicar` : 'Sin cambios'
-  estado.classList.toggle('publicar__estado--pendiente', total > 0)
-  $('[data-accion="descartar"]').hidden = !total
-  $('[data-accion="abrir-publicar"]').disabled = !total
+  const lista = cambios()
 
-  for (const c of Object.keys(n.CATEGORIAS)) {
-    $(`[data-contador="${c}"]`).textContent = base ? elementosDe(c).length : ''
-  }
-  document.querySelectorAll('[data-seccion]').forEach((b) => {
-    if (b.dataset.seccion === seccion) b.setAttribute('aria-current', 'page')
-    else b.removeAttribute('aria-current')
-  })
+  const estado = $('[data-estado-cambios]')
+  estado.hidden = !base
+  estado.textContent = lista.length ? `${lista.length} ${lista.length === 1 ? 'cambio' : 'cambios'} sin publicar` : 'Todo publicado'
+  estado.classList.toggle('barra__estado--pendiente', lista.length > 0)
+
+  const dock = $('[data-dock]')
+  dock.hidden = !lista.length
+  if (!lista.length) listaCambiosAbierta = false
+  $('[data-dock-texto]').textContent = `${lista.length} ${lista.length === 1 ? 'cambio sin publicar' : 'cambios sin publicar'}`
+  $('[data-dock-lista]').replaceChildren(...lista.map((c) => h('li', {}, c)))
+  $('[data-dock-lista]').hidden = !listaCambiosAbierta
+  const ver = $('[data-accion="ver-cambios"]')
+  ver.setAttribute('aria-expanded', String(listaCambiosAbierta))
+  ver.textContent = listaCambiosAbierta ? 'Ocultar' : 'Ver cuáles'
+
+  $('[data-lateral]').replaceChildren(...SECCIONES.map((s) => {
+    if (s.grupo) return h('p', { class: 'lateral__grupo' }, s.grupo)
+    return h('button', {
+      class: 'lateral__opcion',
+      'aria-current': s.id === seccion ? 'page' : null,
+      onclick: () => irA(s.id)
+    }, pixel(s.id), s.nombre, s.categoria && base ? h('span', { class: 'lateral__cuenta' }, elementosDe(s.id).length) : null)
+  }))
 }
 
 function pintar () {
-  pintarCabecera()
-  const contenido = $('[data-contenido]')
+  pintarMarco()
   if (!base) return
-  const vistas = { servidor: vistaServidor, noticias: vistaNoticias, evento: vistaEvento, enlaces: vistaEnlaces }
+  const vistas = { resumen: vistaResumen, servidor: vistaServidor, noticias: vistaNoticias, evento: vistaEvento, enlaces: vistaEnlaces }
   const vista = (vistas[seccion] || (() => vistaCategoria(seccion)))()
-  contenido.replaceChildren(...[vista].flat(Infinity).filter((x) => x != null && x !== false))
+  $('[data-contenido]').replaceChildren(vista)
+}
+
+function irA (id) {
+  if (location.hash !== `#${id}`) location.hash = id
+  else cambiarSeccion(id)
+}
+
+function cambiarSeccion (id) {
+  seccion = IDS.has(id) ? id : 'resumen'
+  pintar()
+  window.scrollTo(0, 0)
+  $('[data-contenido]').focus({ preventScroll: true })
+  if (seccion === 'resumen' || seccion === 'servidor') consultarServidor()
+}
+
+window.addEventListener('hashchange', () => cambiarSeccion(location.hash.slice(1)))
+
+function encabezado (titulo, descripcion, ...acciones) {
+  return h('div', { class: 'encabezado' },
+    h('div', {}, h('h1', {}, titulo), descripcion ? h('p', {}, descripcion) : null),
+    acciones.length ? h('div', { class: 'encabezado__acciones' }, acciones) : null)
+}
+
+function campo (etiqueta, control, ayuda) {
+  return h('label', { class: 'campo' }, h('span', { class: 'campo__etiqueta' }, etiqueta), control, ayuda ? h('span', { class: 'campo__ayuda' }, ayuda) : null)
+}
+
+/* ---------- Estado del servidor ---------- */
+
+async function consultarServidor (forzar = false) {
+  const { ip, puerto } = ajustes?.servidor || {}
+  if (!ip || servidor.cargando) return
+  if (!forzar && Date.now() - servidor.hora < 60000) return
+  servidor = { ...servidor, cargando: true, error: null }
+  pintar()
+  try {
+    servidor = { cargando: false, datos: await n.estadoServidor(ip, puerto), error: null, hora: Date.now() }
+  } catch (e) {
+    servidor = { cargando: false, datos: null, error: e.message, hora: Date.now() }
+  }
+  pintar()
+}
+
+function vistaEstado () {
+  const { ip, puerto } = ajustes.servidor || {}
+  const direccion = puerto && Number(puerto) !== 25565 ? `${ip}:${puerto}` : ip
+  const d = servidor.datos
+  const actualizar = h('button', { class: 'boton boton--pequeno', disabled: servidor.cargando, onclick: () => consultarServidor(true) }, servidor.cargando ? 'Comprobando…' : 'Volver a comprobar')
+  const copiar = h('button', {
+    class: 'boton-icono',
+    'aria-label': 'Copiar la dirección',
+    title: 'Copiar la dirección',
+    onclick: async () => {
+      try { await navigator.clipboard.writeText(direccion); avisar('Dirección copiada.') } catch { avisar('No se pudo copiar la dirección.', 'error') }
+    }
+  }, '⧉')
+
+  let titulo
+  let luz
+  const lineas = []
+  if (!d && servidor.cargando) {
+    titulo = 'Comprobando…'
+    luz = ''
+  } else if (!d) {
+    titulo = 'Sin datos'
+    luz = ''
+    lineas.push(h('p', {}, servidor.error || 'No se pudo consultar el servidor.'))
+  } else if (d.encendido) {
+    titulo = 'Servidor encendido'
+    luz = 'luz--encendido'
+    lineas.push(h('p', {}, `${d.jugadores} de ${d.maximo} ${d.maximo === 1 ? 'jugador conectado' : 'jugadores conectados'}. Minecraft ${d.versionMinecraft || d.version}.`))
+    if (d.lista.length) {
+      lineas.push(h('div', { class: 'cabezas' }, d.lista.map((p) => h('img', { src: `https://mc-heads.net/avatar/${encodeURIComponent(p.uuid || p.nombre)}/26`, alt: p.nombre, title: p.nombre }))))
+    }
+    if (d.versionMinecraft && d.versionMinecraft !== ajustes.minecraft) {
+      lineas.push(h('p', { class: 'aviso-caja aviso-caja--mal' }, `El servidor está en Minecraft ${d.versionMinecraft} y el modpack en ${ajustes.minecraft}. Los jugadores no podrán entrar hasta que coincidan.`))
+    }
+  } else {
+    titulo = 'Servidor apagado'
+    luz = 'luz--apagado'
+    lineas.push(h('p', {}, 'Los jugadores no pueden entrar ahora mismo. ', h('a', { href: PAGINA_ATERNOS, target: '_blank', rel: 'noopener' }, 'Enciéndelo en Aternos'), '.'))
+  }
+
+  return h('div', { class: 'estado' },
+    h('h2', { class: 'estado__titulo' }, h('span', { class: `luz ${luz}`, 'aria-hidden': 'true' }), titulo),
+    h('p', {}, h('span', { class: 'direccion' }, direccion, copiar)),
+    lineas,
+    h('p', {}, actualizar))
+}
+
+/* ---------- Resumen ---------- */
+
+async function cargarHistoria () {
+  const [publicacion, launcher] = await Promise.all([
+    n.ultimaPublicacion(gh).catch(() => null),
+    n.ultimaVersionLauncher(gh).catch(() => null)
+  ])
+  historia = { publicacion, launcher }
+  if (seccion === 'resumen') pintar()
+}
+
+function vistaResumen () {
+  const cuentas = Object.fromEntries(Object.keys(n.CATEGORIAS).map((c) => [c, elementosDe(c).length]))
+  const p = historia.publicacion
+  const l = historia.launcher
+  const evento = cuentaAtras(ajustes.evento)
+  const noticia = (ajustes.noticias || [])[0]
+  const enlaces = Object.entries(ajustes.enlaces || {}).filter(([, url]) => url).map(([k]) => NOMBRES_ENLACE[k] || k)
+
+  return h('section', { class: 'seccion' },
+    h('h1', { class: 'oculto-visual' }, 'Resumen'),
+    h('div', { class: 'portada' }, vistaEstado()),
+    h('div', { class: 'columnas' },
+      h('section', { class: 'bloque' },
+        h('h2', {}, pixel('mods'), 'Modpack'),
+        h('dl', { class: 'datos' },
+          h('dt', {}, 'Versión'), h('dd', {}, `Minecraft ${ajustes.minecraft} con Fabric ${ajustes.loader?.version}`),
+          h('dt', {}, 'Contenido'), h('dd', {}, `${cuentas.mods} mods, ${cuentas.texturas} packs de texturas y ${cuentas.shaders} shaders`),
+          h('dt', {}, 'Publicado'), h('dd', {}, p === undefined ? 'Cargando…' : p ? [h('a', { href: p.url, target: '_blank', rel: 'noopener' }, haceCuanto(p.fecha)), `: ${p.mensaje}`] : 'Sin datos')),
+        h('p', { class: 'bloque__pie' }, h('button', { class: 'boton boton--pequeno', onclick: () => irA('mods') }, 'Gestionar mods'))),
+      h('section', { class: 'bloque' },
+        h('h2', {}, pixel('launcher'), 'Launcher'),
+        h('dl', { class: 'datos' },
+          h('dt', {}, 'Última versión'), h('dd', {}, l === undefined ? 'Cargando…' : l ? `${l.version}, del ${fecha(l.fecha)}` : 'Sin datos'),
+          h('dt', {}, 'Descargas'), h('dd', {}, l ? `${l.descargas} ${l.descargas === 1 ? 'vez' : 'veces'} el instalador` : '—')),
+        h('p', { class: 'bloque__pie' }, l ? h('a', { href: l.url, target: '_blank', rel: 'noopener' }, 'Página de descargas') : null)),
+      h('section', { class: 'bloque' },
+        h('h2', {}, pixel('noticias'), 'Lo que ven los jugadores'),
+        h('dl', { class: 'datos' },
+          h('dt', {}, 'Cuenta atrás'), h('dd', {}, evento || h('button', { class: 'enlace-boton', onclick: () => irA('evento') }, 'Añadir una')),
+          h('dt', {}, 'Última noticia'), h('dd', {}, noticia?.titulo || h('button', { class: 'enlace-boton', onclick: () => irA('noticias') }, 'Escribir una')),
+          h('dt', {}, 'Enlaces'), h('dd', {}, enlaces.length ? enlaces.join(', ') : h('button', { class: 'enlace-boton', onclick: () => irA('enlaces') }, 'Añadir Discord'))))))
 }
 
 /* ---------- Mods, texturas y shaders ---------- */
 
-let busqueda = { categoria: null, texto: '', resultados: null, cargando: false }
-
 function vistaCategoria (categoria) {
   const c = n.CATEGORIAS[categoria]
   const elementos = elementosDe(categoria)
-  const intros = {
+  const descripciones = {
     mods: `Los jugadores reciben estos mods al pulsar Jugar. Solo valen mods de Fabric para Minecraft ${ajustes.minecraft}.`,
-    texturas: 'Los packs marcados como "Activado para todos" se activan solos en el juego de cada jugador (launcher 1.0.4 o posterior). Los demás quedan disponibles en Opciones → Paquetes de recursos.',
+    texturas: 'Los marcados "Para todos" se activan solos en el juego de cada jugador. Los demás quedan disponibles en Opciones → Paquetes de recursos.',
     shaders: 'Los jugadores los eligen en Opciones → Gráficos → Paquetes de shaders. Necesitan el mod Iris.'
   }
+  const titulos = { mods: 'Mods', texturas: 'Packs de texturas', shaders: 'Shaders' }
 
-  const entrada = h('input', { type: 'search', placeholder: `Buscar ${categoria === 'mods' ? 'mods' : categoria === 'texturas' ? 'packs de texturas' : 'shaders'} en Modrinth`, value: busqueda.categoria === categoria ? busqueda.texto : '', 'aria-label': 'Buscar en Modrinth' })
   const selector = h('input', { type: 'file', accept: c.extension, multiple: true, hidden: true, onchange: (e) => subirArchivos(categoria, [...e.target.files]) })
+  const hayModrinth = elementos.some((e) => e.proyecto)
+  const soltar = h('div', { class: 'soltar', role: 'button', tabindex: '0', onclick: () => selector.click(), onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selector.click() } } },
+    h('strong', {}, `Arrastra aquí archivos ${c.extension}`),
+    h('span', {}, 'o pulsa para elegirlos de tu PC'))
 
-  const lista = h('ul', { class: 'lista' }, elementos.length
-    ? elementos.map((e) => filaElemento(categoria, e))
-    : h('li', { class: 'vacio' }, `Todavía no hay ${categoria === 'mods' ? 'mods' : categoria === 'texturas' ? 'packs de texturas' : 'shaders'}. Búscalos en Modrinth o sube un archivo.`))
-  lista.addEventListener('dragover', (e) => { e.preventDefault(); lista.classList.add('lista--soltando') })
-  lista.addEventListener('dragleave', () => lista.classList.remove('lista--soltando'))
-  lista.addEventListener('drop', (e) => {
+  const seccionEl = h('section', { class: 'seccion' },
+    encabezado(titulos[categoria], descripciones[categoria],
+      hayModrinth ? h('button', { class: 'boton boton--fantasma', onclick: (e) => buscarActualizaciones(categoria, e.currentTarget) }, 'Buscar actualizaciones') : null,
+      h('button', { class: 'boton', onclick: () => abrirCajon(categoria) }, 'Añadir desde Modrinth')),
+    categoria === 'shaders' && elementos.length && !proyectosPresentes().has(IRIS)
+      ? h('p', { class: 'aviso-caja aviso-caja--mal' }, 'Los shaders no funcionarán sin el mod Iris. ', h('button', { class: 'enlace-boton', onclick: (ev) => anadirDeModrinth('mods', { project_id: IRIS }, ev.currentTarget) }, 'Añadir Iris'))
+      : null,
+    h('ul', { class: 'lista' }, elementos.length
+      ? elementos.map((e) => filaElemento(categoria, e))
+      : h('li', { class: 'vacio' }, `Todavía no hay ${NOMBRE_CATEGORIA[categoria]}.`)),
+    soltar,
+    selector)
+
+  seccionEl.addEventListener('dragover', (e) => { e.preventDefault(); soltar.classList.add('soltar--activa') })
+  seccionEl.addEventListener('dragleave', (e) => { if (!seccionEl.contains(e.relatedTarget)) soltar.classList.remove('soltar--activa') })
+  seccionEl.addEventListener('drop', (e) => {
     e.preventDefault()
-    lista.classList.remove('lista--soltando')
+    soltar.classList.remove('soltar--activa')
     subirArchivos(categoria, [...e.dataTransfer.files])
   })
-
-  const hayModrinth = elementos.some((e) => e.proyecto)
-  const avisoIris = categoria === 'shaders' && elementos.length && !proyectosPresentes().has(IRIS)
-    ? h('p', { class: 'aviso-caja' }, 'Los shaders no funcionarán sin el mod Iris. ',
-      h('button', { class: 'enlace-boton', onclick: (ev) => anadirDeModrinth('mods', { project_id: IRIS }, ev.target) }, 'Añadir Iris'))
-    : null
-
-  return [
-    h('h1', {}, NOMBRES_SECCION[categoria]),
-    h('p', { class: 'intro' }, intros[categoria]),
-    avisoIris,
-    h('div', { class: 'herramientas' },
-      h('form', { class: 'buscador', onsubmit: (e) => { e.preventDefault(); buscar(categoria, entrada.value) } },
-        entrada, h('button', { class: 'boton', type: 'submit' }, 'Buscar')),
-      h('button', { class: 'boton', onclick: () => selector.click() }, 'Subir archivo'),
-      hayModrinth ? h('button', { class: 'boton', onclick: (e) => buscarActualizaciones(categoria, e.target) }, 'Buscar actualizaciones') : null,
-      selector),
-    busqueda.categoria === categoria ? vistaResultados(categoria) : null,
-    lista,
-    h('p', { class: 'soltar-pista' }, `También puedes arrastrar archivos ${c.extension} a la lista.`)
-  ]
+  return seccionEl
 }
 
 function filaElemento (categoria, e) {
-  const detalle = []
-  detalle.push(e.tipo === 'modrinth' ? 'De Modrinth' : e.tipo === 'nuevo' ? 'Subido ahora' : 'Subido')
-  if (e.numero) detalle.push(`versión ${e.numero}`)
-  if (e.tamano) detalle.push(tamano(e.tamano))
   const actualizacion = actualizaciones.get(e.ruta)
   const activo = (ajustes.packsActivos || []).includes(e.ruta)
+  const origen = e.tipo === 'modrinth'
+    ? h('span', { class: 'chip chip--modrinth' }, 'Modrinth')
+    : e.tipo === 'nuevo'
+      ? h('span', { class: 'chip chip--nuevo' }, e.reemplaza ? 'Reemplaza al anterior' : 'Sin publicar')
+      : h('span', { class: 'chip chip--subido' }, 'Subido')
+  const detalle = [e.numero ? `Versión ${e.numero}` : null, e.tamano ? tamano(e.tamano) : null, e.ruta.split('/').pop()].filter(Boolean).join('. ')
 
   return h('li', { class: 'elemento' },
     e.icono ? h('img', { class: 'icono', src: e.icono, alt: '', loading: 'lazy' }) : h('div', { class: 'icono', 'aria-hidden': 'true' }),
     h('div', {},
-      h('div', { class: 'elemento__nombre' }, e.nombre || e.ruta.split('/').pop(), e.tipo === 'nuevo' ? ' ' : null, e.tipo === 'nuevo' ? h('span', { class: 'etiqueta' }, e.reemplaza ? 'Reemplaza al anterior' : 'Sin publicar') : null),
-      h('div', { class: 'elemento__detalle' }, `${detalle.join(', ')}. ${e.ruta.split('/').pop()}`),
+      h('div', { class: 'elemento__nombre' }, e.nombre || e.ruta.split('/').pop(), origen),
+      h('div', { class: 'elemento__detalle' }, detalle),
       e.aviso ? h('div', { class: 'elemento__aviso' }, e.aviso) : null),
     h('div', { class: 'elemento__acciones' },
       actualizacion ? h('button', { class: 'boton boton--pequeno', onclick: () => aplicarActualizacion(e.ruta) }, `Actualizar a ${actualizacion.entrada.modrinth.numero}`) : null,
       categoria === 'texturas'
-        ? h('label', { class: 'casilla' }, h('input', { type: 'checkbox', checked: activo, onchange: (ev) => cambiarActivo(e.ruta, ev.target.checked) }), 'Activado para todos')
+        ? h('label', { class: 'interruptor' }, h('input', { type: 'checkbox', checked: activo, onchange: (ev) => cambiarActivo(e.ruta, ev.target.checked) }), 'Para todos')
         : null,
-      h('button', { class: 'boton boton--pequeno boton--peligro', onclick: () => quitar(e) }, 'Quitar')))
+      h('button', { class: 'boton-quitar', 'aria-label': `Quitar ${e.nombre || e.ruta.split('/').pop()}`, onclick: () => quitar(e) }, 'Quitar')))
 }
 
-function vistaResultados (categoria) {
-  const cerrar = h('button', { class: 'enlace-boton', onclick: () => { busqueda = { categoria: null }; pintar() } }, 'Cerrar')
-  if (busqueda.cargando) return h('div', { class: 'resultados' }, h('p', { class: 'cargando' }, 'Buscando en Modrinth…'))
-  const resultados = busqueda.resultados || []
-  const presentes = proyectosPresentes()
-  return h('div', { class: 'resultados' },
-    h('div', { class: 'resultados__cabecera' }, h('span', {}, resultados.length ? `Resultados en Modrinth para Minecraft ${ajustes.minecraft}` : 'No hay resultados compatibles.'), cerrar),
-    resultados.map((r) => h('div', { class: 'resultado' },
-      r.icon_url ? h('img', { class: 'icono', src: r.icon_url, alt: '', loading: 'lazy' }) : h('div', { class: 'icono', 'aria-hidden': 'true' }),
-      h('div', {},
-        h('div', { class: 'resultado__titulo' }, r.title),
-        h('div', { class: 'resultado__descripcion' }, r.description)),
-      presentes.has(r.project_id)
-        ? h('button', { class: 'boton boton--pequeno', disabled: true }, 'Ya está')
-        : h('button', { class: 'boton boton--pequeno', onclick: (ev) => anadirDeModrinth(categoria, r, ev.target) }, 'Añadir'))))
+/* Cajón lateral para añadir desde Modrinth */
+
+function abrirCajon (categoria, texto = '') {
+  cajon = { categoria, texto, resultados: null, cargando: false }
+  const d = $('[data-dialogo="anadir"]')
+  $('[data-anadir-titulo]').textContent = `Añadir ${NOMBRE_CATEGORIA[categoria]}`
+  $('[data-anadir-nota]').textContent = `Solo aparecen los compatibles con Minecraft ${ajustes.minecraft}${categoria === 'mods' ? ' y Fabric' : ''}. Sin buscar nada, salen los más populares.`
+  const entrada = $('[data-anadir-buscador] input')
+  entrada.value = texto
+  entrada.placeholder = `Buscar ${NOMBRE_CATEGORIA[categoria]} en Modrinth`
+  if (!d.open) d.showModal()
+  entrada.focus()
+  buscarEnCajon(texto)
 }
 
-async function buscar (categoria, texto) {
-  busqueda = { categoria, texto, resultados: null, cargando: true }
-  pintar()
+async function buscarEnCajon (texto) {
+  cajon = { ...cajon, texto, cargando: true, resultados: null }
+  pintarCajon()
   try {
-    busqueda.resultados = await n.buscarEnModrinth(categoria, texto.trim(), ajustes.minecraft)
+    cajon.resultados = await n.buscarEnModrinth(cajon.categoria, texto.trim(), ajustes.minecraft)
   } catch (e) {
     avisar(e.message, 'error')
-    busqueda.resultados = []
+    cajon.resultados = []
   }
-  busqueda.cargando = false
-  pintar()
+  cajon.cargando = false
+  pintarCajon()
 }
+
+function pintarCajon () {
+  const caja = $('[data-anadir-resultados]')
+  if (cajon.cargando) { caja.replaceChildren(h('p', { class: 'cargando' }, 'Buscando en Modrinth…')); return }
+  const resultados = cajon.resultados || []
+  if (!resultados.length) { caja.replaceChildren(h('p', { class: 'vacio' }, 'No hay resultados compatibles. Prueba con otro nombre.')); return }
+  const presentes = proyectosPresentes()
+  caja.replaceChildren(...resultados.map((r) => h('div', { class: 'resultado' },
+    r.icon_url ? h('img', { class: 'icono', src: r.icon_url, alt: '', loading: 'lazy' }) : h('div', { class: 'icono', 'aria-hidden': 'true' }),
+    h('div', {},
+      h('div', { class: 'resultado__titulo' }, r.title),
+      h('div', { class: 'resultado__descripcion' }, r.description),
+      h('div', { class: 'resultado__descargas' }, `${descargas(r.downloads)} descargas`)),
+    presentes.has(r.project_id)
+      ? h('button', { class: 'boton boton--pequeno', disabled: true }, 'Ya está')
+      : h('button', { class: 'boton boton--pequeno', onclick: (ev) => anadirDeModrinth(cajon.categoria, r, ev.currentTarget) }, 'Añadir'))))
+}
+
+$('[data-anadir-buscador]').addEventListener('submit', (e) => {
+  e.preventDefault()
+  buscarEnCajon(e.target.texto.value)
+})
 
 async function anadirDeModrinth (categoria, resultado, boton) {
   if (boton) { boton.disabled = true; boton.textContent = 'Añadiendo…' }
@@ -428,8 +648,10 @@ async function anadirDeModrinth (categoria, resultado, boton) {
     if (faltan.length) avisar(`${proyecto.title} necesita ${faltan.join(', ')}, que no tiene versión para ${ajustes.minecraft}.`, 'error')
   } catch (e) {
     avisar(e.message, 'error')
+    if (boton) { boton.disabled = false; boton.textContent = 'Añadir' }
   }
   pintar()
+  if ($('[data-dialogo="anadir"]').open) pintarCajon()
 }
 
 async function subirArchivos (categoria, archivos) {
@@ -484,7 +706,7 @@ async function quitar (e) {
 function cambiarActivo (ruta, activo) {
   const lista = (ajustes.packsActivos || []).filter((r) => r !== ruta)
   ajustes.packsActivos = activo ? [...lista, ruta] : lista
-  pintarCabecera()
+  pintarMarco()
 }
 
 async function buscarActualizaciones (categoria, boton) {
@@ -526,13 +748,9 @@ function aplicarActualizacion (ruta) {
 
 /* ---------- Servidor y versión ---------- */
 
-function campo (etiqueta, control, ayuda) {
-  return h('label', { class: 'campo' }, h('span', { class: 'campo__etiqueta' }, etiqueta), control, ayuda ? h('span', { class: 'campo__ayuda' }, ayuda) : null)
-}
-
 function vistaServidor () {
   const s = ajustes.servidor || (ajustes.servidor = {})
-  const alCambiar = (fn) => (e) => { fn(e.target); pintarCabecera() }
+  const alCambiar = (fn) => (e) => { fn(e.target); pintarMarco() }
 
   const mc = h('select', { onchange: (e) => cambiarMinecraft(e.target.value) },
     [...new Set([ajustes.minecraft, ...versionesMc])].map((v) => h('option', { value: v, selected: v === ajustes.minecraft }, v)))
@@ -542,21 +760,28 @@ function vistaServidor () {
       h('option', { value: v, selected: v === loaderActual }, info?.estable ? `${v} (recomendada)` : v)))
   if (!versionesMc.length) cargarVersiones()
 
-  return [
-    h('h1', {}, 'Servidor y versión'),
-    h('p', { class: 'intro' }, 'Los launchers de los jugadores se adaptan solos al publicar: descargan la versión de Minecraft y de Fabric que elijas aquí.'),
-    h('div', { class: 'formulario' },
-      h('div', { class: 'fila' },
-        campo('Dirección del servidor', h('input', { value: s.ip || '', onchange: alCambiar((t) => { s.ip = t.value.trim() }) })),
-        campo('Puerto', h('input', { type: 'number', min: 1, max: 65535, value: s.puerto || 25565, onchange: alCambiar((t) => { s.puerto = Number(t.value) || 25565 }) }))),
-      h('label', { class: 'casilla' },
-        h('input', { type: 'checkbox', checked: s.entrarDirecto === true, onchange: alCambiar((t) => { s.entrarDirecto = t.checked }) }),
-        h('span', {}, 'Entrar al servidor nada más abrir el juego', h('br'), h('span', { class: 'campo__ayuda' }, 'Si está desmarcado, los jugadores ven el menú de RataLand y entran con su botón Jugar.'))),
-      h('div', { class: 'fila' },
-        campo('Versión de Minecraft', mc),
-        campo('Versión de Fabric', loader)),
-      vistaCompatibilidad())
-  ]
+  return h('section', { class: 'seccion' },
+    encabezado('Servidor y versión', 'Al publicar, los launchers de los jugadores se adaptan solos: usan la dirección y las versiones que elijas aquí.'),
+    h('section', { class: 'bloque' }, vistaEstado()),
+    h('section', { class: 'bloque' },
+      h('h2', {}, pixel('servidor'), 'Conexión'),
+      h('div', { class: 'formulario' },
+        h('div', { class: 'fila' },
+          campo('Dirección del servidor', h('input', { value: s.ip || '', onchange: alCambiar((t) => { s.ip = t.value.trim(); servidor.hora = 0 }) })),
+          campo('Puerto', h('input', { type: 'number', min: 1, max: 65535, value: s.puerto || 25565, onchange: alCambiar((t) => { s.puerto = Number(t.value) || 25565; servidor.hora = 0 }) }))),
+        h('label', { class: 'casilla' },
+          h('input', { type: 'checkbox', checked: s.entrarDirecto === true, onchange: alCambiar((t) => { s.entrarDirecto = t.checked }) }),
+          h('span', {}, 'Entrar al servidor nada más abrir el juego', h('br'), h('span', { class: 'campo__ayuda' }, 'Si está desmarcado, los jugadores ven el menú de RataLand y entran con su botón Jugar.'))))),
+    h('section', { class: 'bloque' },
+      h('h2', {}, pixel('mods'), 'Versión del juego'),
+      h('div', { class: 'formulario' },
+        h('div', { class: 'fila' },
+          campo('Minecraft', mc),
+          campo('Fabric', loader)),
+        vistaCompatibilidad())),
+    h('section', { class: 'bloque' },
+      h('h2', {}, pixel('resumen'), 'Comparar mods con el servidor'),
+      vistaComparacion()))
 }
 
 async function cargarVersiones () {
@@ -615,24 +840,127 @@ function aplicarCambioVersion () {
   pintar()
 }
 
+/* Comparar con los mods del servidor (pegando su registro de arranque) */
+
+function leerCacheMods () {
+  try { return JSON.parse(localStorage.getItem(CLAVE_INFO_MODS) || '{}') } catch { return {} }
+}
+
+async function infoDeElemento (e, cache) {
+  if (e.sha1 && cache[e.sha1]) return cache[e.sha1]
+  let bytes
+  if (e.tipo === 'nuevo') bytes = nuevos.get(e.ruta).bytes
+  else {
+    const url = e.tipo === 'modrinth' ? e.url : ajustes.urlBase + n.codificarRuta(e.ruta)
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`No se pudo descargar ${e.ruta.split('/').pop()}.`)
+    bytes = new Uint8Array(await res.arrayBuffer())
+  }
+  const info = await n.infoDeMod(window.JSZip, bytes)
+  if (info && e.sha1) {
+    cache[e.sha1] = info
+    try { localStorage.setItem(CLAVE_INFO_MODS, JSON.stringify(cache)) } catch { /* sin espacio: no pasa nada */ }
+  }
+  return info
+}
+
+async function compararConServidor (texto) {
+  const registro = n.modsDelRegistro(texto)
+  if (!registro) {
+    comparacion = { ...comparacion, texto, error: 'No encuentro la lista "Loading N mods" en ese texto. Copia el registro desde el arranque del servidor.', resultado: null }
+    pintar()
+    return
+  }
+  const elementos = elementosDe('mods')
+  comparacion = { texto, cargando: true, progreso: 'Leyendo los mods del modpack…', resultado: null, registro, error: null }
+  pintar()
+  const cache = leerCacheMods()
+  const cliente = []
+  let i = 0
+  try {
+    for (const e of elementos) {
+      comparacion.progreso = `Leyendo los mods del modpack (${++i} de ${elementos.length})…`
+      const progreso = $('[data-comparacion-progreso]')
+      if (progreso) progreso.textContent = comparacion.progreso
+      const info = await infoDeElemento(e, cache)
+      cliente.push(info ? { ...info, nombre: e.nombre || info.nombre } : { id: null, nombre: e.nombre })
+    }
+    comparacion.resultado = n.compararMods(cliente, registro.mods)
+  } catch (err) {
+    comparacion.error = err.message
+  }
+  comparacion.cargando = false
+  pintar()
+}
+
+function vistaComparacion () {
+  const area = h('textarea', { class: 'registro', placeholder: '[12:00:00] [main/INFO]: Loading 59 mods:\n\t- fabric-api 0.116.17+1.21.1\n\t- …', spellcheck: 'false' }, comparacion.texto)
+  const r = comparacion.resultado
+  const reg = comparacion.registro
+  const nombreDe = (m) => m.nombre && m.nombre !== m.id ? `${m.nombre} (${m.id})` : m.id
+
+  let resultado = null
+  if (comparacion.cargando) {
+    resultado = h('p', { class: 'aviso-caja', 'data-comparacion-progreso': '' }, comparacion.progreso)
+  } else if (comparacion.error) {
+    resultado = h('p', { class: 'aviso-caja aviso-caja--mal' }, comparacion.error)
+  } else if (r) {
+    const problemas = r.faltanEnModpack.length + r.otraVersion.length
+    resultado = h('div', { class: 'comparacion' },
+      reg.minecraft && reg.minecraft !== ajustes.minecraft
+        ? h('p', { class: 'aviso-caja aviso-caja--mal' }, `El servidor usa Minecraft ${reg.minecraft} y el modpack ${ajustes.minecraft}.`)
+        : null,
+      !problemas ? h('p', { class: 'aviso-caja aviso-caja--bien' }, 'Todo cuadra: no falta ningún mod del servidor en el modpack.') : null,
+      r.faltanEnModpack.length
+        ? h('div', { class: 'aviso-caja aviso-caja--mal' },
+          h('h3', {}, `${r.faltanEnModpack.length} en el servidor pero no en el modpack`),
+          h('p', {}, 'Si añaden bloques, objetos o criaturas, los jugadores no podrán entrar sin ellos. Si son solo de servidor (permisos, copias de seguridad…), no hace falta añadirlos.'),
+          h('ul', {}, r.faltanEnModpack.map((m) => h('li', {}, `${m.id} ${m.version} `, h('button', { class: 'enlace-boton', onclick: () => abrirCajon('mods', m.id) }, 'Buscar en Modrinth')))))
+        : null,
+      r.otraVersion.length
+        ? h('div', { class: 'aviso-caja' },
+          h('h3', {}, `${r.otraVersion.length} con otra versión`),
+          h('ul', {}, r.otraVersion.map((m) => h('li', {}, `${nombreDe(m)}: modpack ${m.version}, servidor ${m.versionServidor}`))))
+        : null,
+      r.faltanEnServidor.length
+        ? h('div', { class: 'aviso-caja' },
+          h('h3', {}, `${r.faltanEnServidor.length} en el modpack pero no en el servidor`),
+          h('p', {}, 'Si son visuales o de rendimiento (mapas, menús, gráficos) no pasa nada. Si añaden contenido, instálalos también en Aternos.'),
+          h('ul', {}, r.faltanEnServidor.map((m) => h('li', {}, nombreDe(m)))))
+        : null,
+      r.soloCliente.length || r.coinciden.length
+        ? h('p', { class: 'nota' },
+          r.coinciden.length ? `${r.coinciden.length} ${r.coinciden.length === 1 ? 'coincide' : 'coinciden'}${r.coinciden.length ? ` (${r.coinciden.map((m) => m.nombre || m.id).join(', ')})` : ''}. ` : '',
+          r.soloCliente.length ? `${r.soloCliente.length} ${r.soloCliente.length === 1 ? 'es' : 'son'} solo para jugadores y no ${r.soloCliente.length === 1 ? 'hace' : 'hacen'} falta en el servidor (${r.soloCliente.map((m) => m.nombre || m.id).join(', ')}).` : '')
+        : null)
+  }
+
+  return h('div', { class: 'formulario' },
+    h('ol', { class: 'pasos' },
+      h('li', {}, 'En Aternos, enciende el servidor y abre ', h('strong', {}, 'Registro'), ' (Log).'),
+      h('li', {}, 'Copia todo el texto desde el principio del arranque y pégalo aquí.')),
+    campo('Registro de arranque del servidor', area),
+    h('p', {}, h('button', { class: 'boton', disabled: comparacion.cargando, onclick: () => compararConServidor(area.value) }, comparacion.cargando ? 'Comparando…' : 'Comparar')),
+    resultado)
+}
+
 /* ---------- Noticias ---------- */
 
 function vistaNoticias () {
   const noticias = ajustes.noticias || (ajustes.noticias = [])
   const hoy = new Date().toISOString().slice(0, 10)
-  return [
-    h('h1', {}, 'Noticias'),
-    h('p', { class: 'intro' }, 'Aparecen a la derecha del launcher, en este orden.'),
-    h('p', {}, h('button', { class: 'boton', onclick: () => { noticias.unshift({ fecha: hoy, titulo: '', texto: '' }); pintar() } }, 'Añadir noticia')),
+  return h('section', { class: 'seccion' },
+    encabezado('Noticias', 'Aparecen a la derecha del launcher, en este orden.',
+      h('button', { class: 'boton', onclick: () => { noticias.unshift({ fecha: hoy, titulo: '', texto: '' }); pintar() } }, 'Escribir noticia')),
     h('div', { class: 'tarjetas' }, noticias.length
-      ? noticias.map((noticia, i) => h('div', { class: 'tarjeta' },
-        h('div', { class: 'fila' },
-          campo('Título', h('input', { value: noticia.titulo || '', oninput: (e) => { noticia.titulo = e.target.value; pintarCabecera() } })),
-          campo('Fecha', h('input', { type: 'date', value: noticia.fecha || '', oninput: (e) => { noticia.fecha = e.target.value; pintarCabecera() } }))),
-        campo('Texto', h('textarea', { oninput: (e) => { noticia.texto = e.target.value; pintarCabecera() } }, noticia.texto || '')),
-        h('p', {}, h('button', { class: 'boton boton--pequeno boton--peligro', onclick: () => { noticias.splice(i, 1); pintar() } }, 'Quitar noticia'))))
-      : h('p', { class: 'vacio' }, 'No hay noticias.'))
-  ]
+      ? noticias.map((noticia, i) => h('section', { class: 'bloque' },
+        h('div', { class: 'formulario' },
+          h('div', { class: 'fila' },
+            campo('Título', h('input', { value: noticia.titulo || '', placeholder: 'Empieza la temporada', oninput: (e) => { noticia.titulo = e.target.value; pintarMarco() } })),
+            campo('Fecha', h('input', { type: 'date', value: noticia.fecha || '', oninput: (e) => { noticia.fecha = e.target.value; pintarMarco() } }))),
+          campo('Texto', h('textarea', { oninput: (e) => { noticia.texto = e.target.value; pintarMarco() } }, noticia.texto || '')),
+          h('p', {}, h('button', { class: 'boton-quitar', onclick: () => { noticias.splice(i, 1); pintar() } }, 'Quitar esta noticia')))))
+      : h('p', { class: 'bloque vacio' }, 'No hay noticias. Escribe la primera para que salga en el launcher.')))
 }
 
 /* ---------- Cuenta atrás ---------- */
@@ -654,80 +982,64 @@ function aFechaLocal (iso) {
 function vistaEvento () {
   const ev = ajustes.evento || (ajustes.evento = { titulo: '', fecha: '', duracionHoras: 3 })
   const previa = h('p', { class: 'vista-previa' })
-  const actualizarPrevia = () => {
-    const ms = new Date(ev.fecha).getTime() - Date.now()
-    if (!ev.fecha || Number.isNaN(ms)) previa.textContent = 'Sin cuenta atrás.'
-    else if (ms <= 0) previa.textContent = `${ev.titulo || 'El evento'}: ¡Ya empezó!`
-    else {
-      const s = Math.floor(ms / 1000)
-      previa.textContent = `${ev.titulo || 'El próximo evento'} empieza en ${Math.floor(s / 86400)}d ${String(Math.floor(s / 3600) % 24).padStart(2, '0')}h ${String(Math.floor(s / 60) % 60).padStart(2, '0')}m`
-    }
-  }
+  const actualizarPrevia = () => { previa.textContent = cuentaAtras(ev) || 'Sin cuenta atrás.' }
   actualizarPrevia()
-  return [
-    h('h1', {}, 'Cuenta atrás'),
-    h('p', { class: 'intro' }, 'Se muestra en el launcher debajo del estado del servidor. Al llegar la hora dice "¡Ya empezó!" durante las horas que indiques y luego desaparece.'),
-    h('div', { class: 'formulario' },
-      campo('Título', h('input', { value: ev.titulo || '', placeholder: 'Episodio 2', oninput: (e) => { ev.titulo = e.target.value; actualizarPrevia(); pintarCabecera() } })),
-      h('div', { class: 'fila' },
-        campo('Fecha y hora', h('input', {
-          type: 'datetime-local',
-          value: ev.fecha ? aFechaLocal(ev.fecha) : '',
-          oninput: (e) => { ev.fecha = e.target.value ? `${e.target.value}:00${desfaseLocal()}` : ''; actualizarPrevia(); pintarCabecera() }
-        }), `Hora de este dispositivo (UTC${desfaseLocal()}). Cada jugador la verá en su hora.`),
-        campo('Duración (horas)', h('input', { type: 'number', min: 1, max: 48, value: ev.duracionHoras || 3, oninput: (e) => { ev.duracionHoras = Number(e.target.value) || 3; pintarCabecera() } }))),
-      h('div', { class: 'tarjeta' }, h('span', { class: 'campo__ayuda' }, 'Así se verá ahora mismo:'), previa),
-      ev.fecha ? h('p', {}, h('button', { class: 'boton boton--peligro', onclick: () => { ajustes.evento = { titulo: '', fecha: '', duracionHoras: 3 }; pintar() } }, 'Quitar cuenta atrás')) : null)
-  ]
+  return h('section', { class: 'seccion' },
+    encabezado('Cuenta atrás', 'Se muestra en el launcher debajo del estado del servidor. Al llegar la hora dice "¡Ya empezó!" durante las horas que indiques y luego desaparece.'),
+    h('section', { class: 'bloque' },
+      h('div', { class: 'formulario' },
+        campo('Título', h('input', { value: ev.titulo || '', placeholder: 'Episodio 2', oninput: (e) => { ev.titulo = e.target.value; actualizarPrevia(); pintarMarco() } })),
+        h('div', { class: 'fila' },
+          campo('Fecha y hora', h('input', {
+            type: 'datetime-local',
+            value: ev.fecha ? aFechaLocal(ev.fecha) : '',
+            oninput: (e) => { ev.fecha = e.target.value ? `${e.target.value}:00${desfaseLocal()}` : ''; actualizarPrevia(); pintarMarco() }
+          }), `Hora de este dispositivo (UTC${desfaseLocal()}). Cada jugador la verá en su hora.`),
+          campo('Duración (horas)', h('input', { type: 'number', min: 1, max: 48, value: ev.duracionHoras || 3, oninput: (e) => { ev.duracionHoras = Number(e.target.value) || 3; pintarMarco() } }))),
+        h('div', {}, h('span', { class: 'campo__ayuda' }, 'Así se verá ahora mismo en el launcher:'), previa),
+        ev.fecha ? h('p', {}, h('button', { class: 'boton-quitar', onclick: () => { ajustes.evento = { titulo: '', fecha: '', duracionHoras: 3 }; pintar() } }, 'Quitar la cuenta atrás')) : null)))
 }
 
 /* ---------- Enlaces ---------- */
 
 function vistaEnlaces () {
   const enlaces = ajustes.enlaces || (ajustes.enlaces = {})
-  const tipos = [['discord', 'Discord', 'https://discord.gg/…'], ['youtube', 'YouTube', 'https://youtube.com/@…'], ['tiktok', 'TikTok', 'https://tiktok.com/@…'], ['twitch', 'Twitch', 'https://twitch.tv/…'], ['x', 'X', 'https://x.com/…'], ['web', 'Web', 'https://…']]
-  return [
-    h('h1', {}, 'Enlaces'),
-    h('p', { class: 'intro' }, 'Los que tengan dirección aparecen abajo en el launcher. Discord además sale en el menú de pausa del juego.'),
-    h('div', { class: 'formulario' }, tipos.map(([clave, nombre, ejemplo]) => {
-      const error = h('span', { class: 'campo__ayuda error', hidden: true }, 'Tiene que empezar por https://')
-      return campo(nombre, [h('input', {
-        type: 'url',
-        value: enlaces[clave] || '',
-        placeholder: ejemplo,
-        oninput: (e) => {
-          const v = e.target.value.trim()
-          error.hidden = !v || /^https:\/\//.test(v)
-          if (!v) delete enlaces[clave]
-          else enlaces[clave] = v
-          pintarCabecera()
-        }
-      }), error])
-    }))
-  ]
+  const tipos = [['discord', 'https://discord.gg/…'], ['youtube', 'https://youtube.com/@…'], ['tiktok', 'https://tiktok.com/@…'], ['twitch', 'https://twitch.tv/…'], ['x', 'https://x.com/…'], ['web', 'https://…']]
+  return h('section', { class: 'seccion' },
+    encabezado('Enlaces', 'Los que tengan dirección aparecen abajo en el launcher. Discord además sale en el menú de pausa del juego. Deja vacíos los que no uses.'),
+    h('section', { class: 'bloque' },
+      h('div', { class: 'formulario' }, tipos.map(([clave, ejemplo]) => {
+        const error = h('span', { class: 'campo__ayuda error', hidden: !enlaces[clave] || /^https:\/\//.test(enlaces[clave]) }, 'Tiene que empezar por https://')
+        return campo(NOMBRES_ENLACE[clave], [h('input', {
+          type: 'url',
+          value: enlaces[clave] || '',
+          placeholder: ejemplo,
+          oninput: (e) => {
+            const v = e.target.value.trim()
+            error.hidden = !v || /^https:\/\//.test(v)
+            if (!v) delete enlaces[clave]
+            else enlaces[clave] = v
+            pintarMarco()
+          }
+        }), error])
+      }))))
 }
 
 /* ---------- Conexión ---------- */
-
-function abrirDialogo (nombre) {
-  const d = $(`[data-dialogo="${nombre}"]`)
-  if (!d.open) d.showModal()
-  return d
-}
 
 async function conectar (llave, recordar) {
   const prueba = new n.GitHub(llave)
   usuario = await prueba.comprobarLlave()
   gh = prueba
   guardarLlave(llave, recordar)
-  pintarCabecera()
+  pintarMarco()
 }
 
 function desconectar () {
   guardarLlave('', false)
   gh = new n.GitHub('')
   usuario = null
-  pintarCabecera()
+  pintarMarco()
 }
 
 $('[data-formulario-llave]').addEventListener('submit', async (e) => {
@@ -785,18 +1097,16 @@ $('[data-formulario-publicar]').addEventListener('submit', async (e) => {
     ajustes.enlaces = Object.fromEntries(Object.entries(ajustes.enlaces || {})
       .map(([clave, url]) => [clave, String(url || '').trim()])
       .filter(([, url]) => url))
-    const NOMBRES_ENLACE = { discord: 'Discord', youtube: 'YouTube', tiktok: 'TikTok', twitch: 'Twitch', x: 'X', web: 'Web' }
     for (const [clave, url] of Object.entries(ajustes.enlaces)) {
       if (!/^https:\/\//.test(url)) throw new Error(`El enlace de ${NOMBRES_ENLACE[clave] || clave} tiene que empezar por https:// (o déjalo vacío en Enlaces).`)
     }
     if (ajustes.externos && !ajustes.externos.length) delete ajustes.externos
     alProgreso('Preparando el manifiesto', 0, 1)
     const manifiesto = await n.generarManifiesto({ gh, ajustes, archivos: archivosFinales(), manifiestoPrevio: base.manifiesto, alProgreso })
-    const commit = await n.publicar({ gh, head: base.head, arbol: base.arbol, nuevos, borrados, ajustes, manifiesto, mensaje: form.mensaje.value.trim(), alProgreso })
+    await n.publicar({ gh, head: base.head, arbol: base.arbol, nuevos, borrados, ajustes, manifiesto, mensaje: form.mensaje.value.trim(), alProgreso })
     alProgreso('Publicado', 1, 1)
     form.closest('dialog').close()
     avisar('Publicado. Los jugadores lo recibirán al pulsar Jugar (en unos minutos).')
-    console.info('Commit publicado:', commit.html_url)
     await cargar()
   } catch (err) {
     error.textContent = err.message
@@ -808,12 +1118,12 @@ $('[data-formulario-publicar]').addEventListener('submit', async (e) => {
 /* ---------- Carga ---------- */
 
 async function cargar () {
-  const contenido = $('[data-contenido]')
   try {
     base = await n.cargarModpack(gh)
   } catch (e) {
-    contenido.replaceChildren(h('p', { class: 'error' }, `No se pudo cargar el modpack: ${e.message}`),
-      h('button', { class: 'boton', onclick: cargar }, 'Reintentar'))
+    $('[data-contenido]').replaceChildren(h('section', { class: 'seccion' },
+      encabezado('No se pudo cargar el modpack', e.message),
+      h('button', { class: 'boton', onclick: cargar }, 'Reintentar')))
     return
   }
   ajustes = structuredClone(base.ajustes)
@@ -824,18 +1134,21 @@ async function cargar () {
   pintar()
   const hashes = [...base.archivos.keys()].map(sha1DeRepo).filter(Boolean)
   n.identificarPorHash(hashes).then((m) => { identificados = m; pintar() }).catch(() => {})
+  cargarHistoria()
+  if (seccion === 'resumen' || seccion === 'servidor') consultarServidor(true)
 }
 
 document.addEventListener('click', (e) => {
-  const opcion = e.target.closest('[data-seccion]')
-  if (opcion) {
-    seccion = opcion.dataset.seccion
-    pintar()
-    $('[data-contenido]').focus?.()
-  }
+  // (composedPath, porque el botón se redibuja al pulsarlo y deja de estar dentro de [data-cuenta])
+  if (menuCuentaAbierto && !e.composedPath().includes($('[data-cuenta]'))) alternarMenuCuenta(false)
+
   const accion = e.target.closest('[data-accion]')?.dataset.accion
   if (accion === 'abrir-publicar') abrirPublicar()
   if (accion === 'cerrar-dialogo') e.target.closest('dialog').close()
+  if (accion === 'ver-cambios') {
+    listaCambiosAbierta = !listaCambiosAbierta
+    pintarMarco()
+  }
   if (accion === 'descartar') {
     const lista = cambios()
     confirmar({
@@ -859,11 +1172,19 @@ document.addEventListener('click', (e) => {
   }
 })
 
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && menuCuentaAbierto) {
+    alternarMenuCuenta(false)
+    $('.cuenta-boton')?.focus()
+  }
+})
+
 window.addEventListener('beforeunload', (e) => {
-  if (base && cambios().length) e.preventDefault()
+  if (cambios().length) e.preventDefault()
 })
 
 ;(async () => {
+  pintarMarco()
   if (gh.token) {
     try {
       usuario = await gh.comprobarLlave()
@@ -872,6 +1193,5 @@ window.addEventListener('beforeunload', (e) => {
       desconectar()
     }
   }
-  pintarCabecera()
   await cargar()
 })()
