@@ -155,6 +155,32 @@
         "nombre": "Skin Restorer",
         "icono": "https://cdn.modrinth.com/data/ghrZDhGW/f5bc55cd7b07f988b5f28d7d3f0a4c8e9f480bc1_96.webp"
       }
+    },
+    {
+      "ruta": "mods/RyoamicLights-fabric-0.2.11+mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/reCfnRvJ/versions/eFFsHtIr/RyoamicLights-fabric-0.2.11%2Bmc1.21.1.jar",
+      "sha1": "d0d7a4639b289ecc25d04ff91bad4ca9885dc645",
+      "tamano": 607118,
+      "modrinth": {
+        "proyecto": "reCfnRvJ",
+        "version": "eFFsHtIr",
+        "numero": "0.2.11+mc1.21.1-fabric",
+        "nombre": "RyoamicLights",
+        "icono": "https://cdn.modrinth.com/data/reCfnRvJ/f300dbab39c5628d9293980cddb8bf7451e2c5d7_96.webp"
+      }
+    },
+    {
+      "ruta": "mods/ObsidianUI-fabric-0.2.9+mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/E0L8mfJZ/versions/j7blxBm6/ObsidianUI-fabric-0.2.9%2Bmc1.21.1.jar",
+      "sha1": "12a8051e00f7725b724b280ad521ee6e8ce5c9e4",
+      "tamano": 209744,
+      "modrinth": {
+        "proyecto": "E0L8mfJZ",
+        "version": "j7blxBm6",
+        "numero": "0.2.9+mc1.21.1-fabric",
+        "nombre": "ObsidianUI",
+        "icono": "https://cdn.modrinth.com/data/E0L8mfJZ/ef2aaf4efa20d0cf33213e418c42e5a025720c8e.png"
+      }
     }
   ],
   "packsActivos": []
