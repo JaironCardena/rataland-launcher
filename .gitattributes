@@ -1,0 +1,5 @@
+# Los archivos del modpack se descargan tal cual: sin convertir finales de línea,
+# o su sha1 dejaría de coincidir con el de manifest.json.
+modpack/** -text
+mod/gradlew text eol=lf
+*.bat text eol=crlf

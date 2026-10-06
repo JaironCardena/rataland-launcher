@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "rataland",
+  "version": "${version}",
+  "name": "RataLand",
+  "description": "Pantalla de carga y menú principal de la serie RataLand.",
+  "authors": ["RataLand"],
+  "icon": "assets/rataland/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.rataland.menu.RataLand"]
+  },
+  "mixins": ["rataland.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}

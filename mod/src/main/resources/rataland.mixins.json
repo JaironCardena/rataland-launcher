@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "com.rataland.menu.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "MinecraftClientMixin",
+    "ScreenMixin",
+    "SplashOverlayMixin",
+    "WindowMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

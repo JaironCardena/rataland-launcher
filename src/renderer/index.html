@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' https://mc-heads.net data:; style-src 'self'; font-src 'self'; script-src 'self'; connect-src 'none'">
+  <title>Launcher</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="fondo" aria-hidden="true"></div>
+
+  <header class="barra-titulo">
+    <span class="barra-titulo__nombre" data-nombre></span>
+    <div class="barra-titulo__botones">
+      <button class="boton-ventana" data-ventana="minimizar" aria-label="Minimizar">
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5h8" /></svg>
+      </button>
+      <button class="boton-ventana boton-ventana--cerrar" data-ventana="cerrar" aria-label="Cerrar">
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="escena">
+    <section class="principal" aria-labelledby="nombre-serie">
+      <div class="marca">
+        <img class="marca__logo" src="assets/logo.png" alt="" hidden>
+        <h1 class="marca__texto" id="nombre-serie" data-nombre></h1>
+      </div>
+
+      <p class="estado-servidor" data-estado-servidor="comprobando">
+        <span class="estado-servidor__luz" aria-hidden="true"></span>
+        <span class="estado-servidor__texto">Comprobando el servidor…</span>
+      </p>
+
+      <!-- Sin cuenta -->
+      <div class="zona zona--login" hidden>
+        <h2 class="zona__titulo">Inicia sesión para jugar</h2>
+        <button class="boton-microsoft" data-accion="login-microsoft">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="0" y="0" width="7.5" height="7.5" fill="#f25022" />
+            <rect x="8.5" y="0" width="7.5" height="7.5" fill="#7fba00" />
+            <rect x="0" y="8.5" width="7.5" height="7.5" fill="#00a4ef" />
+            <rect x="8.5" y="8.5" width="7.5" height="7.5" fill="#ffb900" />
+          </svg>
+          Iniciar sesión con Microsoft
+        </button>
+        <form class="sin-premium" hidden>
+          <label class="sin-premium__etiqueta" for="nombre-jugador">¿Sin Minecraft premium? Elige tu nombre</label>
+          <div class="sin-premium__fila">
+            <input id="nombre-jugador" class="campo" name="nombre" autocomplete="off" spellcheck="false"
+                   maxlength="16" placeholder="Tu nombre en el juego" required>
+            <button class="boton-secundario" type="submit">Entrar</button>
+          </div>
+        </form>
+        <p class="aviso aviso--error" data-error-login role="alert" hidden></p>
+      </div>
+
+      <!-- Con cuenta -->
+      <div class="zona zona--jugar" hidden>
+        <div class="fila-jugar">
+          <button class="jugar" data-accion="jugar">
+            <span class="jugar__texto">Jugar</span>
+          </button>
+          <button class="boton-cuadrado" data-accion="ajustes" aria-label="Ajustes" aria-expanded="false" aria-controls="ajustes">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10 2h4v3.1l1.8.8 2.2-2.2 2.8 2.8-2.2 2.2.8 1.8H22v4h-3.1l-.8 1.8 2.2 2.2-2.8 2.8-2.2-2.2-1.8.8V22h-4v-3.1l-1.8-.8-2.2 2.2-2.8-2.8 2.2-2.2-.8-1.8H2v-4h3.1l.8-1.8-2.2-2.2 2.8-2.8 2.2 2.2 1.8-.8z" />
+              <rect x="9" y="9" width="6" height="6" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="progreso" hidden aria-live="polite">
+          <div class="progreso__numero" aria-hidden="true"></div>
+          <div class="xp" role="progressbar" aria-label="Progreso" aria-valuemin="0" aria-valuemax="100">
+            <div class="xp__relleno"></div>
+          </div>
+          <p class="progreso__texto"></p>
+        </div>
+
+        <div class="aviso aviso--error" data-error-juego role="alert" hidden>
+          <p class="aviso__mensaje"></p>
+          <pre class="aviso__lineas" hidden></pre>
+          <div class="aviso__acciones">
+            <button class="enlace" data-accion="jugar">Reintentar</button>
+            <button class="enlace" data-accion="reparar">Reparar archivos</button>
+            <button class="enlace" data-accion="registros">Ver registros</button>
+          </div>
+        </div>
+        <p class="aviso" data-aviso hidden></p>
+      </div>
+    </section>
+
+    <aside class="noticias" aria-labelledby="titulo-noticias">
+      <h2 class="noticias__titulo" id="titulo-noticias">Novedades</h2>
+      <ol class="noticias__lista"></ol>
+      <p class="noticias__vacio" hidden>Aquí aparecerán los avisos del servidor.</p>
+    </aside>
+
+    <aside class="ajustes" id="ajustes" aria-labelledby="titulo-ajustes" hidden>
+      <div class="ajustes__cabecera">
+        <h2 id="titulo-ajustes">Ajustes</h2>
+        <button class="boton-ventana" data-accion="cerrar-ajustes" aria-label="Cerrar ajustes">
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg>
+        </button>
+      </div>
+
+      <div class="ajuste">
+        <label class="ajuste__titulo" for="ram">Memoria para Minecraft <output class="ajuste__valor" for="ram"></output></label>
+        <input type="range" id="ram" class="deslizador" min="2048" step="512">
+        <p class="ajuste__ayuda" data-ayuda-ram></p>
+      </div>
+
+      <label class="ajuste ajuste--interruptor">
+        <span>
+          <span class="ajuste__titulo">Cerrar el launcher al entrar al juego</span>
+          <span class="ajuste__ayuda">Si está apagado, el launcher se esconde y vuelve cuando cierras Minecraft.</span>
+        </span>
+        <input type="checkbox" id="cerrar-al-jugar" class="interruptor">
+      </label>
+
+      <div class="ajuste">
+        <span class="ajuste__titulo">¿El juego no abre?</span>
+        <p class="ajuste__ayuda">Reparar vuelve a comprobar Minecraft, Java y los mods, y descarga lo que esté dañado.</p>
+        <div class="ajuste__botones">
+          <button class="boton-secundario" data-accion="reparar">Reparar archivos</button>
+          <button class="enlace" data-accion="registros">Ver registros</button>
+        </div>
+      </div>
+
+      <p class="ajuste ajuste__ayuda" data-version-launcher></p>
+    </aside>
+  </main>
+
+  <footer class="pie">
+    <div class="cuenta" hidden>
+      <img class="cuenta__cabeza" alt="" width="36" height="36">
+      <div class="cuenta__datos">
+        <span class="cuenta__nombre"></span>
+        <span class="cuenta__tipo"></span>
+      </div>
+      <button class="enlace enlace--tenue" data-accion="cerrar-sesion">Cerrar sesión</button>
+    </div>
+    <div class="pie__derecha">
+      <div class="actualizacion" role="status" hidden>
+        <span class="actualizacion__texto"></span>
+        <button class="boton-secundario boton-secundario--pequeno" data-accion="instalar-actualizacion" hidden>Reiniciar y actualizar</button>
+      </div>
+      <nav class="enlaces" aria-label="Enlaces"></nav>
+      <span class="pie__version" data-version></span>
+    </div>
+  </footer>
+
+  <script src="demo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

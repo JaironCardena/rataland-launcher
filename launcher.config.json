@@ -1,0 +1,22 @@
+{
+  "nombre": "RataLand",
+  "carpeta": ".rataland",
+  "manifiesto": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/manifest.json",
+
+  "minecraft": "1.21.1",
+  "loader": { "tipo": "fabric", "version": "0.19.5" },
+  "servidor": { "ip": "Rataland-8RN6.aternos.me", "puerto": 47702, "entrarDirecto": false },
+
+  "cuentas": { "microsoft": true, "noPremium": true },
+  "ramPredeterminada": 4096,
+
+  "apariencia": {
+    "logo": "assets/logo.png",
+    "fondo": "assets/fondo.png"
+  },
+
+  "enlaces": {
+    "discord": "",
+    "web": ""
+  }
+}

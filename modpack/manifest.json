@@ -1,0 +1,31 @@
+{
+  "generado": "2026-10-06T05:38:58.484Z",
+  "minecraft": "1.21.1",
+  "loader": {
+    "tipo": "fabric",
+    "version": "0.19.5"
+  },
+  "servidor": {
+    "ip": "Rataland-8RN6.aternos.me",
+    "puerto": 47702,
+    "entrarDirecto": false
+  },
+  "carpetasSincronizadas": [
+    "mods"
+  ],
+  "noticias": [
+    {
+      "fecha": "2026-10-06",
+      "titulo": "Bienvenidos a RataLand",
+      "texto": "Pulsa Jugar: el launcher descarga todo lo necesario. Dentro del juego, el botón Jugar del menú te lleva directo al servidor."
+    }
+  ],
+  "archivos": [
+    {
+      "ruta": "mods/rataland-menu-1.0.0.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-1.0.0.jar",
+      "sha1": "848432a4299aa4ccc94ce19329c89325141ec68d",
+      "tamano": 31307
+    }
+  ]
+}

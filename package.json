@@ -1,0 +1,65 @@
+{
+  "name": "rataland-launcher",
+  "productName": "RataLand",
+  "version": "1.0.0",
+  "description": "Launcher de Minecraft de la serie RataLand",
+  "main": "src/main/index.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "publicar": "node tools/publicar.js",
+    "dist": "electron-builder --win",
+    "release": "node tools/release.js"
+  },
+  "dependencies": {
+    "@xmcl/core": "2.15.1",
+    "@xmcl/installer": "6.1.2",
+    "@xmcl/task": "4.1.1",
+    "adm-zip": "^0.6.1",
+    "electron-updater": "^6.8.9",
+    "msmc": "^5.0.5"
+  },
+  "devDependencies": {
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "pngjs": "^7.0.0"
+  },
+  "allowScripts": {
+    "electron@44.5.1": true
+  },
+  "build": {
+    "appId": "com.rataland.launcher",
+    "productName": "RataLand",
+    "files": [
+      "src/**/*",
+      "launcher.config.json",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "RataLand",
+      "artifactName": "RataLand-Setup-${version}.${ext}",
+      "uninstallDisplayName": "RataLand"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "JaironCardena",
+        "repo": "rataland-launcher"
+      }
+    ]
+  },
+  "author": "JaironCardena",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JaironCardena/rataland-launcher.git"
+  }
+}
