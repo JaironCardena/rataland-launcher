@@ -38,6 +38,33 @@ function validar (m) {
 }
 
 /**
+ * raw.githubusercontent.com guarda "main" en caché unos minutos: justo después de publicar puede
+ * servir el manifiesto viejo, que apunta a archivos que ya se borraron (error 404).
+ * Si el manifiesto está en GitHub se pregunta cuál es el último commit y se lee todo de ese commit,
+ * cuyo contenido no cambia nunca. Devuelve null si no se puede (otra web, límite de la API...).
+ */
+async function fijarCommit (direccion) {
+  const m = /^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/.exec(direccion)
+  if (!m) return null
+  const [, dueno, repo, rama, ruta] = m
+  if (/^[0-9a-f]{40}$/.test(rama)) return null
+  try {
+    const res = await fetch(`https://api.github.com/repos/${dueno}/${repo}/commits/${encodeURIComponent(rama)}`, {
+      headers: { accept: 'application/vnd.github.sha', 'user-agent': 'RataLand-Launcher' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(8000)
+    })
+    if (!res.ok) return null
+    const sha = (await res.text()).trim()
+    if (!/^[0-9a-f]{40}$/.test(sha)) return null
+    const raiz = `https://raw.githubusercontent.com/${dueno}/${repo}/`
+    return { rama: `${raiz}${rama}/`, commit: `${raiz}${sha}/`, manifiesto: `${raiz}${sha}/${ruta}` }
+  } catch {
+    return null
+  }
+}
+
+/**
  * Descarga el manifiesto remoto (lista de mods, versión del juego, noticias).
  * Si no hay internet usa la última copia guardada para que se pueda seguir jugando.
  */
@@ -48,12 +75,19 @@ async function obtenerManifiesto (config, dirDatos) {
   if (!/^https?:\/\//i.test(config.manifiesto)) return manifiestoLocal(config.manifiesto)
   const copia = path.join(dirDatos, 'manifest.json')
   try {
-    const url = new URL(config.manifiesto)
-    url.searchParams.set('t', Date.now())
+    const fijo = await fijarCommit(config.manifiesto)
+    const url = new URL(fijo ? fijo.manifiesto : config.manifiesto)
+    if (!fijo) url.searchParams.set('t', Date.now())
     const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(15000) })
     if (!res.ok) throw new Error(`El servidor respondió ${res.status}`)
     const manifiesto = await res.json()
     validar(manifiesto)
+    // Los archivos subidos al repositorio también se bajan de ese mismo commit
+    if (fijo) {
+      for (const a of manifiesto.archivos || []) {
+        if (a.url.startsWith(fijo.rama)) a.url = fijo.commit + a.url.slice(fijo.rama.length)
+      }
+    }
     await escribirJson(copia, manifiesto)
     return { manifiesto, origen: 'red' }
   } catch (e) {
