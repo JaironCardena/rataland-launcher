@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T08:10:25.893Z",
+  "generado": "2026-10-06T08:12:10.272Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -43,11 +43,11 @@
       "git": "62ecc5f93ffe590d6ec510f148886ded7c6a24af"
     },
     {
-      "ruta": "mods/rataland-menu-1.2.1.jar",
-      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-1.2.1.jar",
-      "sha1": "78f0e20c77908e847c2a34f375798ade668ec466",
-      "tamano": 58827,
-      "git": "4c3c7357864d98545692edf53103357dfecf9de0"
+      "ruta": "mods/rataland-menu-1.2.2.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-1.2.2.jar",
+      "sha1": "3966eb1b92223df4d87620d8f1b8b3df93efa839",
+      "tamano": 58526,
+      "git": "0664f0040e637943cbeeec4f562ab82c16f54354"
     }
   ]
 }

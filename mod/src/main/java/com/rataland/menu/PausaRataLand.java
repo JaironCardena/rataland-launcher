@@ -34,7 +34,7 @@ public class PausaRataLand extends Screen {
 	protected void init() {
 		boolean hayDiscord = !RataLand.discord.isEmpty();
 		int alturaLogo = RataLand.LOGO_ALTO * escalaLogo();
-		this.panelAlto = 12 + alturaLogo + 10 + 24 + 4 + 20 + 4 + 20 + 8 + 12 + 8 + 20 + 12;
+		this.panelAlto = 12 + alturaLogo + 10 + 24 + 4 + 20 + 4 + 20 + 12 + 20 + 12;
 		this.panelX = (this.width - ANCHO) / 2;
 		this.panelY = Math.max(4, (this.height - panelAlto) / 2);
 		int x = panelX + (ANCHO - ANCHO_BOTON) / 2;
@@ -63,7 +63,7 @@ public class PausaRataLand extends Screen {
 			this.addDrawableChild(new BotonRataLand(x + medio + 4, y, medio, 20, Text.literal("Discord"),
 					ConfirmLinkScreen.opening(this, RataLand.discord), BotonRataLand.Estilo.PIEDRA));
 		}
-		y += 20 + 8 + 12 + 8;
+		y += 20 + 12;
 		this.addDrawableChild(new BotonRataLand(x, y, ANCHO_BOTON, 20, Text.literal("Volver a " + RataLand.nombre),
 				b -> volverAlMenu(), BotonRataLand.Estilo.PELIGRO));
 	}
@@ -91,13 +91,6 @@ public class PausaRataLand extends Screen {
 		int h = RataLand.LOGO_ALTO * escala;
 		context.drawTexture(RataLand.LOGO, panelX + (ANCHO - w) / 2, panelY + 12, w, h, 0, 0,
 				RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO);
-
-		// Dirección del servidor (sin datos en vivo)
-		int lineaY = panelY + 12 + h + 10 + 28 + 24 + 20 + 8;
-		context.fill(panelX + 10, lineaY - 2, panelX + ANCHO - 10, lineaY + 11, 0x0FFFFFFF);
-		context.fill(panelX + 15, lineaY + 2, panelX + 19, lineaY + 6, 0xFF86CF55);
-		String texto = this.client.getCurrentServerEntry() != null ? "Conectado a " + RataLand.ip : RataLand.nombre;
-		context.drawTextWithShadow(this.textRenderer, this.textRenderer.trimToWidth(texto, ANCHO - 34), panelX + 24, lineaY, 0xFFA3B0C8);
 
 		if (RataLand.MODO_CAPTURA && ++fotogramas == 60) {
 			ScreenshotRecorder.saveScreenshot(this.client.runDirectory, "rataland-pausa.png", this.client.getFramebuffer(), t -> {});
