@@ -87,10 +87,10 @@ function pintarCuenta () {
   $('.cuenta__nombre').textContent = cuenta.nombre
   $('.cuenta__tipo').textContent = tipo
   $('[data-texto-cuenta]').textContent = `Has entrado como ${cuenta.nombre} (${tipo.toLowerCase()}).`
-  const cabeza = $('.cuenta__cabeza')
-  cabeza.src = cuenta.tipo === 'microsoft'
+  // Primero la última cabeza que vimos (o la de mc-heads.net); luego la de la skin real
+  $('.cuenta__cabeza').src = cabezaGuardada(cuenta) || (cuenta.tipo === 'microsoft'
     ? `https://mc-heads.net/avatar/${encodeURIComponent(cuenta.uuid)}/72`
-    : 'https://mc-heads.net/avatar/MHF_Steve/72'
+    : 'https://mc-heads.net/avatar/MHF_Steve/72')
   cargarSkinDeCuenta()
   pintarHud()
 }
@@ -102,8 +102,31 @@ async function cargarSkinDeCuenta () {
   if (estado.cuenta !== cuenta) return
   skin.imagen = r?.ok ? r.imagen : null
   skin.modelo = r?.ok ? r.modelo : 'classic'
-  if (skin.imagen && cuenta.tipo === 'sinPremium') $('.cuenta__cabeza').src = cabezaDe(await cargarImagen(skin.imagen))
+  if (skin.imagen) await ponerCabeza(skin.imagen)
   pintarPersonaje()
+}
+
+/*
+ * La cabeza de abajo sale de la skin de verdad: mc-heads.net guarda las skins viejas varias horas.
+ * Se recuerda la última para no enseñar la vieja ni un momento al abrir.
+ */
+const claveCabeza = (cuenta) => `rataland-cabeza-${cuenta.uuid}`
+
+function cabezaGuardada (cuenta) {
+  try { return localStorage.getItem(claveCabeza(cuenta)) } catch { return null }
+}
+
+async function ponerCabeza (imagen) {
+  const cuenta = estado.cuenta
+  if (!cuenta) return
+  if (!imagen) {
+    try { localStorage.removeItem(claveCabeza(cuenta)) } catch { /* sin almacenamiento */ }
+    $('.cuenta__cabeza').src = 'https://mc-heads.net/avatar/MHF_Steve/72'
+    return
+  }
+  const cabeza = cabezaDe(await cargarImagen(imagen))
+  $('.cuenta__cabeza').src = cabeza
+  try { localStorage.setItem(claveCabeza(cuenta), cabeza) } catch { /* sin almacenamiento */ }
 }
 
 /** Tu personaje, de pie en el paisaje con su nombre encima (como en el juego). */
@@ -593,11 +616,14 @@ function cabezaDe (img) {
   return c.toDataURL('image/png')
 }
 
-async function cargarImagen (src) {
-  const img = new Image()
-  img.src = src
-  await img.decode()
-  return img
+// Con onload y no con decode(): decode() no termina mientras la ventana está oculta (en segundo plano)
+function cargarImagen (src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('No se pudo cargar la imagen'))
+    img.src = src
+  })
 }
 
 function estadoSkin (texto, tipo = '') {
@@ -692,7 +718,7 @@ async function guardarSkin () {
     estadoSkin(r.sinPremium
       ? 'Lista. Se pondrá sola la próxima vez que entres al servidor.'
       : 'Skin guardada. La verás la próxima vez que entres al juego.', 'bien')
-    if (r.imagen) $('.cuenta__cabeza').src = cabezaDe(await cargarImagen(r.imagen))
+    if (r.imagen) await ponerCabeza(r.imagen)
     pintarPersonaje()
   } else {
     estadoSkin(r.error, 'error')
@@ -722,14 +748,8 @@ async function quitarSkin () {
     skin.modelo = r.modelo
     skin.nueva = null
     skin.imagenNueva = null
-    const cuenta = estado.cuenta
-    if (r.sinPremium) {
-      estadoSkin('Se quitará la próxima vez que entres al servidor.', 'bien')
-      $('.cuenta__cabeza').src = 'https://mc-heads.net/avatar/MHF_Steve/72'
-    } else {
-      estadoSkin('Listo: ahora tienes la skin por defecto.', 'bien')
-      $('.cuenta__cabeza').src = `https://mc-heads.net/avatar/${encodeURIComponent(cuenta.uuid)}/72?${Date.now()}`
-    }
+    estadoSkin(r.sinPremium ? 'Se quitará la próxima vez que entres al servidor.' : 'Listo: ahora tienes la skin por defecto.', 'bien')
+    await ponerCabeza(r.imagen)
     pintarPersonaje()
   } else {
     estadoSkin(r.error, 'error')
