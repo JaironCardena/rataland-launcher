@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T16:56:16.580Z",
+  "generado": "2026-10-06T16:56:59.083Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -153,6 +153,19 @@
         "numero": "15.10.6+fabric",
         "nombre": "Jade 🔍",
         "icono": "https://cdn.modrinth.com/data/nvQzSEkH/b04217bc2b7dc524c4d12f81ff42cc1cefb9b0fc_96.webp"
+      }
+    },
+    {
+      "ruta": "mods/skinrestorer-2.11.0+1.21-fabric.jar",
+      "url": "https://cdn.modrinth.com/data/ghrZDhGW/versions/xE07fxaw/skinrestorer-2.11.0%2B1.21-fabric.jar",
+      "sha1": "eeb3592a4b1fc74b79880a43a9bd46dd950f925d",
+      "tamano": 290724,
+      "modrinth": {
+        "proyecto": "ghrZDhGW",
+        "version": "xE07fxaw",
+        "numero": "2.11.0+1.21-fabric",
+        "nombre": "Skin Restorer",
+        "icono": "https://cdn.modrinth.com/data/ghrZDhGW/f5bc55cd7b07f988b5f28d7d3f0a4c8e9f480bc1_96.webp"
       }
     }
   ]
