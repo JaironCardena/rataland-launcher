@@ -22,9 +22,11 @@ const { prepararPrimerArranque, escribirConfigMenu, activarPacks } = require('./
 const { lanzarJuego } = require('./juego')
 const { consultarServidor, direccionDeJuego } = require('./servidor')
 const { crearCuentas } = require('./cuentas')
+const { crearSkins } = require('./skins')
 const { crearActualizador } = require('./actualizador')
 
 const cuentas = crearCuentas(dirDatos)
+const skins = crearSkins(cuentas)
 const ramTotalMB = Math.floor(os.totalmem() / 1048576)
 const rutaAjustes = path.join(dirDatos, 'ajustes.json')
 let ajustes
@@ -255,6 +257,12 @@ function registrarIpc () {
     ? cuentas.loginSinPremium(nombre)
     : { ok: false, error: 'Este servidor solo admite cuentas de Microsoft.' })
   ipcMain.handle('cerrar-sesion', () => cuentas.cerrarSesion())
+  ipcMain.handle('skin-actual', () => skins.actual())
+  ipcMain.handle('cambiar-skin', (_e, cambio) => skins.cambiar({
+    datos: cambio?.datos instanceof Uint8Array ? cambio.datos : null,
+    modelo: cambio?.modelo
+  }))
+  ipcMain.handle('quitar-skin', () => skins.quitar())
 
   ipcMain.handle('guardar-ajustes', async (_e, nuevos) => {
     const ram = Math.round(Number(nuevos?.ram))

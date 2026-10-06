@@ -56,6 +56,8 @@ function pintarFondo () {
 
 function pintarCuenta () {
   const cuenta = estado.cuenta
+  $('[data-accion="abrir-skin"]').hidden = cuenta?.tipo !== 'microsoft'
+  if (cuenta?.tipo !== 'microsoft') cerrarSkin()
   $('.zona--login').hidden = Boolean(cuenta)
   $('.zona--jugar').hidden = !cuenta
   $('.cuenta').hidden = !cuenta
@@ -463,7 +465,193 @@ async function cerrarSesion () {
   pintarCuenta()
 }
 
+/* ---------- Skin (cuentas de Microsoft) ---------- */
+
+const skin = { imagen: null, modelo: 'classic', nueva: null, imagenNueva: null, ocupado: false }
+
+/**
+ * Dibuja la skin de frente en un lienzo de 16×32 (cabeza, cuerpo, brazos y piernas, y encima la
+ * capa exterior). Las skins antiguas de 64×32 no tienen brazo ni pierna izquierdos: se reflejan los derechos.
+ */
+function dibujarSkin (lienzo, img, delgado) {
+  const c = lienzo.getContext('2d')
+  c.imageSmoothingEnabled = false
+  c.clearRect(0, 0, lienzo.width, lienzo.height)
+  if (!img) return
+  const moderna = img.height === 64
+  const brazo = delgado ? 3 : 4
+  const pieza = (sx, sy, w, h, dx, dy, espejo) => {
+    if (!espejo) return c.drawImage(img, sx, sy, w, h, dx, dy, w, h)
+    c.save()
+    c.translate(dx + w, dy)
+    c.scale(-1, 1)
+    c.drawImage(img, sx, sy, w, h, 0, 0, w, h)
+    c.restore()
+  }
+  pieza(8, 8, 8, 8, 4, 0)
+  pieza(20, 20, 8, 12, 4, 8)
+  pieza(44, 20, brazo, 12, 4 - brazo, 8)
+  if (moderna) pieza(36, 52, brazo, 12, 12, 8)
+  else pieza(44, 20, brazo, 12, 12, 8, true)
+  pieza(4, 20, 4, 12, 4, 20)
+  if (moderna) pieza(20, 52, 4, 12, 8, 20)
+  else pieza(4, 20, 4, 12, 8, 20, true)
+  // Capa exterior (gorro, chaqueta, mangas y pantalón)
+  if (moderna || !capaOpaca(img)) pieza(40, 8, 8, 8, 4, 0)
+  if (moderna) {
+    pieza(20, 36, 8, 12, 4, 8)
+    pieza(44, 36, brazo, 12, 4 - brazo, 8)
+    pieza(52, 52, brazo, 12, 12, 8)
+    pieza(4, 36, 4, 12, 4, 20)
+    pieza(4, 52, 4, 12, 8, 20)
+  }
+}
+
+/** En las skins antiguas, un gorro sin ningún píxel transparente es relleno: Minecraft no lo pinta. */
+function capaOpaca (img) {
+  const c = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+  c.canvas.width = 8
+  c.canvas.height = 8
+  c.drawImage(img, 40, 8, 8, 8, 0, 0, 8, 8)
+  const pixeles = c.getImageData(0, 0, 8, 8).data
+  for (let i = 3; i < pixeles.length; i += 4) if (pixeles[i] < 255) return false
+  return true
+}
+
+/** Cabeza (con gorro) de la skin, para la foto de la cuenta abajo a la izquierda. */
+function cabezaDe (img) {
+  const c = document.createElement('canvas')
+  c.width = 8
+  c.height = 8
+  const ctx = c.getContext('2d')
+  ctx.drawImage(img, 8, 8, 8, 8, 0, 0, 8, 8)
+  if (img.height === 64 || !capaOpaca(img)) ctx.drawImage(img, 40, 8, 8, 8, 0, 0, 8, 8)
+  return c.toDataURL('image/png')
+}
+
+async function cargarImagen (src) {
+  const img = new Image()
+  img.src = src
+  await img.decode()
+  return img
+}
+
+function estadoSkin (texto, tipo = '') {
+  const p = $('[data-estado-skin]')
+  p.textContent = texto || ''
+  p.className = `aviso skin-estado${tipo ? ` skin-estado--${tipo}` : ''}`
+}
+
+function modeloElegido () {
+  return document.querySelector('input[name="modeloSkin"]:checked')?.value || 'classic'
+}
+
+async function pintarSkin () {
+  const lienzo = $('.skin-vista__lienzo')
+  const fuente = skin.imagenNueva || skin.imagen
+  const img = fuente ? (typeof fuente === 'string' ? await cargarImagen(fuente) : fuente) : null
+  dibujarSkin(lienzo, img, modeloElegido() === 'slim')
+  $('.skin-vista__vacia').hidden = Boolean(img)
+  const hayCambios = Boolean(skin.nueva) || (Boolean(skin.imagen) && modeloElegido() !== skin.modelo)
+  $('[data-accion="guardar-skin"]').disabled = skin.ocupado || !hayCambios
+  $('[data-accion="quitar-skin"]').disabled = skin.ocupado || !skin.imagen
+}
+
+async function abrirSkin () {
+  cerrarAjustes()
+  $('.panel-skin').hidden = false
+  $('.noticias').hidden = true
+  $('[data-accion="abrir-skin"]').setAttribute('aria-expanded', 'true')
+  skin.nueva = null
+  skin.imagenNueva = null
+  estadoSkin('Cargando tu skin…')
+  const r = await api.skinActual()
+  if (!r.ok) return estadoSkin(r.error, 'error')
+  skin.imagen = r.imagen
+  skin.modelo = r.modelo
+  document.querySelector(`input[name="modeloSkin"][value="${r.modelo}"]`).checked = true
+  estadoSkin('')
+  await pintarSkin()
+}
+
+function cerrarSkin () {
+  const panel = $('.panel-skin')
+  if (panel.hidden) return
+  panel.hidden = true
+  $('.noticias').hidden = false
+  $('[data-accion="abrir-skin"]').setAttribute('aria-expanded', 'false')
+}
+
+async function elegirSkin (archivo) {
+  if (!archivo) return
+  if (archivo.type && archivo.type !== 'image/png') return estadoSkin('La skin tiene que ser una imagen PNG.', 'error')
+  let img
+  try {
+    img = await createImageBitmap(archivo)
+  } catch {
+    return estadoSkin('No se pudo abrir esa imagen.', 'error')
+  }
+  if (img.width !== 64 || (img.height !== 64 && img.height !== 32)) {
+    return estadoSkin(`La skin tiene que medir 64×64 píxeles; esta mide ${img.width}×${img.height}.`, 'error')
+  }
+  skin.nueva = new Uint8Array(await archivo.arrayBuffer())
+  skin.imagenNueva = img
+  estadoSkin('Así quedará. Pulsa "Guardar skin" para ponértela.')
+  await pintarSkin()
+}
+
+async function guardarSkin () {
+  skin.ocupado = true
+  await pintarSkin()
+  estadoSkin('Guardando…')
+  const r = await api.cambiarSkin(skin.nueva, modeloElegido())
+  skin.ocupado = false
+  if (r.ok) {
+    skin.imagen = r.imagen
+    skin.modelo = r.modelo
+    skin.nueva = null
+    skin.imagenNueva = null
+    estadoSkin('Skin guardada. La verás la próxima vez que entres al juego.', 'bien')
+    if (r.imagen) $('.cuenta__cabeza').src = cabezaDe(await cargarImagen(r.imagen))
+  } else {
+    estadoSkin(r.error, 'error')
+  }
+  await pintarSkin()
+}
+
+let confirmarQuitar = null
+async function quitarSkin () {
+  const boton = $('[data-accion="quitar-skin"]')
+  // Primer clic: pide confirmación en el propio botón
+  if (!confirmarQuitar) {
+    boton.textContent = 'Pulsa otra vez para quitarla'
+    confirmarQuitar = setTimeout(() => { confirmarQuitar = null; boton.textContent = 'Quitar mi skin' }, 4000)
+    return
+  }
+  clearTimeout(confirmarQuitar)
+  confirmarQuitar = null
+  boton.textContent = 'Quitar mi skin'
+  skin.ocupado = true
+  await pintarSkin()
+  estadoSkin('Quitando…')
+  const r = await api.quitarSkin()
+  skin.ocupado = false
+  if (r.ok) {
+    skin.imagen = r.imagen
+    skin.modelo = r.modelo
+    skin.nueva = null
+    skin.imagenNueva = null
+    estadoSkin('Listo: ahora tienes la skin por defecto.', 'bien')
+    const cuenta = estado.cuenta
+    $('.cuenta__cabeza').src = `https://mc-heads.net/avatar/${encodeURIComponent(cuenta.uuid)}/72?${Date.now()}`
+  } else {
+    estadoSkin(r.error, 'error')
+  }
+  await pintarSkin()
+}
+
 function abrirAjustes () {
+  cerrarSkin()
   $('.ajustes').hidden = false
   $('.noticias').hidden = true
   $('[data-accion="ajustes"]').setAttribute('aria-expanded', 'true')
@@ -578,6 +766,11 @@ document.addEventListener('click', (e) => {
   if (accion === 'cerrar-sesion') cerrarSesion()
   if (accion === 'ajustes') $('.ajustes').hidden ? abrirAjustes() : cerrarAjustes()
   if (accion === 'cerrar-ajustes') cerrarAjustes()
+  if (accion === 'abrir-skin') $('.panel-skin').hidden ? abrirSkin() : cerrarSkin()
+  if (accion === 'cerrar-skin') cerrarSkin()
+  if (accion === 'elegir-skin') $('[data-archivo-skin]').click()
+  if (accion === 'guardar-skin') guardarSkin()
+  if (accion === 'quitar-skin') quitarSkin()
   if (accion === 'instalar-actualizacion') api.instalarActualizacion()
   if (accion === 'descargar-launcher') api.abrirDescargaLauncher()
   if (accion === 'seguir-sin-actualizar') api.seguirSinActualizar()
@@ -590,12 +783,23 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return
   if (!dialogoCierre.hidden) dialogoCierre.hidden = true
-  else cerrarAjustes()
+  else { cerrarAjustes(); cerrarSkin() }
 })
 
 $('.sin-premium').addEventListener('submit', loginSinPremium)
 $('#ram').addEventListener('input', (e) => { $('.ajuste__valor').textContent = gb(Number(e.target.value)) })
 $('#ram').addEventListener('change', (e) => guardarAjustes({ ram: Number(e.target.value) }))
+$('[data-archivo-skin]').addEventListener('change', (e) => { elegirSkin(e.target.files[0]); e.target.value = '' })
+document.querySelectorAll('input[name="modeloSkin"]').forEach((r) => r.addEventListener('change', pintarSkin))
+const panelSkin = $('.panel-skin')
+panelSkin.addEventListener('dragover', (e) => { e.preventDefault(); panelSkin.classList.add('soltando') })
+panelSkin.addEventListener('dragleave', (e) => { if (!panelSkin.contains(e.relatedTarget)) panelSkin.classList.remove('soltando') })
+panelSkin.addEventListener('drop', (e) => {
+  e.preventDefault()
+  panelSkin.classList.remove('soltando')
+  elegirSkin(e.dataTransfer.files[0])
+})
+
 $('.ajustes').addEventListener('change', (e) => {
   if (e.target.type === 'radio') guardarAjustes({ [e.target.name]: e.target.value })
 })

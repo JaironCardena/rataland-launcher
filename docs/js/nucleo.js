@@ -251,6 +251,7 @@ export async function buscarEnModrinth (categoria, texto, mc) {
 }
 
 export const proyectoModrinth = (id) => modrinth(`/project/${encodeURIComponent(id)}`)
+export const versionModrinth = (id) => modrinth(`/version/${encodeURIComponent(id)}`)
 
 export async function proyectosModrinth (ids) {
   if (!ids.length) return []
@@ -483,13 +484,102 @@ export function modsDelRegistro (texto) {
   return { mods, loader, minecraft }
 }
 
-/** Datos de fabric.mod.json: id, nombre, versión y si es solo para el cliente. */
+async function leerFabricModJson (zip) {
+  const archivo = zip.file('fabric.mod.json')
+  if (!archivo) return null
+  try { return JSON.parse(await archivo.async('string')) } catch { return null }
+}
+
+/**
+ * Datos de fabric.mod.json: id, nombre, versión, si es solo para el cliente, qué necesita
+ * ("depends"), con qué no funciona ("breaks") y qué ids ofrece, contando los mods que lleva
+ * dentro (Fabric API, por ejemplo, son unos 40 módulos que otros mods piden por su nombre).
+ */
 export async function infoDeMod (JSZip, bytes) {
   const zip = await JSZip.loadAsync(bytes)
-  const fmj = zip.file('fabric.mod.json')
-  if (!fmj) return null
-  const info = JSON.parse(await fmj.async('string'))
-  return { id: info.id, nombre: info.name || info.id, version: info.version, entorno: info.environment || '*' }
+  const info = await leerFabricModJson(zip)
+  if (!info) return null
+  const ofrece = [{ id: info.id, version: info.version }, ...[].concat(info.provides || []).map((id) => ({ id, version: info.version }))]
+  for (const j of info.jars || []) {
+    const interno = zip.file(j.file)
+    if (!interno) continue
+    try {
+      const sub = await leerFabricModJson(await JSZip.loadAsync(await interno.async('uint8array')))
+      if (sub?.id) ofrece.push({ id: sub.id, version: sub.version }, ...[].concat(sub.provides || []).map((id) => ({ id, version: sub.version })))
+    } catch { /* un jar interno raro no impide lo demás */ }
+  }
+  return {
+    id: info.id,
+    nombre: info.name || info.id,
+    version: info.version,
+    entorno: info.environment || '*',
+    depende: info.depends || {},
+    rompe: info.breaks || {},
+    ofrece
+  }
+}
+
+// Lo que pone el propio juego: no son mods del modpack
+const INTEGRADOS = new Set(['java', 'fabricloader', 'fabric-loader'])
+
+/** ¿La versión `tiene` cumple el requisito? Ante algo que no se entiende, se da por bueno (mejor no avisar en falso). */
+function satisface (requisito, tiene) {
+  if (!tiene) return true
+  try {
+    return cumpleRequisito(requisito, String(tiene).split('+')[0].split('-')[0])
+  } catch {
+    return true
+  }
+}
+
+/**
+ * Revisa los mods entre sí. Recibe [{ nombre, info }] (info de infoDeMod) y devuelve:
+ * faltan (un mod pide otro que no está), version (está pero en otra versión o pide otro Minecraft)
+ * e incompatibles (un mod dice que no funciona junto a otro que sí está).
+ */
+export function revisarDependencias (mods, mc) {
+  const disponibles = new Map()
+  const nombres = new Map()
+  for (const m of mods) {
+    if (m.info?.id) nombres.set(m.info.id, m.nombre)
+    for (const o of m.info?.ofrece || []) if (!disponibles.has(o.id)) disponibles.set(o.id, o.version)
+  }
+  // "fabric" es el nombre antiguo de Fabric API
+  if (disponibles.has('fabric-api') && !disponibles.has('fabric')) disponibles.set('fabric', disponibles.get('fabric-api'))
+  const nombreDe = (id) => nombres.get(id) || id
+
+  const faltan = []
+  const version = []
+  const incompatibles = []
+  for (const m of mods) {
+    if (!m.info) continue
+    const pide = []
+    for (const [id, requisito] of Object.entries(m.info.depende)) {
+      if (INTEGRADOS.has(id)) continue
+      if (id === 'minecraft') {
+        if (!satisface(requisito, mc)) version.push({ mod: m, texto: `pide Minecraft ${[].concat(requisito).join(' o ')} y el modpack usa ${mc}` })
+        continue
+      }
+      if (!disponibles.has(id)) pide.push(id)
+      else if (!satisface(requisito, disponibles.get(id))) {
+        version.push({ mod: m, texto: `pide ${nombreDe(id)} ${[].concat(requisito).join(' o ')} y hay la ${disponibles.get(id)}` })
+      }
+    }
+    if (pide.length) faltan.push({ mod: m, ids: pide })
+    for (const [id, requisito] of Object.entries(m.info.rompe)) {
+      if (disponibles.has(id) && id !== m.info.id && satisface(requisito, disponibles.get(id))) incompatibles.push({ mod: m, con: nombreDe(id) })
+    }
+  }
+  return { faltan, version, incompatibles }
+}
+
+/** ¿Hace falta este mod en el servidor? Lo dice su fabric.mod.json ("environment") y, si no, Modrinth. */
+export function ladoServidor (info, proyecto) {
+  if (info?.entorno === 'client') return { va: false, motivo: 'Solo funciona en el juego de cada jugador.' }
+  if (proyecto?.server_side === 'unsupported') return { va: false, motivo: 'Según Modrinth, solo es para los jugadores.' }
+  if (proyecto?.server_side === 'optional') return { va: true, motivo: 'Opcional en el servidor: si también lo tiene, añade funciones.' }
+  if (!info && !proyecto) return { va: true, motivo: 'No se pudo saber; se incluye por si acaso.' }
+  return { va: true, motivo: '' }
 }
 
 /**
@@ -533,7 +623,9 @@ export function cumpleRequisito (requisito, mc) {
   return opciones.some((op) => String(op).trim().split(/\s+/).every((parte) => {
     if (parte === '*' || parte === '') return true
     const m = /^(>=|<=|>|<|=|~|\^)?(.+)$/.exec(parte)
-    const [, operador = '=', version] = m
+    // "~1.21-" o "1.21.1-rc.1": lo de detrás del guion es una versión de prueba; para comparar cuenta lo de delante
+    const [, operador = '=', bruta] = m
+    const version = bruta.replace(/-.*$/, '')
     if (/[xX*]/.test(version)) {
       const base = version.replace(/\.[xX*].*$/, '')
       return mc === base || mc.startsWith(base + '.')

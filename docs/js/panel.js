@@ -2,7 +2,8 @@ import * as n from './nucleo.js'
 
 const $ = (selector, raiz = document) => raiz.querySelector(selector)
 const CLAVE_LLAVE = 'rataland-panel-llave'
-const CLAVE_INFO_MODS = 'rataland-panel-info-mods'
+// v2: ahora también guarda dependencias e incompatibilidades
+const CLAVE_INFO_MODS = 'rataland-panel-info-mods-2'
 const IRIS = 'YL57xq9U'
 const PAGINA_ATERNOS = 'https://aternos.org/servers/'
 
@@ -390,6 +391,7 @@ function pintar () {
   const vistas = { resumen: vistaResumen, servidor: vistaServidor, temporada: vistaTemporada, noticias: vistaNoticias, evento: vistaEvento, enlaces: vistaEnlaces }
   const vista = (vistas[seccion] || (() => vistaCategoria(seccion)))()
   $('[data-contenido]').replaceChildren(vista)
+  if (seccion === 'mods' && revision.clave !== claveMods() && elementosDe('mods').length) setTimeout(revisarMods, 0)
 }
 
 function irA (id) {
@@ -557,7 +559,9 @@ function vistaCategoria (categoria) {
   const seccionEl = h('section', { class: 'seccion' },
     encabezado(titulos[categoria], descripciones[categoria],
       hayModrinth ? h('button', { class: 'boton boton--fantasma', onclick: (e) => buscarActualizaciones(categoria, e.currentTarget) }, 'Buscar actualizaciones') : null,
+      categoria === 'mods' && elementos.length ? h('button', { class: 'boton boton--fantasma', onclick: abrirZipServidor }, 'Mods para el servidor') : null,
       h('button', { class: 'boton', onclick: () => abrirCajon(categoria) }, 'Añadir desde Modrinth')),
+    categoria === 'mods' && elementos.length ? vistaRevision('mods') : null,
     categoria === 'shaders' && elementos.length && !proyectosPresentes().has(IRIS)
       ? h('p', { class: 'aviso-caja aviso-caja--mal' }, 'Los shaders no funcionarán sin el mod Iris. ', h('button', { class: 'enlace-boton', onclick: (ev) => anadirDeModrinth('mods', { project_id: IRIS }, ev.currentTarget) }, 'Añadir Iris'))
       : null,
@@ -612,25 +616,7 @@ async function descargarArchivo (e, boton) {
   const archivo = e.ruta.split('/').pop()
   boton.disabled = true
   try {
-    let datos
-    const nuevo = nuevos.get(e.ruta)
-    if (nuevo) {
-      // Subido pero sin publicar: ya lo tenemos en el navegador
-      datos = new Blob([nuevo.bytes])
-    } else {
-      const { propietario, repositorio, carpeta } = n.CONFIG
-      const url = e.tipo === 'modrinth'
-        ? e.url
-        : `https://raw.githubusercontent.com/${propietario}/${repositorio}/${base.head}/${carpeta}/${n.codificarRuta(e.ruta)}`
-      const res = await fetch(url)
-      if (!res.ok) throw new Error(`respuesta ${res.status}`)
-      datos = await res.blob()
-    }
-    const enlace = h('a', { href: URL.createObjectURL(datos), download: archivo, hidden: true })
-    document.body.append(enlace)
-    enlace.click()
-    enlace.remove()
-    setTimeout(() => URL.revokeObjectURL(enlace.href), 10000)
+    guardarArchivo(new Blob([await bytesDe(e)]), archivo)
   } catch {
     avisar(`No se pudo descargar ${archivo}. Prueba otra vez en un momento.`, 'error')
   } finally {
@@ -736,7 +722,12 @@ async function subirArchivos (categoria, archivos) {
       })
       borrados.delete(ruta)
       if (categoria === 'texturas' && !(ajustes.packsActivos || []).includes(ruta)) ajustes.packsActivos = [...(ajustes.packsActivos || []), ruta]
-      n.identificarPorHash([sha1]).then((m) => { if (m.size) { m.forEach((v, k) => identificados.set(k, v)); pintar() } }).catch(() => {})
+      n.identificarPorHash([sha1]).then(async (m) => {
+        if (!m.size) return
+        m.forEach((v, k) => identificados.set(k, v))
+        pintar()
+        if (categoria === 'mods') await anadirLoQueNecesita(m.get(sha1).version, analisis.nombre, null, true)
+      }).catch(() => {})
       avisar(`${analisis.nombre} listo para publicar.`)
     } catch (e) {
       avisar(`${archivo.name}: ${e.message}`, 'error')
@@ -906,17 +897,30 @@ function leerCacheMods () {
   try { return JSON.parse(localStorage.getItem(CLAVE_INFO_MODS) || '{}') } catch { return {} }
 }
 
+/** Contenido del archivo: de lo subido sin publicar, de Modrinth o del commit actual del repositorio. */
+async function bytesDe (e) {
+  const nuevo = nuevos.get(e.ruta)
+  if (nuevo) return nuevo.bytes
+  const { propietario, repositorio, carpeta } = n.CONFIG
+  const url = e.tipo === 'modrinth'
+    ? e.url
+    : `https://raw.githubusercontent.com/${propietario}/${repositorio}/${base.head}/${carpeta}/${n.codificarRuta(e.ruta)}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`No se pudo descargar ${e.ruta.split('/').pop()}.`)
+  return new Uint8Array(await res.arrayBuffer())
+}
+
+function guardarArchivo (datos, nombre) {
+  const enlace = h('a', { href: URL.createObjectURL(datos), download: nombre, hidden: true })
+  document.body.append(enlace)
+  enlace.click()
+  enlace.remove()
+  setTimeout(() => URL.revokeObjectURL(enlace.href), 10000)
+}
+
 async function infoDeElemento (e, cache) {
   if (e.sha1 && cache[e.sha1]) return cache[e.sha1]
-  let bytes
-  if (e.tipo === 'nuevo') bytes = nuevos.get(e.ruta).bytes
-  else {
-    const url = e.tipo === 'modrinth' ? e.url : ajustes.urlBase + n.codificarRuta(e.ruta)
-    const res = await fetch(url)
-    if (!res.ok) throw new Error(`No se pudo descargar ${e.ruta.split('/').pop()}.`)
-    bytes = new Uint8Array(await res.arrayBuffer())
-  }
-  const info = await n.infoDeMod(window.JSZip, bytes)
+  const info = await n.infoDeMod(window.JSZip, await bytesDe(e))
   if (info && e.sha1) {
     cache[e.sha1] = info
     try { localStorage.setItem(CLAVE_INFO_MODS, JSON.stringify(cache)) } catch { /* sin espacio: no pasa nada */ }
@@ -1021,6 +1025,210 @@ function vistaNoticias () {
           campo('Texto', h('textarea', { oninput: (e) => { noticia.texto = e.target.value; pintarMarco() } }, noticia.texto || '')),
           h('p', {}, h('button', { class: 'boton-quitar', onclick: () => { noticias.splice(i, 1); pintar() } }, 'Quitar esta noticia')))))
       : h('p', { class: 'bloque vacio' }, 'No hay noticias. Escribe la primera para que salga en el launcher.')))
+}
+
+/* ---------- Dependencias entre mods ---------- */
+
+let revision = { clave: '', estado: 'nada', progreso: '', resultado: null, error: null }
+
+/** Cambia cuando cambian los mods: así se sabe si la revisión sigue valiendo. */
+function claveMods () {
+  return elementosDe('mods').map((e) => e.sha1 || e.ruta).sort().join(',')
+}
+
+/** fabric.mod.json de cada mod (lo ya leído queda guardado en este navegador). */
+async function infosDeMods (alProgreso) {
+  const elementos = elementosDe('mods')
+  const cache = leerCacheMods()
+  const lista = []
+  let i = 0
+  for (const e of elementos) {
+    alProgreso?.(++i, elementos.length)
+    lista.push({ e, nombre: e.nombre || e.ruta.split('/').pop(), info: await infoDeElemento(e, cache).catch(() => null) })
+  }
+  return lista
+}
+
+async function revisarMods () {
+  const clave = claveMods()
+  if (revision.estado === 'revisando' && revision.clave === clave) return
+  revision = { clave, estado: 'revisando', progreso: '', resultado: null, error: null }
+  pintarRevision()
+  try {
+    const mods = await infosDeMods((i, total) => {
+      if (revision.clave !== clave) return
+      revision.progreso = `${i} de ${total}`
+      pintarRevision()
+    })
+    if (revision.clave !== clave) return // los mods cambiaron mientras tanto
+    revision = { clave, estado: 'lista', resultado: n.revisarDependencias(mods, ajustes.minecraft), error: null }
+  } catch (err) {
+    if (revision.clave !== clave) return
+    revision = { clave, estado: 'error', error: err.message }
+  }
+  pintarRevision()
+}
+
+function pintarRevision () {
+  document.querySelectorAll('[data-revision]').forEach((el) => el.replaceWith(vistaRevision(el.dataset.revision)))
+}
+
+/** Versión de Modrinth de un mod del modpack, si se sabe (para añadir lo que necesita). */
+function versionDe (e) {
+  if (e.tipo === 'modrinth') return (ajustes.externos || []).find((x) => x.ruta === e.ruta)?.modrinth?.version
+  return identificados.get(e.sha1)?.version
+}
+
+/** Añade de Modrinth lo que un mod necesita y aún no está. */
+async function anadirLoQueNecesita (versionId, nombre, boton, silencioso = false) {
+  if (!versionId) return
+  if (boton) boton.disabled = true
+  try {
+    const version = await n.versionModrinth(versionId)
+    const { anadir, faltan } = await n.dependenciasDe(version, ajustes.minecraft, proyectosPresentes())
+    const nuevas = anadir.filter((x) => !rutaOcupada(x.ruta))
+    if (nuevas.length) {
+      ajustes.externos = [...(ajustes.externos || []), ...nuevas]
+      avisar(`Añadido lo que necesita ${nombre}: ${nuevas.map((x) => x.modrinth.nombre).join(', ')}.`)
+    } else if (!silencioso) {
+      avisar(`Modrinth no dice qué le falta a ${nombre}. Búscalo en "Añadir desde Modrinth".`, 'error')
+    }
+    if (faltan.length) avisar(`${nombre} necesita ${faltan.join(', ')}, que no tiene versión para ${ajustes.minecraft}.`, 'error')
+  } catch (err) {
+    if (!silencioso) avisar(err.message, 'error')
+  }
+  if (boton) boton.disabled = false
+  pintar()
+}
+
+function vistaRevision (donde) {
+  const r = revision
+  const enPublicar = donde === 'publicar'
+  let contenido = null
+  if (r.estado === 'revisando' || r.estado === 'nada') {
+    contenido = h('p', { class: 'revision' }, `Revisando que cada mod tenga lo que necesita…${r.progreso ? ` (${r.progreso})` : ''}`)
+  } else if (r.estado === 'error') {
+    contenido = h('p', { class: 'aviso-caja' }, `No se pudieron revisar las dependencias: ${r.error} `,
+      h('button', { class: 'enlace-boton', onclick: () => revisarMods() }, 'Reintentar'))
+  } else if (r.resultado) {
+    const { faltan, version, incompatibles } = r.resultado
+    const nombre = (m) => h('strong', {}, m.nombre)
+    const items = [
+      ...faltan.map(({ mod, ids }) => {
+        const id = versionDe(mod.e)
+        return h('li', {}, nombre(mod), ` necesita ${ids.join(', ')}, que no está.`,
+          enPublicar ? null
+            : id
+              ? h('button', { class: 'enlace-boton', onclick: (ev) => anadirLoQueNecesita(id, mod.nombre, ev.currentTarget) }, 'Añadir lo que necesita')
+              : ids.map((x) => h('button', { class: 'enlace-boton', onclick: () => abrirCajon('mods', x) }, `Buscar ${x}`)))
+      }),
+      ...incompatibles.map(({ mod, con }) => h('li', {}, nombre(mod), ` no funciona junto a ${con}: quita uno de los dos.`)),
+      ...version.map(({ mod, texto }) => h('li', {}, nombre(mod), ` ${texto}. Puede que no arranque.`))
+    ]
+    if (!items.length) {
+      contenido = enPublicar ? null : h('p', { class: 'revision revision--bien' }, 'Cada mod tiene todo lo que necesita y no hay incompatibilidades.')
+    } else {
+      contenido = h('div', { class: 'aviso-caja aviso-caja--mal' },
+        h('strong', {}, enPublicar ? 'Hay mods con problemas: el juego podría no arrancar' : 'Revisa esto antes de publicar'),
+        h('ul', { class: 'revision__lista' }, items),
+        enPublicar ? h('p', {}, h('button', { class: 'enlace-boton', onclick: (ev) => { ev.target.closest('dialog').close(); irA('mods') } }, 'Arreglarlo en Mods')) : null)
+    }
+  }
+  return h('div', { 'data-revision': donde }, contenido)
+}
+
+/* ---------- Mods para el servidor ---------- */
+
+let zipServidor = { lista: [], cargando: false }
+
+async function abrirZipServidor () {
+  abrirDialogo('servidor-zip')
+  $('[data-error-zip]').hidden = true
+  zipServidor = { lista: [], cargando: true, progreso: '' }
+  pintarZip()
+  try {
+    const mods = await infosDeMods((i, total) => { zipServidor.progreso = `${i} de ${total}`; pintarZip() })
+    const ids = [...new Set(mods.map((m) => m.e.proyecto).filter(Boolean))]
+    const proyectos = new Map((await n.proyectosModrinth(ids).catch(() => [])).map((p) => [p.id, p]))
+    const lista = mods.map((m) => {
+      const lado = n.ladoServidor(m.info, proyectos.get(m.e.proyecto))
+      return { ...m, ...lado, marcado: lado.va }
+    })
+    // Si un mod que va al servidor necesita otro, ese otro también es obligatorio allí
+    // (Modrinth dice que Fabric API es opcional, pero no si otro mod la usa).
+    const quien = new Map()
+    for (const x of lista) for (const o of x.info?.ofrece || []) if (!quien.has(o.id)) quien.set(o.id, x)
+    let cambio = true
+    while (cambio) {
+      cambio = false
+      for (const x of lista.filter((y) => y.va)) {
+        for (const id of Object.keys(x.info?.depende || {})) {
+          const otro = quien.get(id === 'fabric' ? 'fabric-api' : id)
+          if (!otro || otro === x || otro.info?.entorno === 'client' || otro.necesario) continue
+          Object.assign(otro, { va: true, marcado: true, necesario: true, motivo: `Lo necesita ${x.nombre}.` })
+          cambio = true
+        }
+      }
+    }
+    zipServidor.lista = lista.sort((a, b) => (b.va - a.va) || a.nombre.localeCompare(b.nombre))
+  } catch (err) {
+    $('[data-error-zip]').textContent = err.message
+    $('[data-error-zip]').hidden = false
+  }
+  zipServidor.cargando = false
+  pintarZip()
+}
+
+function pintarZip () {
+  const caja = $('[data-zip-contenido]')
+  const boton = $('[data-accion="descargar-zip"]')
+  if (zipServidor.cargando) {
+    caja.replaceChildren(h('p', {}, `Leyendo los mods…${zipServidor.progreso ? ` (${zipServidor.progreso})` : ''}`))
+    boton.disabled = true
+    return
+  }
+  const marcados = zipServidor.lista.filter((x) => x.marcado).length
+  const sinPublicar = nuevos.size || borrados.size || cambios().some((c) => /^(Añadir|Quitar|Actualizar|Reemplazar) /.test(c))
+  caja.replaceChildren(
+    h('ul', { class: 'lista-zip' }, zipServidor.lista.map((x) => h('li', {},
+      h('label', { class: 'casilla' },
+        h('input', { type: 'checkbox', checked: x.marcado, onchange: (e) => { x.marcado = e.target.checked; pintarZip() } }),
+        h('span', {}, h('strong', {}, x.nombre), x.motivo ? h('span', { class: 'campo__ayuda' }, x.motivo) : null))))),
+    h('p', { class: 'zip-resumen' }, `${marcados} de ${zipServidor.lista.length} mods irán en el .zip.`),
+    sinPublicar ? h('p', { class: 'aviso-caja' }, 'Incluye los cambios que aún no has publicado.') : null,
+    h('ol', { class: 'zip-pasos' },
+      h('li', {}, 'Descomprime el .zip.'),
+      h('li', {}, 'En Aternos, entra en Archivos y abre la carpeta mods.'),
+      h('li', {}, 'Borra los mods que ya no estén en esta lista y sube los .jar del .zip.'),
+      h('li', {}, `Comprueba que el servidor usa Minecraft ${ajustes.minecraft} con Fabric ${ajustes.loader?.version}.`)))
+  boton.disabled = !marcados
+}
+
+async function descargarZip (boton) {
+  const marcados = zipServidor.lista.filter((x) => x.marcado)
+  boton.disabled = true
+  $('[data-error-zip]').hidden = true
+  try {
+    const zip = new window.JSZip()
+    let i = 0
+    for (const x of marcados) {
+      boton.textContent = `Preparando ${++i} de ${marcados.length}…`
+      zip.file(`mods/${x.e.ruta.split('/').pop()}`, await bytesDe(x.e))
+    }
+    zip.file('LEEME.txt', [
+      `Mods para el servidor: Minecraft ${ajustes.minecraft} con Fabric ${ajustes.loader?.version}.`,
+      'Sube los archivos de la carpeta "mods" a la carpeta "mods" del servidor.',
+      '',
+      ...marcados.map((x) => `- ${x.nombre} (${x.e.ruta.split('/').pop()})`)
+    ].join('\r\n'))
+    boton.textContent = 'Comprimiendo…'
+    guardarArchivo(await zip.generateAsync({ type: 'blob' }), `mods-servidor-minecraft-${ajustes.minecraft}.zip`)
+  } catch (err) {
+    $('[data-error-zip]').textContent = `No se pudo preparar el .zip: ${err.message}`
+    $('[data-error-zip]').hidden = false
+  }
+  boton.textContent = 'Descargar .zip'
+  boton.disabled = false
 }
 
 /* ---------- Temporada y fondo ---------- */
@@ -1202,6 +1410,8 @@ function abrirPublicar () {
   form.mensaje.value = lista.length === 1 ? lista[0] : `Panel: ${lista.slice(0, 2).join(', ')}${lista.length > 2 ? ' y más' : ''}`
   $('[data-error-publicar]').hidden = true
   $('[data-progreso]').hidden = true
+  if (elementosDe('mods').length && revision.clave !== claveMods()) revisarMods()
+  pintarRevision()
   form.querySelector('[type="submit"]').disabled = false
   abrirDialogo('publicar')
 }
@@ -1273,6 +1483,7 @@ document.addEventListener('click', (e) => {
   const accion = e.target.closest('[data-accion]')?.dataset.accion
   if (accion === 'abrir-publicar') abrirPublicar()
   if (accion === 'cerrar-dialogo') e.target.closest('dialog').close()
+  if (accion === 'descargar-zip') descargarZip(e.target.closest('button'))
   if (accion === 'ver-cambios') {
     listaCambiosAbierta = !listaCambiosAbierta
     pintarMarco()

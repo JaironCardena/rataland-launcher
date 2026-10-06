@@ -347,6 +347,22 @@ h1, h2, h3 { margin: 0; }
 .escena-opcion input:focus-visible ~ img { outline: 2px solid var(--queso); outline-offset: 3px; }
 .episodio-previa { display: grid; gap: 6px; max-width: 280px; font-weight: 600; font-size: 14px; }
 .episodio-previa img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-control); }
+/* Revisión de dependencias */
+.revision { margin: 0 0 16px; color: var(--muy-tenue); font-size: 14px; }
+.revision--bien { color: var(--hierba-luz); }
+[data-revision] > .aviso-caja { margin-bottom: 16px; }
+.revision__lista { display: grid; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+.revision__lista li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.revision__lista strong { color: var(--texto); }
+
+/* Mods para el servidor */
+.lista-zip { display: grid; gap: 2px; max-height: 300px; margin: 0; padding: 0; overflow: auto; list-style: none; }
+.lista-zip li { padding: 8px 10px; border-radius: var(--r-control); }
+.lista-zip li:hover { background: rgba(255, 255, 255, 0.03); }
+.lista-zip .campo__ayuda { display: block; }
+.zip-pasos { margin: 0; padding-left: 20px; color: var(--tenue); font-size: 13.5px; }
+.zip-resumen { color: var(--texto) !important; font-weight: 600; }
+
 .vista-previa { margin: 6px 0 0; color: var(--queso); font: 700 26px/1.2 var(--pixel); }
 .pasos { margin: 0; padding-left: 22px; color: var(--tenue); display: grid; gap: 4px; }
 

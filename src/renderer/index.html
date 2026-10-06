@@ -189,6 +189,46 @@
 
       <p class="ajuste ajuste__ayuda" data-version-launcher></p>
     </aside>
+
+    <aside class="panel-skin" id="panel-skin" aria-labelledby="titulo-skin" hidden>
+      <div class="ajustes__cabecera">
+        <h2 id="titulo-skin">Tu skin</h2>
+        <button class="boton-ventana" data-accion="cerrar-skin" aria-label="Cerrar">
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg>
+        </button>
+      </div>
+
+      <div class="skin-vista">
+        <canvas class="skin-vista__lienzo" width="16" height="32" role="img" aria-label="Vista previa de tu skin"></canvas>
+        <span class="skin-vista__vacia" hidden>Skin por defecto</span>
+      </div>
+
+      <fieldset class="ajuste">
+        <legend class="ajuste__titulo">Modelo</legend>
+        <div class="opciones">
+          <label class="opcion"><input type="radio" name="modeloSkin" value="classic"><span>Clásico</span></label>
+          <label class="opcion"><input type="radio" name="modeloSkin" value="slim"><span>Delgado</span></label>
+        </div>
+        <p class="ajuste__ayuda">Clásico tiene los brazos anchos, como Steve. Delgado, finos, como Alex.</p>
+      </fieldset>
+
+      <div class="ajuste">
+        <span class="ajuste__titulo">Imagen</span>
+        <p class="ajuste__ayuda">Un PNG de 64×64 píxeles. También puedes arrastrarlo hasta aquí.</p>
+        <div class="ajuste__botones">
+          <button class="boton-secundario" data-accion="elegir-skin">Elegir imagen</button>
+          <input type="file" accept="image/png" data-archivo-skin hidden>
+        </div>
+      </div>
+
+      <div class="ajuste">
+        <p class="aviso skin-estado" data-estado-skin role="status"></p>
+        <div class="ajuste__botones">
+          <button class="boton-principal" data-accion="guardar-skin" disabled>Guardar skin</button>
+          <button class="enlace enlace--tenue" data-accion="quitar-skin">Quitar mi skin</button>
+        </div>
+      </div>
+    </aside>
   </main>
 
   <footer class="pie">
@@ -198,6 +238,7 @@
         <span class="cuenta__nombre"></span>
         <span class="cuenta__tipo"></span>
       </div>
+      <button class="enlace enlace--tenue" data-accion="abrir-skin" aria-controls="panel-skin" aria-expanded="false" hidden>Cambiar skin</button>
       <button class="enlace enlace--tenue" data-accion="cerrar-sesion">Cerrar sesión</button>
     </div>
     <div class="pie__derecha">

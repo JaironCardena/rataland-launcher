@@ -416,7 +416,7 @@ button { cursor: pointer; }
 .aviso__acciones { display: flex; gap: 18px; margin-top: 10px; font-size: 13.5px; }
 
 /* Columna derecha: novedades o ajustes */
-.noticias, .ajustes {
+.noticias, .ajustes, .panel-skin {
   grid-column: 2;
   grid-row: 1;
   align-self: stretch;
@@ -485,6 +485,25 @@ button { cursor: pointer; }
 .noticia__titulo { margin: 2px 0 4px; font-size: 15.5px; font-weight: 600; line-height: 1.35; }
 .noticia__texto { margin: 0; color: var(--tenue); user-select: text; }
 .noticias__vacio { margin: 14px 0 0; color: var(--muy-tenue); }
+
+/* Skin: vista de frente sobre un "pedestal" de noche */
+.skin-vista {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 260px;
+  margin: 4px 0 6px;
+  border-radius: 8px;
+  background: radial-gradient(ellipse at 50% 92%, rgba(246, 196, 69, 0.18) 0 18%, transparent 40%), rgba(9, 14, 26, 0.6);
+}
+.skin-vista__lienzo { width: 112px; height: 224px; image-rendering: pixelated; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35)); }
+.skin-vista__vacia { position: absolute; bottom: 10px; color: var(--muy-tenue); font-size: 12.5px; }
+.panel-skin .ajuste:first-of-type { border-top: 0; }
+.skin-estado { margin: 0 0 12px; max-width: none; }
+.skin-estado:empty { display: none; }
+.skin-estado--error { color: var(--error); }
+.skin-estado--bien { color: var(--hierba-luz); }
+.panel-skin.soltando .skin-vista { outline: 2px dashed var(--antorcha); outline-offset: 4px; }
 
 .ajustes__cabecera { display: flex; align-items: center; justify-content: space-between; margin: -8px -12px 10px 0; }
 .ajuste { display: block; padding: 18px 0; border-top: 1px solid var(--linea); }

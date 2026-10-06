@@ -69,6 +69,25 @@ if (!window.launcher) {
       ? { ok: true, cuenta: (cuenta = { tipo: 'sinPremium', nombre, uuid: '0' }) }
       : { ok: false, error: 'El nombre debe tener entre 3 y 16 letras, números o guiones bajos.' },
     cerrarSesion: async () => { cuenta = null },
+    // Skin de prueba dibujada aquí mismo (piel, ojos, camiseta y pantalón)
+    skinActual: async () => {
+      await espera(500)
+      if (params.has('sin-skin')) return { ok: true, imagen: null, modelo: 'classic' }
+      const c = document.createElement('canvas'); c.width = 64; c.height = 64
+      const x = c.getContext('2d')
+      const caja = (color, ...r) => { x.fillStyle = color; x.fillRect(...r) }
+      caja('#c8956d', 8, 8, 8, 8); caja('#3b2a1f', 8, 8, 8, 2); caja('#fff', 9, 12, 2, 1); caja('#fff', 13, 12, 2, 1); caja('#3a5cc5', 10, 12, 1, 1); caja('#3a5cc5', 14, 12, 1, 1)
+      caja('#f6c445', 20, 20, 8, 12); caja('#c8956d', 44, 20, 4, 12); caja('#f6c445', 44, 20, 4, 4); caja('#c8956d', 36, 52, 4, 12); caja('#f6c445', 36, 52, 4, 4)
+      caja('#2c3e8c', 4, 20, 4, 12); caja('#2c3e8c', 20, 52, 4, 12); caja('#333', 4, 29, 4, 3); caja('#333', 20, 61, 4, 3)
+      return { ok: true, imagen: c.toDataURL(), modelo: 'classic' }
+    },
+    cambiarSkin: async (datos, modelo) => {
+      await espera(700)
+      if (params.has('skin-error')) return { ok: false, error: 'Has hecho muchos cambios seguidos. Espera un minuto y vuelve a probar.' }
+      const imagen = datos ? await new Promise((r) => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(new Blob([datos], { type: 'image/png' })) }) : (await window.launcher.skinActual()).imagen
+      return { ok: true, imagen, modelo }
+    },
+    quitarSkin: async () => { await espera(500); return { ok: true, imagen: null, modelo: 'classic' } },
     guardarAjustes: async (a) => (ajustes = { ...ajustes, ...a }),
     jugar: async () => {
       if (params.has('error')) {
