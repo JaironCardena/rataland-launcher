@@ -6,6 +6,7 @@ if (!window.launcher) {
   let loginCancelado = false
   const emitir = (canal, datos) => oyentes[canal].forEach((f) => f(datos))
   const params = new URLSearchParams(location.search)
+  const inicioDemo = Date.now()
   const oyentesActualizacion = []
   let actualizacion = { fase: 'nada', modo: 'arranque', versionActual: '1.0.1' }
   const emitirActualizacion = (cambios) => {
@@ -42,7 +43,14 @@ if (!window.launcher) {
       perfil: { ...perfil, noticias: [] },
       actualizacion: { ...actualizacion, recienActualizado: params.has('actualizado') ? '1.0.2' : null }
     }),
-    buscarActualizaciones: async () => { await espera(400); return { ok: true, origen: 'red', perfil } },
+    // ?novedad: al cabo de un rato aparece una noticia nueva (para ver que se refresca sola)
+    buscarActualizaciones: async () => {
+      await espera(400)
+      if (params.has('novedad') && Date.now() - inicioDemo > 3000 && !perfil.noticias.some((n) => n.titulo === 'Noticia nueva')) {
+        perfil.noticias = [{ fecha: '2026-10-07', titulo: 'Noticia nueva', texto: 'Esta noticia apareció sin cerrar el launcher.' }, ...perfil.noticias]
+      }
+      return { ok: true, origen: 'red', perfil: JSON.parse(JSON.stringify(perfil)) }
+    },
     estadoServidor: async () => {
       await espera(700)
       if (params.has('cerrado')) return { enLinea: false, motivo: 'sin respuesta' }

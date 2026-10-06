@@ -31,6 +31,7 @@ const ramTotalMB = Math.floor(os.totalmem() / 1048576)
 const rutaAjustes = path.join(dirDatos, 'ajustes.json')
 let ajustes
 let perfil = combinarPerfil(config, {})
+let perfilGenerado = '' // fecha del modpack que se está enseñando
 let ventana = null
 let jugando = false
 let actualizador = null
@@ -141,6 +142,7 @@ async function jugar (reparar) {
     reportar({ etapa: 'actualizaciones', texto: 'Buscando actualizaciones', actual: 0, total: 0 })
     const { manifiesto } = await obtenerManifiesto(config, dirDatos)
     perfil = combinarPerfil(config, manifiesto)
+    perfilGenerado = manifiesto.generado || perfilGenerado
     enviar('perfil', perfil)
 
     let instalacion = await prepararJuego(perfil, raiz, { reportar, reparar })
@@ -220,10 +222,13 @@ function registrarIpc () {
     actualizacion: actualizador.estado()
   }))
 
-  ipcMain.handle('actualizaciones', async () => {
+  ipcMain.handle('actualizaciones', async (_e, opciones) => {
     try {
-      const { manifiesto, origen } = await obtenerManifiesto(config, dirDatos)
+      const { manifiesto, origen } = await obtenerManifiesto(config, dirDatos, { rapido: Boolean(opciones?.rapido) })
+      // Nunca se vuelve a un modpack más antiguo que el que ya se tiene (la caché de GitHub puede dar uno viejo)
+      if (manifiesto.generado && perfilGenerado && manifiesto.generado < perfilGenerado) return { ok: true, perfil, origen, sinCambios: true }
       perfil = combinarPerfil(config, manifiesto)
+      perfilGenerado = manifiesto.generado || perfilGenerado
       return { ok: true, perfil, origen }
     } catch (e) {
       return { ok: false, error: mensajeError(e) }

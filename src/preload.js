@@ -8,7 +8,7 @@ const escuchar = (canal) => (fn) => {
 
 contextBridge.exposeInMainWorld('launcher', {
   inicio: () => ipcRenderer.invoke('inicio'),
-  buscarActualizaciones: () => ipcRenderer.invoke('actualizaciones'),
+  buscarActualizaciones: (opciones) => ipcRenderer.invoke('actualizaciones', opciones),
   estadoServidor: () => ipcRenderer.invoke('estado-servidor'),
   loginMicrosoft: () => ipcRenderer.invoke('login-microsoft'),
   loginNavegador: () => ipcRenderer.invoke('login-navegador'),

@@ -1101,6 +1101,25 @@ async function anadirLoQueNecesita (versionId, nombre, boton, silencioso = false
   pintar()
 }
 
+/* Avisos que el administrador decidió ignorar (se recuerdan en este navegador) */
+const CLAVE_IGNORADOS = 'rataland-panel-avisos-ignorados'
+
+function avisosIgnorados () {
+  try { return new Set(JSON.parse(localStorage.getItem(CLAVE_IGNORADOS) || '[]')) } catch { return new Set() }
+}
+
+function guardarIgnorados (claves) {
+  try { localStorage.setItem(CLAVE_IGNORADOS, JSON.stringify([...claves])) } catch { /* sin almacenamiento */ }
+  pintarRevision()
+}
+
+function ignorarAvisos (claves) {
+  const ignorados = avisosIgnorados()
+  claves.forEach((c) => ignorados.add(c))
+  guardarIgnorados(ignorados)
+  avisar(claves.length === 1 ? 'Aviso ignorado. No volverá a salir mientras no cambie.' : 'Avisos ignorados. No volverán a salir mientras no cambien.')
+}
+
 function vistaRevision (donde) {
   const r = revision
   const enPublicar = donde === 'publicar'
@@ -1113,25 +1132,44 @@ function vistaRevision (donde) {
   } else if (r.resultado) {
     const { faltan, version, incompatibles } = r.resultado
     const nombre = (m) => h('strong', {}, m.nombre)
-    const items = [
+    // Cada aviso tiene una clave: si el mod o el problema cambian, la clave cambia y el aviso vuelve a salir
+    const idMod = (m) => m.info?.id || m.nombre
+    const avisos = [
       ...faltan.map(({ mod, ids }) => {
         const id = versionDe(mod.e)
-        return h('li', {}, nombre(mod), ` necesita ${ids.join(', ')}, que no está.`,
-          enPublicar ? null
-            : id
-              ? h('button', { class: 'enlace-boton', onclick: (ev) => anadirLoQueNecesita(id, mod.nombre, ev.currentTarget) }, 'Añadir lo que necesita')
-              : ids.map((x) => h('button', { class: 'enlace-boton', onclick: () => abrirCajon('mods', x) }, `Buscar ${x}`)))
+        return {
+          clave: `falta:${idMod(mod)}:${ids.join(',')}`,
+          contenido: [nombre(mod), ` necesita ${ids.join(', ')}, que no está.`,
+            enPublicar ? null
+              : id
+                ? h('button', { class: 'enlace-boton', onclick: (ev) => anadirLoQueNecesita(id, mod.nombre, ev.currentTarget) }, 'Añadir lo que necesita')
+                : ids.map((x) => h('button', { class: 'enlace-boton', onclick: () => abrirCajon('mods', x) }, `Buscar ${x}`))]
+        }
       }),
-      ...incompatibles.map(({ mod, con }) => h('li', {}, nombre(mod), ` no funciona junto a ${con}: quita uno de los dos.`)),
-      ...version.map(({ mod, texto }) => h('li', {}, nombre(mod), ` ${texto}. Puede que no arranque.`))
+      ...incompatibles.map(({ mod, con }) => ({ clave: `choca:${idMod(mod)}:${con}`, contenido: [nombre(mod), ` no funciona junto a ${con}: quita uno de los dos.`] })),
+      ...version.map(({ mod, texto }) => ({ clave: `version:${idMod(mod)}:${texto}`, contenido: [nombre(mod), ` ${texto}. Puede que no arranque.`] }))
     ]
-    if (!items.length) {
-      contenido = enPublicar ? null : h('p', { class: 'revision revision--bien' }, 'Cada mod tiene todo lo que necesita y no hay incompatibilidades.')
+    const ignorados = avisosIgnorados()
+    const visibles = avisos.filter((a) => !ignorados.has(a.clave))
+    const ocultos = avisos.length - visibles.length
+    const volverAMostrar = ocultos && !enPublicar
+      ? h('button', { class: 'enlace-boton', onclick: () => guardarIgnorados(new Set([...ignorados].filter((c) => !avisos.some((a) => a.clave === c)))) },
+        `Volver a mostrar ${ocultos === 1 ? 'el aviso ignorado' : `los ${ocultos} avisos ignorados`}`)
+      : null
+    if (!visibles.length) {
+      contenido = enPublicar
+        ? null
+        : h('p', { class: 'revision revision--bien' },
+          ocultos ? 'No hay avisos por revisar. ' : 'Cada mod tiene todo lo que necesita y no hay incompatibilidades.', volverAMostrar)
     } else {
       contenido = h('div', { class: 'aviso-caja aviso-caja--mal' },
-        h('strong', {}, enPublicar ? 'Hay mods con problemas: el juego podría no arrancar' : 'Revisa esto antes de publicar'),
-        h('ul', { class: 'revision__lista' }, items),
-        enPublicar ? h('p', {}, h('button', { class: 'enlace-boton', onclick: (ev) => { ev.target.closest('dialog').close(); irA('mods') } }, 'Arreglarlo en Mods')) : null)
+        h('div', { class: 'revision__cabecera' },
+          h('strong', {}, enPublicar ? 'Hay mods con problemas: el juego podría no arrancar' : 'Revisa esto antes de publicar'),
+          h('button', { class: 'enlace-boton', onclick: () => ignorarAvisos(visibles.map((a) => a.clave)) }, visibles.length === 1 ? 'Ignorar' : 'Ignorar todos')),
+        h('ul', { class: 'revision__lista' }, visibles.map((a) => h('li', {}, a.contenido,
+          visibles.length > 1 ? h('button', { class: 'enlace-boton revision__ignorar', onclick: () => ignorarAvisos([a.clave]) }, 'Ignorar') : null))),
+        enPublicar ? h('p', {}, h('button', { class: 'enlace-boton', onclick: (ev) => { ev.target.closest('dialog').close(); irA('mods') } }, 'Arreglarlo en Mods')) : null,
+        volverAMostrar ? h('p', {}, volverAMostrar) : null)
     }
   }
   return h('div', { 'data-revision': donde }, contenido)

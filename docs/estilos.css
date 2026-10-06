@@ -354,6 +354,8 @@ h1, h2, h3 { margin: 0; }
 .revision__lista { display: grid; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
 .revision__lista li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .revision__lista strong { color: var(--texto); }
+.revision__cabecera { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.revision__ignorar { margin-left: auto; color: var(--muy-tenue); }
 
 /* Mods para el servidor */
 .lista-zip { display: grid; gap: 2px; max-height: 300px; margin: 0; padding: 0; overflow: auto; list-style: none; }

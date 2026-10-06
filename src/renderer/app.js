@@ -840,7 +840,25 @@ async function consultarServidor () {
 // Al volver a la ventana (por ejemplo tras encender el servidor en Aternos) se comprueba enseguida.
 window.addEventListener('focus', () => {
   if (Date.now() - servidor.ultima > 5000) consultarServidor()
+  // Y las novedades, con el último commit de GitHub (como mucho cada 5 minutos)
+  if (Date.now() - refresco.ultimoCompleto > 5 * 60 * 1000) refrescarPerfil(true)
 })
+
+/*
+ * Novedades al día con el launcher abierto: cada 3 minutos se mira el modpack publicado
+ * (noticias, episodio, cuenta atrás, temporada, enlaces...). Mientras se prepara el juego, no.
+ */
+const refresco = { ultimoCompleto: Date.now() }
+async function refrescarPerfil (completo) {
+  if (estado.ocupado || !estado.perfil) return
+  if (completo) refresco.ultimoCompleto = Date.now()
+  const r = await api.buscarActualizaciones({ rapido: !completo }).catch(() => null)
+  if (!r?.ok || r.origen === 'copia' || r.sinCambios || estado.ocupado) return
+  if (JSON.stringify(r.perfil) === JSON.stringify(estado.perfil)) return
+  estado.perfil = r.perfil
+  pintarPerfil()
+}
+setInterval(() => refrescarPerfil(false), 3 * 60 * 1000)
 
 async function buscarActualizaciones () {
   const r = await api.buscarActualizaciones()

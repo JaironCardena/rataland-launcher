@@ -67,15 +67,19 @@ async function fijarCommit (direccion) {
 /**
  * Descarga el manifiesto remoto (lista de mods, versión del juego, noticias).
  * Si no hay internet usa la última copia guardada para que se pueda seguir jugando.
+ *
+ * `rapido`: sin preguntar el último commit a la API de GitHub (que limita a 60 consultas por hora);
+ * sirve para mirar las novedades a menudo con el launcher abierto, aunque la caché de GitHub
+ * puede tardar unos minutos en dar lo último.
  */
-async function obtenerManifiesto (config, dirDatos) {
+async function obtenerManifiesto (config, dirDatos, { rapido = false } = {}) {
   if (!config.manifiesto || SIN_CONFIGURAR.test(config.manifiesto)) {
     return { manifiesto: {}, origen: 'sin-configurar' }
   }
   if (!/^https?:\/\//i.test(config.manifiesto)) return manifiestoLocal(config.manifiesto)
   const copia = path.join(dirDatos, 'manifest.json')
   try {
-    const fijo = await fijarCommit(config.manifiesto)
+    const fijo = rapido ? null : await fijarCommit(config.manifiesto)
     const url = new URL(fijo ? fijo.manifiesto : config.manifiesto)
     if (!fijo) url.searchParams.set('t', Date.now())
     const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(15000) })
@@ -88,7 +92,9 @@ async function obtenerManifiesto (config, dirDatos) {
         if (a.url.startsWith(fijo.rama)) a.url = fijo.commit + a.url.slice(fijo.rama.length)
       }
     }
-    await escribirJson(copia, manifiesto)
+    // La caché puede dar uno más antiguo que el que ya teníamos: ese no sustituye a la copia
+    const anterior = await leerJson(copia, null)
+    if (!anterior?.generado || !manifiesto.generado || manifiesto.generado >= anterior.generado) await escribirJson(copia, manifiesto)
     return { manifiesto, origen: 'red' }
   } catch (e) {
     const guardado = await leerJson(copia, null)

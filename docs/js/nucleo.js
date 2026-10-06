@@ -623,9 +623,10 @@ export function cumpleRequisito (requisito, mc) {
   return opciones.some((op) => String(op).trim().split(/\s+/).every((parte) => {
     if (parte === '*' || parte === '') return true
     const m = /^(>=|<=|>|<|=|~|\^)?(.+)$/.exec(parte)
-    // "~1.21-" o "1.21.1-rc.1": lo de detrás del guion es una versión de prueba; para comparar cuenta lo de delante
+    // "~1.21-" o "1.21.1-rc.1": lo de detrás del guion es una versión de prueba, y "+1.21.1" solo dice
+    // para qué se compiló; para comparar cuenta lo de delante
     const [, operador = '=', bruta] = m
-    const version = bruta.replace(/-.*$/, '')
+    const version = bruta.replace(/\+.*$/, '').replace(/-.*$/, '')
     if (/[xX*]/.test(version)) {
       const base = version.replace(/\.[xX*].*$/, '')
       return mc === base || mc.startsWith(base + '.')
