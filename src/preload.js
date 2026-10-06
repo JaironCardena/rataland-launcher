@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('launcher', {
   ventana: (accion) => ipcRenderer.send('ventana', accion),
   abrirEnlace: (clave) => ipcRenderer.send('abrir-enlace', clave),
   abrirEpisodio: () => ipcRenderer.send('abrir-episodio'),
+  copiar: (texto) => ipcRenderer.send('copiar', String(texto)),
   abrirRegistros: () => ipcRenderer.send('abrir-registros'),
   instalarActualizacion: () => ipcRenderer.send('instalar-actualizacion'),
   abrirDescargaLauncher: () => ipcRenderer.send('abrir-descarga-launcher'),

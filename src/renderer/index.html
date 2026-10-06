@@ -27,224 +27,257 @@
     </div>
   </header>
 
-  <main class="escena">
-    <section class="principal" aria-labelledby="nombre-serie">
-      <div class="marca">
-        <span class="temporada" hidden></span>
-        <img class="marca__logo" src="assets/logo.png" alt="" hidden>
-        <h1 class="marca__texto" id="nombre-serie" data-nombre></h1>
+  <div class="cuerpo">
+    <!-- Barra lateral: secciones y enlaces de la serie -->
+    <nav class="rail" aria-label="Secciones">
+      <button class="rail__boton" data-accion="ir-inicio" aria-current="page">
+        <span class="rail__icono px" aria-hidden="true">
+          <svg viewBox="0 0 8 8"><path d="M3 0h2v1h-2zM2 1h4v1h-4zM1 2h6v1h-6zM0 3h8v1h-8zM1 4h2v1h-2zM5 4h2v1h-2zM1 5h2v1h-2zM5 5h2v1h-2zM1 6h6v1h-6z" /></svg>
+        </span>
+        Inicio
+      </button>
+      <button class="rail__boton" data-accion="abrir-skin" aria-controls="panel-skin" aria-expanded="false" hidden>
+        <span class="rail__icono px" aria-hidden="true">
+          <svg viewBox="0 0 8 8"><path d="M1 0h2v1h-2zM5 0h2v1h-2zM0 1h8v1h-8zM0 2h8v1h-8zM1 3h6v1h-6zM1 4h6v1h-6zM1 5h6v1h-6zM1 6h6v1h-6z" /></svg>
+        </span>
+        Tu skin
+      </button>
+      <button class="rail__boton" data-accion="ajustes" aria-controls="ajustes" aria-expanded="false">
+        <span class="rail__icono px" aria-hidden="true">
+          <svg viewBox="0 0 8 8"><path d="M2 0h1v1h-1zM5 0h1v1h-1zM1 1h6v1h-6zM0 2h2v1h-2zM3 2h2v1h-2zM6 2h2v1h-2zM1 3h1v1h-1zM6 3h1v1h-1zM1 4h1v1h-1zM6 4h1v1h-1zM0 5h2v1h-2zM3 5h2v1h-2zM6 5h2v1h-2zM1 6h6v1h-6zM2 7h1v1h-1zM5 7h1v1h-1z" /></svg>
+        </span>
+        Ajustes
+      </button>
+      <div class="rail__hueco"></div>
+      <div class="enlaces"></div>
+    </nav>
+
+    <main class="escena">
+      <section class="principal" aria-labelledby="nombre-serie">
+        <div class="marca">
+          <span class="temporada" hidden></span>
+          <img class="marca__logo" src="assets/logo.png" alt="" hidden>
+          <h1 class="marca__texto" id="nombre-serie" data-nombre></h1>
+        </div>
+
+        <div class="estado-servidor px" data-estado-servidor="comprobando">
+          <span class="estado-servidor__luz" aria-hidden="true"></span>
+          <span class="estado-servidor__texto" role="status">Comprobando el servidor…</span>
+          <span class="estado-servidor__cabezas" hidden></span>
+          <span class="estado-servidor__jugadores" hidden></span>
+          <button class="estado-servidor__copiar" data-accion="copiar-ip" aria-label="Copiar la dirección del servidor" title="Copiar la dirección del servidor">
+            <svg viewBox="0 0 8 8" aria-hidden="true"><path d="M0 0h4v1h-4zM0 1h1v1h-1zM3 1h1v1h-1zM0 2h1v1h-1zM3 2h4v1h-4zM0 3h4v1h-4zM6 3h1v1h-1zM3 4h1v1h-1zM6 4h1v1h-1zM3 5h4v1h-4z" /></svg>
+          </button>
+        </div>
+
+        <div class="cuenta-atras px" hidden>
+          <p class="cuenta-atras__titulo"></p>
+          <p class="cuenta-atras__tiempo"></p>
+          <p class="cuenta-atras__fecha"></p>
+        </div>
+
+        <!-- Sin cuenta -->
+        <div class="zona zona--login" hidden>
+          <h2 class="zona__titulo">Inicia sesión para jugar</h2>
+          <div class="login-opciones">
+            <button class="boton-microsoft" data-accion="login-navegador">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <rect x="0" y="0" width="7.5" height="7.5" fill="#f25022" />
+                <rect x="8.5" y="0" width="7.5" height="7.5" fill="#7fba00" />
+                <rect x="0" y="8.5" width="7.5" height="7.5" fill="#00a4ef" />
+                <rect x="8.5" y="8.5" width="7.5" height="7.5" fill="#ffb900" />
+              </svg>
+              Iniciar sesión con Microsoft
+            </button>
+            <p class="login-nota">
+              Se abre en tu navegador, donde puedes usar tus llaves de acceso o Windows Hello.
+              <button class="enlace enlace--tenue" data-accion="login-microsoft">Prefiero hacerlo en una ventana del launcher</button>
+            </p>
+          </div>
+
+          <div class="login-codigo px" hidden aria-live="polite">
+            <p class="login-codigo__texto">Termina en tu navegador. Si Microsoft te pide un código, pega este (ya está copiado):</p>
+            <div class="login-codigo__fila">
+              <output class="login-codigo__valor">…</output>
+              <button class="boton-secundario boton-secundario--pequeno" data-accion="copiar-codigo">Copiar</button>
+            </div>
+            <p class="login-codigo__espera"><span class="login-codigo__punto" aria-hidden="true"></span>Esperando a que confirmes en el navegador…</p>
+            <div class="ajuste__botones">
+              <button class="enlace" data-accion="abrir-login-navegador">Abrir la página otra vez</button>
+              <button class="enlace enlace--tenue" data-accion="cancelar-login">Cancelar</button>
+            </div>
+          </div>
+
+          <form class="sin-premium" hidden>
+            <label class="sin-premium__etiqueta" for="nombre-jugador">¿Sin Minecraft premium? Elige tu nombre</label>
+            <div class="sin-premium__fila">
+              <input id="nombre-jugador" class="campo" name="nombre" autocomplete="off" spellcheck="false"
+                     maxlength="16" placeholder="Tu nombre en el juego" required>
+              <button class="boton-secundario" type="submit">Entrar</button>
+            </div>
+          </form>
+          <p class="aviso aviso--error" data-error-login role="alert" hidden></p>
+        </div>
+
+        <!-- Con cuenta: avisos y errores al jugar (el botón Jugar está abajo) -->
+        <div class="zona zona--jugar" hidden>
+          <div class="aviso aviso--error" data-error-juego role="alert" hidden>
+            <p class="aviso__mensaje"></p>
+            <pre class="aviso__lineas" hidden></pre>
+            <div class="aviso__acciones">
+              <button class="enlace" data-accion="jugar">Reintentar</button>
+              <button class="enlace" data-accion="reparar">Reparar archivos</button>
+              <button class="enlace" data-accion="registros">Ver registros</button>
+            </div>
+          </div>
+          <p class="aviso" data-aviso hidden></p>
+        </div>
+      </section>
+
+      <!-- Tu personaje, de pie en el paisaje -->
+      <div class="personaje" aria-hidden="true" hidden>
+        <span class="personaje__nombre"></span>
+        <canvas class="personaje__lienzo" width="16" height="32"></canvas>
       </div>
 
-      <p class="estado-servidor" data-estado-servidor="comprobando">
-        <span class="estado-servidor__luz" aria-hidden="true"></span>
-        <span class="estado-servidor__texto">Comprobando el servidor…</span>
-        <span class="estado-servidor__cabezas" hidden></span>
-        <span class="estado-servidor__jugadores" hidden></span>
-      </p>
-
-      <div class="cuenta-atras" hidden>
-        <p class="cuenta-atras__titulo"></p>
-        <p class="cuenta-atras__tiempo"></p>
-        <p class="cuenta-atras__fecha"></p>
-      </div>
-
-      <!-- Sin cuenta -->
-      <div class="zona zona--login" hidden>
-        <h2 class="zona__titulo">Inicia sesión para jugar</h2>
-        <div class="login-opciones">
-        <button class="boton-microsoft" data-accion="login-navegador">
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <rect x="0" y="0" width="7.5" height="7.5" fill="#f25022" />
-            <rect x="8.5" y="0" width="7.5" height="7.5" fill="#7fba00" />
-            <rect x="0" y="8.5" width="7.5" height="7.5" fill="#00a4ef" />
-            <rect x="8.5" y="8.5" width="7.5" height="7.5" fill="#ffb900" />
-          </svg>
-          Iniciar sesión con Microsoft
+      <aside class="noticias px" aria-labelledby="titulo-noticias">
+        <h2 class="noticias__titulo" id="titulo-noticias">Novedades</h2>
+        <button class="episodio" data-accion="episodio" hidden>
+          <span class="episodio__miniatura px">
+            <img alt="" width="480" height="360">
+            <span class="episodio__play" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+            </span>
+          </span>
+          <span class="episodio__titulo"></span>
+          <span class="episodio__ver">Ver en YouTube</span>
         </button>
-        <p class="login-nota">
-          Se abre en tu navegador, donde puedes usar tus llaves de acceso o Windows Hello.
-          <button class="enlace enlace--tenue" data-accion="login-microsoft">Prefiero hacerlo en una ventana del launcher</button>
-        </p>
+        <ol class="noticias__lista"></ol>
+        <p class="noticias__vacio" hidden>Aquí aparecerán los avisos del servidor.</p>
+      </aside>
+
+      <aside class="ajustes px" id="ajustes" aria-labelledby="titulo-ajustes" hidden>
+        <div class="ajustes__cabecera">
+          <h2 id="titulo-ajustes">Ajustes</h2>
+          <button class="boton-ventana" data-accion="cerrar-ajustes" aria-label="Cerrar ajustes">
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg>
+          </button>
         </div>
 
-        <div class="login-codigo" hidden aria-live="polite">
-          <p class="login-codigo__texto">Termina en tu navegador. Si Microsoft te pide un código, pega este (ya está copiado):</p>
-          <div class="login-codigo__fila">
-            <output class="login-codigo__valor">…</output>
-            <button class="boton-secundario boton-secundario--pequeno" data-accion="copiar-codigo">Copiar</button>
-          </div>
-          <p class="login-codigo__espera"><span class="login-codigo__punto" aria-hidden="true"></span>Esperando a que confirmes en el navegador…</p>
+        <div class="ajuste" data-ajuste-cuenta hidden>
+          <span class="ajuste__titulo">Cuenta</span>
+          <p class="ajuste__ayuda" data-texto-cuenta></p>
           <div class="ajuste__botones">
-            <button class="enlace" data-accion="abrir-login-navegador">Abrir la página otra vez</button>
-            <button class="enlace enlace--tenue" data-accion="cancelar-login">Cancelar</button>
+            <button class="boton-secundario" data-accion="cerrar-sesion">Cerrar sesión</button>
           </div>
         </div>
 
-        <form class="sin-premium" hidden>
-          <label class="sin-premium__etiqueta" for="nombre-jugador">¿Sin Minecraft premium? Elige tu nombre</label>
-          <div class="sin-premium__fila">
-            <input id="nombre-jugador" class="campo" name="nombre" autocomplete="off" spellcheck="false"
-                   maxlength="16" placeholder="Tu nombre en el juego" required>
-            <button class="boton-secundario" type="submit">Entrar</button>
-          </div>
-        </form>
-        <p class="aviso aviso--error" data-error-login role="alert" hidden></p>
-      </div>
-
-      <!-- Con cuenta -->
-      <div class="zona zona--jugar" hidden>
-        <div class="fila-jugar">
-          <button class="jugar" data-accion="jugar">
-            <span class="jugar__texto">Jugar</span>
-          </button>
-          <button class="boton-cuadrado" data-accion="ajustes" aria-label="Ajustes" aria-expanded="false" aria-controls="ajustes">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M10 2h4v3.1l1.8.8 2.2-2.2 2.8 2.8-2.2 2.2.8 1.8H22v4h-3.1l-.8 1.8 2.2 2.2-2.8 2.8-2.2-2.2-1.8.8V22h-4v-3.1l-1.8-.8-2.2 2.2-2.8-2.8 2.2-2.2-.8-1.8H2v-4h3.1l.8-1.8-2.2-2.2 2.8-2.8 2.2 2.2 1.8-.8z" />
-              <rect x="9" y="9" width="6" height="6" />
-            </svg>
-          </button>
+        <div class="ajuste">
+          <label class="ajuste__titulo" for="ram">Memoria para Minecraft <output class="ajuste__valor" for="ram"></output></label>
+          <input type="range" id="ram" class="deslizador" min="2048" step="512">
+          <p class="ajuste__ayuda" data-ayuda-ram></p>
         </div>
 
-        <div class="progreso" hidden aria-live="polite">
-          <div class="progreso__numero" aria-hidden="true"></div>
-          <div class="xp" role="progressbar" aria-label="Progreso" aria-valuemin="0" aria-valuemax="100">
-            <div class="xp__relleno"></div>
+        <fieldset class="ajuste">
+          <legend class="ajuste__titulo">Al entrar al juego</legend>
+          <div class="opciones">
+            <label class="opcion"><input type="radio" name="alJugar" value="segundoPlano"><span>Esconder</span></label>
+            <label class="opcion"><input type="radio" name="alJugar" value="cerrar"><span>Cerrar</span></label>
+            <label class="opcion"><input type="radio" name="alJugar" value="abierto"><span>Dejar abierto</span></label>
           </div>
-          <p class="progreso__texto"></p>
-        </div>
+          <p class="ajuste__ayuda" data-ayuda="alJugar"></p>
+        </fieldset>
 
-        <p class="resumen-mods" hidden></p>
+        <fieldset class="ajuste">
+          <legend class="ajuste__titulo">Al pulsar la ✕ de la ventana</legend>
+          <div class="opciones">
+            <label class="opcion"><input type="radio" name="alCerrar" value="preguntar"><span>Preguntar</span></label>
+            <label class="opcion"><input type="radio" name="alCerrar" value="segundoPlano"><span>Segundo plano</span></label>
+            <label class="opcion"><input type="radio" name="alCerrar" value="cerrar"><span>Cerrar</span></label>
+          </div>
+          <p class="ajuste__ayuda" data-ayuda="alCerrar"></p>
+        </fieldset>
 
-        <div class="aviso aviso--error" data-error-juego role="alert" hidden>
-          <p class="aviso__mensaje"></p>
-          <pre class="aviso__lineas" hidden></pre>
-          <div class="aviso__acciones">
-            <button class="enlace" data-accion="jugar">Reintentar</button>
-            <button class="enlace" data-accion="reparar">Reparar archivos</button>
+        <div class="ajuste">
+          <span class="ajuste__titulo">¿El juego no abre?</span>
+          <p class="ajuste__ayuda">Reparar vuelve a comprobar Minecraft, Java y los mods, y descarga lo que esté dañado.</p>
+          <div class="ajuste__botones">
+            <button class="boton-secundario" data-accion="reparar">Reparar archivos</button>
             <button class="enlace" data-accion="registros">Ver registros</button>
           </div>
         </div>
-        <p class="aviso" data-aviso hidden></p>
-      </div>
-    </section>
 
-    <aside class="noticias" aria-labelledby="titulo-noticias">
-      <h2 class="noticias__titulo" id="titulo-noticias">Novedades</h2>
-      <button class="episodio" data-accion="episodio" hidden>
-        <span class="episodio__miniatura">
-          <img alt="" width="480" height="360">
-          <span class="episodio__play" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-          </span>
-        </span>
-        <span class="episodio__titulo"></span>
-        <span class="episodio__ver">Ver en YouTube</span>
-      </button>
-      <ol class="noticias__lista"></ol>
-      <p class="noticias__vacio" hidden>Aquí aparecerán los avisos del servidor.</p>
-    </aside>
+        <p class="ajuste ajuste__ayuda" data-version-launcher></p>
+      </aside>
 
-    <aside class="ajustes" id="ajustes" aria-labelledby="titulo-ajustes" hidden>
-      <div class="ajustes__cabecera">
-        <h2 id="titulo-ajustes">Ajustes</h2>
-        <button class="boton-ventana" data-accion="cerrar-ajustes" aria-label="Cerrar ajustes">
-          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg>
-        </button>
-      </div>
-
-      <div class="ajuste">
-        <label class="ajuste__titulo" for="ram">Memoria para Minecraft <output class="ajuste__valor" for="ram"></output></label>
-        <input type="range" id="ram" class="deslizador" min="2048" step="512">
-        <p class="ajuste__ayuda" data-ayuda-ram></p>
-      </div>
-
-      <fieldset class="ajuste">
-        <legend class="ajuste__titulo">Al entrar al juego</legend>
-        <div class="opciones">
-          <label class="opcion"><input type="radio" name="alJugar" value="segundoPlano"><span>Esconder</span></label>
-          <label class="opcion"><input type="radio" name="alJugar" value="cerrar"><span>Cerrar</span></label>
-          <label class="opcion"><input type="radio" name="alJugar" value="abierto"><span>Dejar abierto</span></label>
+      <aside class="panel-skin px" id="panel-skin" aria-labelledby="titulo-skin" hidden>
+        <div class="ajustes__cabecera">
+          <h2 id="titulo-skin">Tu skin</h2>
+          <button class="boton-ventana" data-accion="cerrar-skin" aria-label="Cerrar">
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg>
+          </button>
         </div>
-        <p class="ajuste__ayuda" data-ayuda="alJugar"></p>
-      </fieldset>
 
-      <fieldset class="ajuste">
-        <legend class="ajuste__titulo">Al pulsar la ✕ de la ventana</legend>
-        <div class="opciones">
-          <label class="opcion"><input type="radio" name="alCerrar" value="preguntar"><span>Preguntar</span></label>
-          <label class="opcion"><input type="radio" name="alCerrar" value="segundoPlano"><span>Segundo plano</span></label>
-          <label class="opcion"><input type="radio" name="alCerrar" value="cerrar"><span>Cerrar</span></label>
+        <div class="skin-vista px">
+          <canvas class="skin-vista__lienzo" width="16" height="32" role="img" aria-label="Vista previa de tu skin"></canvas>
+          <span class="skin-vista__vacia" hidden>Skin por defecto</span>
         </div>
-        <p class="ajuste__ayuda" data-ayuda="alCerrar"></p>
-      </fieldset>
+        <p class="ajuste__ayuda skin-nota" data-nota-skin hidden>
+          Sin premium, la skin la pone el servidor (con SkinRestorer) cuando entras. La imagen se sube a MineSkin, el servicio que usa SkinRestorer.
+        </p>
 
-      <div class="ajuste">
-        <span class="ajuste__titulo">¿El juego no abre?</span>
-        <p class="ajuste__ayuda">Reparar vuelve a comprobar Minecraft, Java y los mods, y descarga lo que esté dañado.</p>
-        <div class="ajuste__botones">
-          <button class="boton-secundario" data-accion="reparar">Reparar archivos</button>
-          <button class="enlace" data-accion="registros">Ver registros</button>
+        <fieldset class="ajuste">
+          <legend class="ajuste__titulo">Modelo</legend>
+          <div class="opciones">
+            <label class="opcion"><input type="radio" name="modeloSkin" value="classic"><span>Clásico</span></label>
+            <label class="opcion"><input type="radio" name="modeloSkin" value="slim"><span>Delgado</span></label>
+          </div>
+          <p class="ajuste__ayuda">Clásico tiene los brazos anchos, como Steve. Delgado, finos, como Alex.</p>
+        </fieldset>
+
+        <div class="ajuste">
+          <span class="ajuste__titulo">Imagen</span>
+          <p class="ajuste__ayuda">Un PNG de 64×64 píxeles. También puedes arrastrarlo hasta aquí.</p>
+          <div class="ajuste__botones">
+            <button class="boton-secundario" data-accion="elegir-skin">Elegir imagen</button>
+            <input type="file" accept="image/png" data-archivo-skin hidden>
+          </div>
         </div>
-      </div>
 
-      <p class="ajuste ajuste__ayuda" data-version-launcher></p>
-    </aside>
-
-    <aside class="panel-skin" id="panel-skin" aria-labelledby="titulo-skin" hidden>
-      <div class="ajustes__cabecera">
-        <h2 id="titulo-skin">Tu skin</h2>
-        <button class="boton-ventana" data-accion="cerrar-skin" aria-label="Cerrar">
-          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg>
-        </button>
-      </div>
-
-      <div class="skin-vista">
-        <canvas class="skin-vista__lienzo" width="16" height="32" role="img" aria-label="Vista previa de tu skin"></canvas>
-        <span class="skin-vista__vacia" hidden>Skin por defecto</span>
-      </div>
-
-      <fieldset class="ajuste">
-        <legend class="ajuste__titulo">Modelo</legend>
-        <div class="opciones">
-          <label class="opcion"><input type="radio" name="modeloSkin" value="classic"><span>Clásico</span></label>
-          <label class="opcion"><input type="radio" name="modeloSkin" value="slim"><span>Delgado</span></label>
+        <div class="ajuste">
+          <p class="aviso skin-estado" data-estado-skin role="status"></p>
+          <div class="ajuste__botones">
+            <button class="boton-principal" data-accion="guardar-skin" disabled>Guardar skin</button>
+            <button class="enlace enlace--tenue" data-accion="quitar-skin">Quitar mi skin</button>
+          </div>
         </div>
-        <p class="ajuste__ayuda">Clásico tiene los brazos anchos, como Steve. Delgado, finos, como Alex.</p>
-      </fieldset>
+      </aside>
+    </main>
+  </div>
 
-      <div class="ajuste">
-        <span class="ajuste__titulo">Imagen</span>
-        <p class="ajuste__ayuda">Un PNG de 64×64 píxeles. También puedes arrastrarlo hasta aquí.</p>
-        <div class="ajuste__botones">
-          <button class="boton-secundario" data-accion="elegir-skin">Elegir imagen</button>
-          <input type="file" accept="image/png" data-archivo-skin hidden>
-        </div>
-      </div>
-
-      <div class="ajuste">
-        <p class="aviso skin-estado" data-estado-skin role="status"></p>
-        <div class="ajuste__botones">
-          <button class="boton-principal" data-accion="guardar-skin" disabled>Guardar skin</button>
-          <button class="enlace enlace--tenue" data-accion="quitar-skin">Quitar mi skin</button>
-        </div>
-      </div>
-    </aside>
-  </main>
-
-  <footer class="pie">
-    <div class="cuenta" hidden>
-      <img class="cuenta__cabeza" alt="" width="36" height="36">
-      <div class="cuenta__datos">
+  <!-- Abajo, como el HUD de Minecraft: tu cuenta, la barra de experiencia (lo que se está preparando) y Jugar -->
+  <footer class="hud">
+    <button class="cuenta" data-accion="abrir-skin" aria-label="Tu skin" hidden>
+      <img class="cuenta__cabeza" alt="" width="44" height="44">
+      <span class="cuenta__datos">
         <span class="cuenta__nombre"></span>
         <span class="cuenta__tipo"></span>
+      </span>
+    </button>
+    <div class="hud__estado" aria-live="polite">
+      <div class="hud__fila">
+        <span class="hud__texto" data-hud-texto></span>
+        <span class="hud__detalle" data-version></span>
+        <span class="resumen-mods hud__detalle" hidden></span>
+        <span class="progreso__numero" aria-hidden="true"></span>
       </div>
-      <button class="enlace enlace--tenue" data-accion="abrir-skin" aria-controls="panel-skin" aria-expanded="false" hidden>Cambiar skin</button>
-      <button class="enlace enlace--tenue" data-accion="cerrar-sesion">Cerrar sesión</button>
+      <div class="xp" role="progressbar" aria-label="Progreso" aria-valuemin="0" aria-valuemax="100">
+        <div class="xp__relleno"></div>
+      </div>
     </div>
-    <div class="pie__derecha">
-      <nav class="enlaces" aria-label="Enlaces"></nav>
-      <span class="pie__version" data-version></span>
-    </div>
+    <button class="jugar" data-accion="jugar" hidden>
+      <span class="jugar__texto">Jugar</span>
+    </button>
   </footer>
 
   <div class="actualizando" role="dialog" aria-modal="true" aria-labelledby="titulo-actualizando" hidden>

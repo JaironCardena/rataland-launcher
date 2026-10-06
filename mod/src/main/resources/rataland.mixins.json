@@ -3,6 +3,7 @@
   "package": "com.rataland.menu.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "ClientPlayNetworkHandlerMixin",
     "MinecraftClientMixin",
     "ScreenMixin",
     "SplashOverlayMixin",

@@ -26,7 +26,7 @@ const { crearSkins } = require('./skins')
 const { crearActualizador } = require('./actualizador')
 
 const cuentas = crearCuentas(dirDatos)
-const skins = crearSkins(cuentas)
+const skins = crearSkins(cuentas, { raiz, dirDatos, agente: `RataLand-Launcher/${app.getVersion()}` })
 const ramTotalMB = Math.floor(os.totalmem() / 1048576)
 const rutaAjustes = path.join(dirDatos, 'ajustes.json')
 let ajustes
@@ -253,6 +253,7 @@ function registrarIpc () {
   }))
   ipcMain.on('abrir-login-navegador', () => { if (enlaceLogin) shell.openExternal(enlaceLogin) })
   ipcMain.on('cancelar-login', () => cuentas.cancelarLogin())
+  ipcMain.on('copiar', (_e, texto) => { if (typeof texto === 'string') clipboard.writeText(texto.slice(0, 200)) })
   ipcMain.handle('login-sin-premium', (_e, nombre) => config.cuentas?.noPremium
     ? cuentas.loginSinPremium(nombre)
     : { ok: false, error: 'Este servidor solo admite cuentas de Microsoft.' })

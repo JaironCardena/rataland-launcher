@@ -29,10 +29,10 @@
   --pixel: 'Pixelify Sans', 'Onest', system-ui, sans-serif;
   --texto-ui: 'Onest', system-ui, sans-serif;
 
-  --margen-izq: 52px;
-  --margen-der: 36px;
-  --ancho-jugar: 300px;
-  --alto-jugar: 76px;
+  --margen-izq: 48px;
+  --margen-der: 24px;
+  --ancho-lateral: 300px;
+  --alto-hud: 92px;
   color-scheme: dark;
 }
 
@@ -43,7 +43,7 @@ html, body { height: 100%; }
 body {
   margin: 0;
   display: grid;
-  grid-template-rows: 40px 1fr 72px;
+  grid-template-rows: 40px 1fr var(--alto-hud);
   overflow: hidden;
   background: var(--noche);
   color: var(--texto);
@@ -58,12 +58,18 @@ legend { padding: 0; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--antorcha); outline-offset: 3px; }
 
+/* Esquinas en escalón, como las ventanas del juego (en vez de redondeadas) */
+.px {
+  clip-path: polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px),
+    calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px));
+}
+
 /* Fondo: imagen de la serie + oscurecido para que el texto se lea */
 .fondo {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: var(--imagen-fondo, url('assets/fondo.svg')) center bottom / cover no-repeat;
+  background: var(--imagen-fondo, url('assets/fondo.svg')) center 70% / cover no-repeat;
   image-rendering: pixelated;
 }
 .fondo::after {
@@ -71,8 +77,8 @@ button { cursor: pointer; }
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(13, 20, 36, 0.94) 0%, rgba(13, 20, 36, 0.7) 34%, rgba(13, 20, 36, 0.05) 62%),
-    linear-gradient(0deg, rgba(9, 14, 26, 0.9) 0%, rgba(9, 14, 26, 0) 32%);
+    linear-gradient(90deg, rgba(8, 13, 26, 0.92) 0%, rgba(8, 13, 26, 0.62) 34%, rgba(8, 13, 26, 0) 58%),
+    linear-gradient(0deg, rgba(6, 10, 19, 0.9) 0%, rgba(6, 10, 19, 0) 26%);
 }
 
 /* Barra de título propia (la ventana no tiene marco) */
@@ -80,7 +86,8 @@ button { cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-left: 18px;
+  padding-left: 16px;
+  background: rgba(7, 12, 24, 0.55);
   -webkit-app-region: drag;
 }
 .barra-titulo__nombre { font-size: 12.5px; color: var(--muy-tenue); }
@@ -98,19 +105,82 @@ button { cursor: pointer; }
 .boton-ventana:hover { background: rgba(255, 255, 255, 0.08); color: var(--texto); }
 .boton-ventana--cerrar:hover { background: #c42b1c; color: #fff; }
 
-/* Escena principal */
-.escena {
+/* Cuerpo: barra lateral + escena */
+.cuerpo {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 40px;
-  padding: 8px var(--margen-der) 32px var(--margen-izq);
+  grid-template-columns: 72px minmax(0, 1fr);
+  min-height: 0;
+}
+
+/* Barra lateral con las secciones (iconos pixel) y los enlaces de la serie */
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0 12px;
+  background: rgba(7, 12, 24, 0.72);
+  box-shadow: inset -1px 0 0 rgba(214, 226, 255, 0.08);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.rail__hueco { flex: 1; }
+.rail__boton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 64px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--muy-tenue);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.rail__icono {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.06);
+  transition: background 120ms, box-shadow 120ms;
+}
+.rail__icono svg { width: 20px; height: 20px; fill: currentColor; shape-rendering: crispEdges; }
+.rail__boton:hover { color: var(--texto); }
+.rail__boton:hover .rail__icono { background: rgba(255, 255, 255, 0.08); }
+.rail__boton[aria-current='page'] { color: var(--antorcha); }
+.rail__boton[aria-current='page'] .rail__icono { background: rgba(246, 196, 69, 0.16); box-shadow: inset 0 0 0 2px rgba(246, 196, 69, 0.55); }
+.rail__boton:focus-visible { outline-offset: 0; }
+.rail__boton--discord { color: #c9cdfb; }
+.rail__boton--discord .rail__icono { background: var(--discord); box-shadow: none; color: #fff; }
+.rail__boton--discord:hover .rail__icono { background: #5d69e6; }
+.enlaces { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+/* Escena: portada a la izquierda, columna (novedades, ajustes o skin) a la derecha */
+.escena {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--ancho-lateral);
+  gap: 32px;
+  padding: 16px var(--margen-der) 16px var(--margen-izq);
   min-height: 0;
 }
 .principal {
   align-self: end;
   max-width: 470px;
   min-width: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+/* Sin cuenta lo importante es entrar: fuera la cuenta atrás y el logo algo más pequeño */
+.sin-cuenta .cuenta-atras,
+.sin-cuenta .temporada { display: none; }
+.sin-cuenta .marca__logo { width: 335px; }
+.sin-cuenta .marca { margin-bottom: 12px; }
 
 .marca { margin-bottom: 18px; }
 /* Chip de la temporada encima del logo */
@@ -149,12 +219,28 @@ button { cursor: pointer; }
 }
 
 .estado-servidor {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 30px;
+  margin: 0 0 24px;
+  padding: 8px 8px 8px 12px;
+  background: rgba(9, 14, 26, 0.78);
+  box-shadow: inset 0 0 0 2px rgba(214, 226, 255, 0.08);
   color: var(--tenue);
 }
+.estado-servidor__copiar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: 2px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--tenue);
+}
+.estado-servidor__copiar svg { width: 14px; height: 14px; fill: currentColor; shape-rendering: crispEdges; }
+.estado-servidor__copiar:hover { background: rgba(255, 255, 255, 0.12); color: var(--texto); }
+.estado-servidor__copiar.copiado { background: rgba(134, 207, 85, 0.2); color: var(--hierba-luz); }
 .estado-servidor__luz {
   width: 10px;
   height: 10px;
@@ -164,7 +250,7 @@ button { cursor: pointer; }
 [data-estado-servidor='abierto'] .estado-servidor__luz { background: var(--hierba-luz); box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35), 0 0 12px rgba(134, 207, 85, 0.55); }
 [data-estado-servidor='cerrado'] .estado-servidor__luz { background: var(--error); }
 [data-estado-servidor='encendiendo'] .estado-servidor__luz { background: var(--antorcha); }
-[data-estado-servidor='abierto'] .estado-servidor__texto { color: var(--texto); }
+[data-estado-servidor='abierto'] .estado-servidor__texto { color: var(--texto); font-weight: 600; }
 .estado-servidor__cabezas { display: flex; gap: 4px; margin-left: 4px; }
 .estado-servidor__cabezas img {
   width: 22px;
@@ -177,20 +263,20 @@ button { cursor: pointer; }
 
 /* Cuenta atrás para el próximo episodio o evento: un cartel con marco de queso */
 .cuenta-atras {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   gap: 2px;
-  margin: -8px 0 28px;
-  padding: 12px 16px;
-  border: 3px solid var(--tierra-borde);
-  background: rgba(13, 20, 36, 0.86);
-  box-shadow: inset 0 0 0 2px var(--antorcha), 0 8px 0 rgba(0, 0, 0, 0.35);
+  width: fit-content;
+  margin: 0 0 16px;
+  padding: 12px 18px 13px;
+  background: rgba(13, 20, 36, 0.88);
+  box-shadow: inset 0 0 0 2px var(--antorcha), inset 0 0 0 5px rgba(13, 20, 36, 0.88), inset 0 0 0 6px rgba(246, 196, 69, 0.25);
 }
 .ocupado .cuenta-atras { display: none; }
 .cuenta-atras p { margin: 0; }
 .cuenta-atras__titulo { color: var(--tenue); font-size: 13px; }
 .cuenta-atras__tiempo {
-  font: 700 34px/1.1 var(--pixel);
+  font: 700 36px/1.05 var(--pixel);
   color: var(--antorcha);
   text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
   font-variant-numeric: tabular-nums;
@@ -222,9 +308,8 @@ button { cursor: pointer; }
 .login-codigo {
   max-width: 430px;
   padding: 14px 18px;
-  border: 3px solid var(--tierra-borde);
-  background: rgba(13, 20, 36, 0.86);
-  box-shadow: inset 0 0 0 2px var(--antorcha), 0 8px 0 rgba(0, 0, 0, 0.35);
+  background: rgba(13, 20, 36, 0.88);
+  box-shadow: inset 0 0 0 2px var(--antorcha), inset 0 0 0 5px rgba(13, 20, 36, 0.88), inset 0 0 0 6px rgba(246, 196, 69, 0.25);
 }
 .login-codigo p { margin: 0; }
 .login-codigo__texto { color: var(--tenue); font-size: 13.5px; }
@@ -285,11 +370,11 @@ button { cursor: pointer; }
 .enlace--tenue { color: var(--tenue); font-size: 13px; }
 
 /* El botón Jugar: un bloque de hierba */
-.fila-jugar { display: flex; gap: 12px; }
 .jugar {
   position: relative;
-  width: var(--ancho-jugar);
-  height: var(--alto-jugar);
+  flex: none;
+  width: 236px;
+  height: 60px;
   padding: 0;
   border: 3px solid var(--tierra-borde);
   background:
@@ -298,14 +383,13 @@ button { cursor: pointer; }
   box-shadow:
     inset 0 -6px 0 rgba(0, 0, 0, 0.28),
     inset 0 3px 0 rgba(255, 255, 255, 0.18),
-    0 6px 0 var(--tierra-borde),
-    0 14px 24px rgba(0, 0, 0, 0.45);
+    0 5px 0 var(--tierra-borde);
   transition: transform 80ms ease-out, box-shadow 80ms ease-out, filter 120ms;
 }
 .jugar__texto {
   position: relative;
-  top: 6px;
-  font: 700 36px/1 var(--pixel);
+  top: 4px;
+  font: 700 30px/1 var(--pixel);
   color: #fff;
   letter-spacing: 0.03em;
   text-shadow: 3px 3px 0 #2c1d10;
@@ -317,28 +401,13 @@ button { cursor: pointer; }
   box-shadow:
     inset 0 -6px 0 rgba(0, 0, 0, 0.28),
     inset 0 3px 0 rgba(255, 255, 255, 0.18),
-    0 1px 0 var(--tierra-borde),
-    0 6px 12px rgba(0, 0, 0, 0.4);
+    0 0 0 var(--tierra-borde);
 }
 .jugar:disabled { cursor: default; filter: saturate(0.35) brightness(0.72); }
 .jugar:focus-visible { outline-offset: 5px; }
 
-.boton-cuadrado {
-  display: grid;
-  place-items: center;
-  width: var(--alto-jugar);
-  height: var(--alto-jugar);
-  border: 3px solid rgba(0, 0, 0, 0.55);
-  background: rgba(30, 40, 62, 0.85);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.08), inset 0 -5px 0 rgba(0, 0, 0, 0.3), 0 6px 0 rgba(0, 0, 0, 0.55);
-  color: var(--tenue);
-}
-.boton-cuadrado svg { width: 26px; height: 26px; fill: currentColor; fill-rule: evenodd; }
-.boton-cuadrado svg rect { fill: rgba(30, 40, 62, 1); }
-.boton-cuadrado:hover, .boton-cuadrado[aria-expanded='true'] { color: var(--texto); background: rgba(44, 57, 86, 0.9); }
 
 /* Progreso como barra de experiencia */
-.progreso { width: calc(var(--ancho-jugar) + 12px + var(--alto-jugar)); margin-top: 26px; }
 .progreso__numero {
   height: 22px;
   margin-bottom: 4px;
@@ -374,22 +443,75 @@ button { cursor: pointer; }
   from { transform: translateX(-100%); }
   to { transform: translateX(340%); }
 }
-.progreso__texto { margin: 10px 0 0; color: var(--tenue); font-size: 13.5px; }
-
-/* Lo que cambió en los mods al preparar el juego */
-.resumen-mods {
-  display: -webkit-box;
-  max-width: calc(var(--ancho-jugar) + 12px + var(--alto-jugar));
-  margin: 16px 0 0;
-  padding-left: 12px;
-  border-left: 3px solid var(--hierba-luz);
-  color: var(--tenue);
-  font-size: 13px;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+/* HUD de abajo: tu cuenta, el estado (barra de experiencia) y Jugar */
+.hud {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 24px 0 20px;
+  background: rgba(6, 10, 19, 0.95);
+  box-shadow: inset 0 2px 0 #1b2640, inset 0 3px 0 rgba(255, 255, 255, 0.04);
 }
+.cuenta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  width: 220px;
+  min-width: 0;
+  padding: 4px;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+.cuenta__cabeza {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  image-rendering: pixelated;
+  background: #3b2a1f;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(246, 196, 69, 0.35);
+}
+.cuenta:hover .cuenta__cabeza { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.6), 0 0 0 4px var(--antorcha); }
+.cuenta__datos { display: grid; min-width: 0; line-height: 1.25; }
+.cuenta__nombre { font-weight: 700; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cuenta__tipo { color: var(--muy-tenue); font-size: 12px; }
+.hud__estado { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.hud__fila { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.hud__texto { flex: none; font-size: 14px; font-weight: 600; }
+.hud__detalle { min-width: 0; overflow: hidden; color: var(--muy-tenue); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+.hud .progreso__numero { height: auto; margin: 0 0 0 auto; line-height: 1; font-size: 18px; }
+/* En reposo no hay barra: solo el texto */
+.hud:not(.hud--progreso) .xp,
+.hud:not(.hud--progreso) .progreso__numero { display: none; }
+
+/* Lo que cambió en los mods al preparar el juego (en el HUD) */
 .resumen-mods b { color: var(--texto); font-weight: 600; }
+
+/* Tu personaje, de pie en el paisaje entre la portada y la columna */
+.personaje {
+  position: absolute;
+  right: calc(var(--margen-der) + var(--ancho-lateral) + 44px);
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 120px;
+  pointer-events: none;
+}
+.personaje__nombre {
+  max-width: 100%;
+  padding: 2px 8px 3px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font: 400 14px/1.2 var(--pixel);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.personaje__lienzo { width: 96px; height: 192px; image-rendering: pixelated; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35)); }
+.personaje::after { content: ''; width: 84px; height: 10px; margin-top: -14px; border-radius: 50%; background: rgba(0, 0, 0, 0.45); }
 
 /* Avisos */
 .aviso { margin: 18px 0 0; color: var(--tenue); font-size: 13.5px; max-width: 420px; }
@@ -415,23 +537,22 @@ button { cursor: pointer; }
 }
 .aviso__acciones { display: flex; gap: 18px; margin-top: 10px; font-size: 13.5px; }
 
-/* Columna derecha: novedades o ajustes */
+/* Columna derecha: novedades, ajustes o skin */
 .noticias, .ajustes, .panel-skin {
   grid-column: 2;
   grid-row: 1;
   align-self: stretch;
   min-height: 0;
-  padding: 22px 24px;
-  border: 1px solid var(--linea);
-  border-radius: 10px;
-  background: var(--noche-panel);
+  padding: 18px 20px;
+  background: rgba(11, 17, 31, 0.86);
+  box-shadow: inset 0 0 0 2px rgba(214, 226, 255, 0.07);
   backdrop-filter: blur(12px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(214, 226, 255, 0.2) transparent;
 }
 .noticias__titulo { margin: 0; font: 700 20px/1.2 var(--pixel); }
-.ajustes h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.ajustes h2, .panel-skin h2 { margin: 0; font: 700 20px/1.2 var(--pixel); }
 
 /* Último episodio de la serie */
 .episodio {
@@ -452,8 +573,7 @@ button { cursor: pointer; }
   aspect-ratio: 16 / 9;
   margin-bottom: 4px;
   overflow: hidden;
-  border-radius: 8px;
-  background: #22304d;
+  background: #1e2b47;
 }
 .episodio__miniatura img {
   position: absolute;
@@ -493,12 +613,12 @@ button { cursor: pointer; }
   place-items: center;
   height: 260px;
   margin: 4px 0 6px;
-  border-radius: 8px;
   background: radial-gradient(ellipse at 50% 92%, rgba(246, 196, 69, 0.18) 0 18%, transparent 40%), rgba(9, 14, 26, 0.6);
 }
 .skin-vista__lienzo { width: 112px; height: 224px; image-rendering: pixelated; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35)); }
 .skin-vista__vacia { position: absolute; bottom: 10px; color: var(--muy-tenue); font-size: 12.5px; }
 .panel-skin .ajuste:first-of-type { border-top: 0; }
+.skin-nota { margin: 0 0 4px; }
 .skin-estado { margin: 0 0 12px; max-width: none; }
 .skin-estado:empty { display: none; }
 .skin-estado--error { color: var(--error); }
@@ -564,28 +684,6 @@ fieldset.ajuste { width: 100%; }
 }
 
 
-/* Pie: cuenta y versión */
-.pie {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 0 var(--margen-der) 0 var(--margen-izq);
-  border-top: 1px solid rgba(214, 226, 255, 0.06);
-  background: rgba(9, 14, 26, 0.78);
-}
-.cuenta { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.cuenta__cabeza {
-  width: 36px;
-  height: 36px;
-  image-rendering: pixelated;
-  border: 2px solid rgba(0, 0, 0, 0.5);
-  background: #3b2a1f;
-}
-.cuenta__datos { display: grid; line-height: 1.25; margin-right: 10px; min-width: 0; }
-.cuenta__nombre { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
-.cuenta__tipo { color: var(--muy-tenue); font-size: 12.5px; }
-.pie__derecha { display: flex; align-items: center; gap: 22px; margin-left: auto; }
 /* Aviso de versión nueva del launcher, en la barra de título: siempre a la vista */
 .actualizacion {
   display: flex;
@@ -636,23 +734,6 @@ fieldset.ajuste { width: 100%; }
 .actualizando__texto { margin: 0 0 24px; color: var(--tenue); }
 .actualizando__acciones { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .boton-secundario--pequeno { height: 32px; padding: 0 12px; font-size: 13px; color: var(--texto); }
-.enlaces { display: flex; align-items: center; gap: 18px; }
-.enlaces .enlace { color: var(--tenue); font-size: 13px; }
-.boton-discord {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 34px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 6px;
-  background: var(--discord);
-  color: #fff;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-.boton-discord svg { width: 18px; height: 18px; fill: currentColor; }
-.boton-discord:hover { background: #5d69e6; }
 
 /* Diálogos (al cerrar el launcher) */
 .velo {
@@ -713,31 +794,37 @@ fieldset.ajuste { width: 100%; }
   text-shadow: 1px 1px 0 #2c1d10;
 }
 .boton-principal:hover { background: #6cba44; }
-.pie__version { color: var(--muy-tenue); font-size: 12.5px; white-space: nowrap; }
 
 /* Entrada al abrir el launcher: un único momento */
 @media (prefers-reduced-motion: no-preference) {
-  .marca, .estado-servidor, .zona { animation: entrada 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .marca, .estado-servidor, .zona, .personaje { animation: entrada 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
   .estado-servidor { animation-delay: 80ms; }
   .zona { animation-delay: 160ms; }
+  .personaje { animation-delay: 240ms; }
   @keyframes entrada {
     from { opacity: 0; transform: translateY(14px); }
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .xp--indeterminada .xp__relleno { animation: none; width: 100%; opacity: 0.4; }
-  .jugar, .episodio__play { transition: none; }
+  .jugar, .episodio__play, .rail__icono { transition: none; }
 }
 
+/* Sin sitio para el personaje entre la portada y la columna */
+@media (max-width: 1060px) {
+  .personaje { display: none; }
+}
 @media (max-width: 1000px) {
-  :root { --margen-izq: 36px; --ancho-jugar: 260px; }
-  .escena { grid-template-columns: minmax(0, 1fr) 290px; gap: 28px; }
+  :root { --margen-izq: 32px; --ancho-lateral: 280px; }
+  .escena { gap: 24px; }
   .marca__texto { font-size: 48px; }
   .marca__logo { width: 335px; }
+  .cuenta { width: 180px; }
+  .jugar { width: 200px; }
 }
 /* Ventana baja: el logo a tamaño natural y menos aire */
 @media (max-height: 640px) {
   .marca__logo { width: 335px; }
   .temporada { margin-bottom: 10px; }
-  .estado-servidor { margin-bottom: 22px; }
+  .estado-servidor { margin-bottom: 18px; }
 }

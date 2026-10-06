@@ -13,7 +13,9 @@ if (!window.launcher) {
     oyentesActualizacion.forEach((f) => f(actualizacion))
   }
   let ajustes = { ram: 4096, alJugar: 'segundoPlano', alCerrar: params.get('al-cerrar') || 'preguntar' }
-  let cuenta = params.has('sin-cuenta') ? null : { tipo: 'microsoft', nombre: 'Steve', uuid: '8667ba71b85a4004af54457a9734eed7' }
+  let cuenta = params.has('sin-cuenta') ? null
+    : params.has('no-premium') ? { tipo: 'sinPremium', nombre: 'JaironEc', uuid: '0' }
+      : { tipo: 'microsoft', nombre: 'Steve', uuid: '8667ba71b85a4004af54457a9734eed7' }
 
   const perfil = {
     minecraft: '1.21.1',
@@ -79,13 +81,13 @@ if (!window.launcher) {
       caja('#c8956d', 8, 8, 8, 8); caja('#3b2a1f', 8, 8, 8, 2); caja('#fff', 9, 12, 2, 1); caja('#fff', 13, 12, 2, 1); caja('#3a5cc5', 10, 12, 1, 1); caja('#3a5cc5', 14, 12, 1, 1)
       caja('#f6c445', 20, 20, 8, 12); caja('#c8956d', 44, 20, 4, 12); caja('#f6c445', 44, 20, 4, 4); caja('#c8956d', 36, 52, 4, 12); caja('#f6c445', 36, 52, 4, 4)
       caja('#2c3e8c', 4, 20, 4, 12); caja('#2c3e8c', 20, 52, 4, 12); caja('#333', 4, 29, 4, 3); caja('#333', 20, 61, 4, 3)
-      return { ok: true, imagen: c.toDataURL(), modelo: 'classic' }
+      return { ok: true, imagen: c.toDataURL(), modelo: 'classic', ...(cuenta?.tipo === 'sinPremium' ? { sinPremium: true, estado: 'puesta' } : {}) }
     },
     cambiarSkin: async (datos, modelo) => {
       await espera(700)
       if (params.has('skin-error')) return { ok: false, error: 'Has hecho muchos cambios seguidos. Espera un minuto y vuelve a probar.' }
       const imagen = datos ? await new Promise((r) => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(new Blob([datos], { type: 'image/png' })) }) : (await window.launcher.skinActual()).imagen
-      return { ok: true, imagen, modelo }
+      return { ok: true, imagen, modelo, ...(cuenta?.tipo === 'sinPremium' ? { sinPremium: true, estado: 'pendiente' } : {}) }
     },
     quitarSkin: async () => { await espera(500); return { ok: true, imagen: null, modelo: 'classic' } },
     guardarAjustes: async (a) => (ajustes = { ...ajustes, ...a }),
@@ -115,6 +117,7 @@ if (!window.launcher) {
     },
     ventana (accion) { console.log('ventana:', accion) },
     abrirEnlace () {},
+    copiar (texto) { console.log('copiado:', texto) },
     abrirEpisodio () {},
     abrirRegistros () {},
     instalarActualizacion () {},

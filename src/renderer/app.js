@@ -7,6 +7,13 @@ const $$ = (s) => document.querySelectorAll(s)
 const NOMBRE_LOADER = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge' }
 const NOMBRE_ENLACE = { discord: 'Discord', web: 'Web', youtube: 'YouTube', twitch: 'Twitch', tiktok: 'TikTok', x: 'X', twitter: 'X' }
 const FONDO_ESCENA = { cloacas: 'assets/fondo-cloacas.png', amanecer: 'assets/fondo-amanecer.png' }
+// Iconos pixel (8×8) de los enlaces en la barra lateral
+const ICONO_ENLACE = {
+  discord: 'M1 1h6v1h-6zM0 2h8v1h-8zM0 3h2v1h-2zM3 3h2v1h-2zM6 3h2v1h-2zM0 4h8v1h-8zM0 5h8v1h-8zM1 6h1v1h-1zM6 6h1v1h-1z',
+  video: 'M1 1h6v1h-6zM0 2h2v1h-2zM3 2h5v1h-5zM0 3h2v1h-2zM4 3h4v1h-4zM0 4h2v1h-2zM5 4h3v1h-3zM0 5h2v1h-2zM4 5h4v1h-4zM0 6h2v1h-2zM3 6h5v1h-5zM1 7h6v1h-6z',
+  enlace: 'M4 0h3v1h-3zM5 1h2v1h-2zM4 2h1v1h-1zM6 2h1v1h-1zM3 3h1v1h-1zM2 4h1v1h-1zM1 5h1v1h-1zM0 6h1v1h-1z'
+}
+const TIPO_ICONO = { discord: 'discord', youtube: 'video', twitch: 'video', tiktok: 'video' }
 
 const AYUDA = {
   alJugar: {
@@ -56,11 +63,14 @@ function pintarFondo () {
 
 function pintarCuenta () {
   const cuenta = estado.cuenta
-  $('[data-accion="abrir-skin"]').hidden = cuenta?.tipo !== 'microsoft'
-  if (cuenta?.tipo !== 'microsoft') cerrarSkin()
+  $$('[data-accion="abrir-skin"]').forEach((b) => { b.hidden = !cuenta })
+  if (!cuenta) cerrarSkin()
   $('.zona--login').hidden = Boolean(cuenta)
   $('.zona--jugar').hidden = !cuenta
   $('.cuenta').hidden = !cuenta
+  $('.jugar').hidden = !cuenta
+  $('[data-ajuste-cuenta]').hidden = !cuenta
+  document.body.classList.toggle('sin-cuenta', !cuenta)
 
   const { cuentas = {} } = estado.launcher
   $('.login-opciones').hidden = cuentas.microsoft === false
@@ -68,14 +78,44 @@ function pintarCuenta () {
 
   if (!cuenta) {
     cerrarAjustes()
+    skin.imagen = null
+    pintarPersonaje()
+    pintarHud()
     return
   }
+  const tipo = cuenta.tipo === 'microsoft' ? 'Cuenta de Microsoft' : 'Sin premium'
   $('.cuenta__nombre').textContent = cuenta.nombre
-  $('.cuenta__tipo').textContent = cuenta.tipo === 'microsoft' ? 'Cuenta de Microsoft' : 'Sin premium'
+  $('.cuenta__tipo').textContent = tipo
+  $('[data-texto-cuenta]').textContent = `Has entrado como ${cuenta.nombre} (${tipo.toLowerCase()}).`
   const cabeza = $('.cuenta__cabeza')
   cabeza.src = cuenta.tipo === 'microsoft'
     ? `https://mc-heads.net/avatar/${encodeURIComponent(cuenta.uuid)}/72`
     : 'https://mc-heads.net/avatar/MHF_Steve/72'
+  cargarSkinDeCuenta()
+  pintarHud()
+}
+
+/** Skin de la cuenta: para el personaje del paisaje (y la cabeza de abajo, sin premium). */
+async function cargarSkinDeCuenta () {
+  const cuenta = estado.cuenta
+  const r = await api.skinActual().catch(() => null)
+  if (estado.cuenta !== cuenta) return
+  skin.imagen = r?.ok ? r.imagen : null
+  skin.modelo = r?.ok ? r.modelo : 'classic'
+  if (skin.imagen && cuenta.tipo === 'sinPremium') $('.cuenta__cabeza').src = cabezaDe(await cargarImagen(skin.imagen))
+  pintarPersonaje()
+}
+
+/** Tu personaje, de pie en el paisaje con su nombre encima (como en el juego). */
+async function pintarPersonaje () {
+  const caja = $('.personaje')
+  if (!estado.cuenta || !skin.imagen) {
+    caja.hidden = true
+    return
+  }
+  caja.querySelector('.personaje__nombre').textContent = estado.cuenta.nombre
+  dibujarSkin(caja.querySelector('.personaje__lienzo'), await cargarImagen(skin.imagen), skin.modelo === 'slim')
+  caja.hidden = false
 }
 
 function pintarPerfil () {
@@ -122,6 +162,7 @@ function pintarPerfil () {
   $('.noticias__vacio').hidden = Boolean(noticias?.length || estado.perfil.episodio)
   pintarEvento()
   pintarEnlaces()
+  pintarHud()
 }
 
 let relojEvento = null
@@ -191,14 +232,10 @@ function pintarEnlaces () {
   nav.replaceChildren(...claves.map((clave) => {
     const b = document.createElement('button')
     const nombre = NOMBRE_ENLACE[clave] || clave[0].toUpperCase() + clave.slice(1)
-    if (clave === 'discord') {
-      b.className = 'boton-discord'
-      b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v13H10l-5 4v-4H3z" /></svg>'
-      b.append('Únete al Discord')
-    } else {
-      b.className = 'enlace'
-      b.textContent = nombre
-    }
+    b.className = `rail__boton${clave === 'discord' ? ' rail__boton--discord' : ''}`
+    b.title = clave === 'discord' ? 'Únete al Discord de la serie' : `Abrir ${nombre}`
+    b.innerHTML = `<span class="rail__icono px" aria-hidden="true"><svg viewBox="0 0 8 8"><path d="${ICONO_ENLACE[TIPO_ICONO[clave] || 'enlace']}" /></svg></span>`
+    b.append(nombre)
     b.addEventListener('click', () => api.abrirEnlace(clave))
     return b
   }))
@@ -225,6 +262,18 @@ function actualizarBoton () {
   boton.disabled = estado.ocupado
   document.body.classList.toggle('ocupado', estado.ocupado)
   $('.jugar__texto').textContent = estado.jugando ? 'Jugando' : estado.ocupado ? 'Preparando' : 'Jugar'
+  pintarHud()
+}
+
+/** HUD en reposo: qué toca ahora y, al lado, la versión o lo que cambió en los mods. */
+function pintarHud () {
+  const hud = $('.hud')
+  if (hud.classList.contains('hud--progreso')) return
+  // Sin cuenta el aviso para entrar ya está en la portada: aquí solo la versión
+  $('[data-hud-texto]').textContent = !estado.cuenta
+    ? ''
+    : estado.jugando ? 'Minecraft está abierto' : 'Listo para jugar'
+  $('[data-version]').hidden = !$('.resumen-mods').hidden
 }
 
 /* ---------- Progreso y avisos ---------- */
@@ -250,11 +299,11 @@ function pintarBarra (contenedor, actual, total) {
   }
 }
 
+/** El progreso va en el HUD: el texto arriba y la barra de experiencia debajo. */
 function mostrarProgreso ({ texto, actual, total }) {
-  const caja = $('.progreso')
-  caja.hidden = false
-  $('.progreso__texto').textContent = texto || ''
-  pintarBarra(caja, actual, total)
+  $('.hud').classList.add('hud--progreso')
+  $('[data-hud-texto]').textContent = texto || ''
+  pintarBarra($('.hud__estado'), actual, total)
 }
 
 /* ---------- Actualizaciones del launcher ---------- */
@@ -349,10 +398,12 @@ function pintarResumen (r) {
   }
   p.title = grupos.map(([lista, uno, varios]) => `${lista.length === 1 ? uno : varios}: ${lista.join(', ')}`).join('\n')
   p.hidden = false
+  $('[data-version]').hidden = true
 }
 
 function ocultarProgreso () {
-  $('.progreso').hidden = true
+  $('.hud').classList.remove('hud--progreso')
+  pintarHud()
 }
 
 function mostrarError (mensaje, lineas = []) {
@@ -382,6 +433,7 @@ async function jugar (reparar = false) {
   ocultarError()
   aviso('')
   $('.resumen-mods').hidden = true
+  $('[data-version]').hidden = false
   estado.ocupado = true
   actualizarBoton()
   mostrarProgreso({ texto: reparar ? 'Preparando la reparación' : 'Preparando', actual: 0, total: 0 })
@@ -437,13 +489,25 @@ async function loginNavegador () {
   }
 }
 
-async function copiarCodigo () {
+function copiarCodigo () {
   const boton = $('[data-accion="copiar-codigo"]')
-  try {
-    await navigator.clipboard.writeText($('.login-codigo__valor').textContent)
-    boton.textContent = 'Copiado'
-    setTimeout(() => { boton.textContent = 'Copiar' }, 2000)
-  } catch { /* se puede seleccionar a mano */ }
+  api.copiar($('.login-codigo__valor').textContent)
+  boton.textContent = 'Copiado'
+  setTimeout(() => { boton.textContent = 'Copiar' }, 2000)
+}
+
+/** Copia la dirección del servidor (para dársela a alguien o añadirla a mano). */
+function copiarIp () {
+  const s = estado.perfil?.servidor
+  if (!s?.ip) return
+  const boton = $('.estado-servidor__copiar')
+  api.copiar(Number(s.puerto) && Number(s.puerto) !== 25565 ? `${s.ip}:${s.puerto}` : s.ip)
+  boton.classList.add('copiado')
+  boton.title = 'Dirección copiada'
+  setTimeout(() => {
+    boton.classList.remove('copiado')
+    boton.title = 'Copiar la dirección del servidor'
+  }, 1800)
 }
 
 async function loginSinPremium (evento) {
@@ -557,11 +621,22 @@ async function pintarSkin () {
   $('[data-accion="quitar-skin"]').disabled = skin.ocupado || !skin.imagen
 }
 
+/** Marca en la barra lateral la sección que se ve. */
+function marcarRail () {
+  const actual = !$('.ajustes').hidden ? 'ajustes' : !$('.panel-skin').hidden ? 'abrir-skin' : 'ir-inicio'
+  $$('.rail__boton[data-accion]').forEach((b) => {
+    if (b.dataset.accion === actual) b.setAttribute('aria-current', 'page')
+    else b.removeAttribute('aria-current')
+  })
+  $$('[data-accion="abrir-skin"]').forEach((b) => b.setAttribute('aria-expanded', String(actual === 'abrir-skin')))
+  $('[data-accion="ajustes"]').setAttribute('aria-expanded', String(actual === 'ajustes'))
+}
+
 async function abrirSkin () {
   cerrarAjustes()
   $('.panel-skin').hidden = false
   $('.noticias').hidden = true
-  $('[data-accion="abrir-skin"]').setAttribute('aria-expanded', 'true')
+  marcarRail()
   skin.nueva = null
   skin.imagenNueva = null
   estadoSkin('Cargando tu skin…')
@@ -570,7 +645,10 @@ async function abrirSkin () {
   skin.imagen = r.imagen
   skin.modelo = r.modelo
   document.querySelector(`input[name="modeloSkin"][value="${r.modelo}"]`).checked = true
-  estadoSkin('')
+  $('[data-nota-skin]').hidden = !r.sinPremium
+  estadoSkin(r.estado === 'pendiente'
+    ? 'Se pondrá sola la próxima vez que entres al servidor.'
+    : r.estado === 'puesta' ? 'Ya está puesta en el servidor.' : '', r.estado === 'puesta' ? 'bien' : '')
   await pintarSkin()
 }
 
@@ -579,7 +657,7 @@ function cerrarSkin () {
   if (panel.hidden) return
   panel.hidden = true
   $('.noticias').hidden = false
-  $('[data-accion="abrir-skin"]').setAttribute('aria-expanded', 'false')
+  marcarRail()
 }
 
 async function elegirSkin (archivo) {
@@ -611,8 +689,11 @@ async function guardarSkin () {
     skin.modelo = r.modelo
     skin.nueva = null
     skin.imagenNueva = null
-    estadoSkin('Skin guardada. La verás la próxima vez que entres al juego.', 'bien')
+    estadoSkin(r.sinPremium
+      ? 'Lista. Se pondrá sola la próxima vez que entres al servidor.'
+      : 'Skin guardada. La verás la próxima vez que entres al juego.', 'bien')
     if (r.imagen) $('.cuenta__cabeza').src = cabezaDe(await cargarImagen(r.imagen))
+    pintarPersonaje()
   } else {
     estadoSkin(r.error, 'error')
   }
@@ -641,9 +722,15 @@ async function quitarSkin () {
     skin.modelo = r.modelo
     skin.nueva = null
     skin.imagenNueva = null
-    estadoSkin('Listo: ahora tienes la skin por defecto.', 'bien')
     const cuenta = estado.cuenta
-    $('.cuenta__cabeza').src = `https://mc-heads.net/avatar/${encodeURIComponent(cuenta.uuid)}/72?${Date.now()}`
+    if (r.sinPremium) {
+      estadoSkin('Se quitará la próxima vez que entres al servidor.', 'bien')
+      $('.cuenta__cabeza').src = 'https://mc-heads.net/avatar/MHF_Steve/72'
+    } else {
+      estadoSkin('Listo: ahora tienes la skin por defecto.', 'bien')
+      $('.cuenta__cabeza').src = `https://mc-heads.net/avatar/${encodeURIComponent(cuenta.uuid)}/72?${Date.now()}`
+    }
+    pintarPersonaje()
   } else {
     estadoSkin(r.error, 'error')
   }
@@ -654,7 +741,7 @@ function abrirAjustes () {
   cerrarSkin()
   $('.ajustes').hidden = false
   $('.noticias').hidden = true
-  $('[data-accion="ajustes"]').setAttribute('aria-expanded', 'true')
+  marcarRail()
   $('#ram').focus()
 }
 
@@ -663,7 +750,7 @@ function cerrarAjustes () {
   if (panel.hidden) return
   panel.hidden = true
   $('.noticias').hidden = false
-  $('[data-accion="ajustes"]').setAttribute('aria-expanded', 'false')
+  marcarRail()
 }
 
 async function guardarAjustes (cambios) {
@@ -768,6 +855,8 @@ document.addEventListener('click', (e) => {
   if (accion === 'cerrar-ajustes') cerrarAjustes()
   if (accion === 'abrir-skin') $('.panel-skin').hidden ? abrirSkin() : cerrarSkin()
   if (accion === 'cerrar-skin') cerrarSkin()
+  if (accion === 'ir-inicio') { cerrarAjustes(); cerrarSkin() }
+  if (accion === 'copiar-ip') copiarIp()
   if (accion === 'elegir-skin') $('[data-archivo-skin]').click()
   if (accion === 'guardar-skin') guardarSkin()
   if (accion === 'quitar-skin') quitarSkin()
@@ -822,7 +911,6 @@ api.alJuego(({ estado: fase, error }) => {
     if (estado.actualizacion) pintarActualizacion(estado.actualizacion)
     ocultarProgreso()
     actualizarBoton()
-    aviso(estado.ajustes.alJugar === 'abierto' ? 'Minecraft está abierto.' : 'Minecraft está abierto. El launcher volverá cuando lo cierres.')
   } else if (fase === 'cerrado') {
     estado.ocupado = false
     estado.jugando = false
