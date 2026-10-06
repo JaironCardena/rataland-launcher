@@ -207,9 +207,7 @@ h1, h2, h3 { margin: 0; }
 }
 .boton--peligro-lleno:hover:not(:disabled) { background: #c8533b; }
 .boton-quitar { min-height: 32px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--r-control); background: none; color: var(--muy-tenue); font-size: 13px; font-weight: 600; cursor: pointer; }
-.boton-accion { min-height: 32px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--r-control); background: none; color: var(--muy-tenue); font-size: 13px; font-weight: 600; cursor: pointer; }
-.boton-accion:hover { border-color: var(--linea-fuerte); background: rgba(255, 255, 255, 0.05); color: var(--texto); }
-.boton-accion:disabled { opacity: 0.6; cursor: progress; }
+.boton-icono:disabled { opacity: 0.5; cursor: progress; }
 .boton-quitar:hover { border-color: rgba(255, 138, 122, 0.35); background: rgba(255, 138, 122, 0.08); color: var(--error); }
 .boton-icono { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: var(--r-control); background: none; color: var(--tenue); cursor: pointer; }
 .boton-icono:hover { background: rgba(255, 255, 255, 0.06); color: var(--texto); }

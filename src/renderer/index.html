@@ -13,6 +13,10 @@
 
   <header class="barra-titulo">
     <span class="barra-titulo__nombre" data-nombre></span>
+    <div class="actualizacion" role="status" hidden>
+      <span class="actualizacion__texto"></span>
+      <button class="actualizacion__boton" data-accion="instalar-actualizacion" hidden>Actualizar ahora</button>
+    </div>
     <div class="barra-titulo__botones">
       <button class="boton-ventana" data-ventana="minimizar" aria-label="Minimizar">
         <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5h8" /></svg>
@@ -177,10 +181,6 @@
       <button class="enlace enlace--tenue" data-accion="cerrar-sesion">Cerrar sesión</button>
     </div>
     <div class="pie__derecha">
-      <div class="actualizacion" role="status" hidden>
-        <span class="actualizacion__texto"></span>
-        <button class="boton-secundario boton-secundario--pequeno" data-accion="instalar-actualizacion" hidden>Actualizar ahora</button>
-      </div>
       <nav class="enlaces" aria-label="Enlaces"></nav>
       <span class="pie__version" data-version></span>
     </div>

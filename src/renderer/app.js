@@ -258,6 +258,7 @@ function mostrarProgreso ({ texto, actual, total }) {
 /* ---------- Actualizaciones del launcher ---------- */
 
 function pintarActualizacion (a) {
+  estado.actualizacion = a
   const pantalla = $('.actualizando')
   const enArranque = a.modo === 'arranque'
   const visible = a.fase === 'instalando' || a.fase === 'error' ||
@@ -299,9 +300,12 @@ function pintarActualizacion (a) {
     boton.hidden = true
     textoAviso.textContent = `Descargando la versión ${a.version} del launcher (${a.porcentaje || 0}%)`
   } else if (!enArranque && a.fase === 'lista') {
+    // Mientras se juega no se instala: se hará solo al cerrar Minecraft
     aviso.hidden = false
-    boton.hidden = false
-    textoAviso.textContent = `Versión ${a.version} del launcher lista`
+    boton.hidden = estado.jugando
+    textoAviso.textContent = estado.jugando
+      ? `Versión ${a.version} del launcher lista: se instalará al cerrar Minecraft`
+      : `Hay una versión nueva del launcher (${a.version})`
   } else if (a.fase !== 'instalando') {
     aviso.hidden = true
   }
@@ -571,12 +575,14 @@ api.alJuego(({ estado: fase, error }) => {
     mostrarProgreso({ texto: 'Abriendo Minecraft', actual: 0, total: 0 })
   } else if (fase === 'abierto') {
     estado.jugando = true
+    if (estado.actualizacion) pintarActualizacion(estado.actualizacion)
     ocultarProgreso()
     actualizarBoton()
     aviso(estado.ajustes.alJugar === 'abierto' ? 'Minecraft está abierto.' : 'Minecraft está abierto. El launcher volverá cuando lo cierres.')
   } else if (fase === 'cerrado') {
     estado.ocupado = false
     estado.jugando = false
+    if (estado.actualizacion) pintarActualizacion(estado.actualizacion)
     ocultarProgreso()
     actualizarBoton()
     aviso('')

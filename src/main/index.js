@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage } = require('electron')
+const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage, Notification } = require('electron')
 const path = require('path')
 const os = require('os')
 const fs = require('fs')
@@ -63,11 +63,34 @@ function pasarASegundoPlano () {
     bandeja.on('click', mostrarVentana)
   }
   bandeja.setToolTip(jugando ? `${config.nombre}: Minecraft está abierto` : `${config.nombre} sigue abierto en segundo plano`)
+  const actualizacion = actualizador?.estado()
+  const lista = actualizacion?.fase === 'lista'
   bandeja.setContextMenu(Menu.buildFromTemplate([
     { label: `Abrir ${config.nombre}`, click: mostrarVentana },
+    ...(lista
+      ? [jugando
+          ? { label: `Versión ${actualizacion.version} lista: se instalará al cerrar Minecraft`, enabled: false }
+          : { label: `Actualizar a la versión ${actualizacion.version}`, click: () => { mostrarVentana(); actualizador.instalar() } }]
+      : []),
     { type: 'separator' },
     { label: `Cerrar ${config.nombre}`, click: cerrarDelTodo }
   ]))
+}
+
+/** Hay una versión nueva del launcher descargada: si no se está viendo el launcher, aviso de Windows. */
+function avisarActualizacionLista (version) {
+  if (bandeja) pasarASegundoPlano() // pone "Actualizar" en el menú del icono
+  const aLaVista = ventana && !ventana.isDestroyed() && ventana.isVisible() && !ventana.isMinimized() && ventana.isFocused()
+  if ((aLaVista && !jugando) || !Notification.isSupported()) return
+  const aviso = new Notification({
+    title: `Actualización de ${config.nombre} lista`,
+    body: jugando
+      ? `La versión ${version} se instalará sola cuando cierres Minecraft.`
+      : `Abre el launcher para instalar la versión ${version}.`,
+    icon: nativeImage.createFromPath(path.join(__dirname, '..', 'renderer', 'assets', 'icono.png'))
+  })
+  aviso.on('click', mostrarVentana)
+  aviso.show()
 }
 
 function mostrarVentana () {
@@ -156,6 +179,9 @@ async function jugar (reparar) {
           jugando = false
           if (ventana && !ventana.isDestroyed() && !ventana.isVisible()) mostrarVentana()
           enviar('juego', { estado: 'cerrado', error })
+          // Si hay una versión nueva del launcher, ahora que no se juega se instala (salvo que haya
+          // que leer un error del juego: entonces se ofrece con el botón).
+          if (!error) actualizador.alTerminarJuego()
         }
       })
     }
@@ -277,6 +303,7 @@ function crearVentana () {
     })
   }
   ventana.once('ready-to-show', () => ventana.show())
+  ventana.on('focus', () => actualizador?.comprobar())
   // La X de la ventana (o Alt+F4) no cierra sin más: la interfaz pregunta o hace lo elegido en Ajustes.
   ventana.on('close', (e) => {
     // Si la interfaz se colgó, nadie contestaría: se deja cerrar.
@@ -303,7 +330,7 @@ if (!app.requestSingleInstanceLock()) {
     await prepararCarpeta()
     ajustes = leerAjustes(await leerJson(rutaAjustes, {}))
     Menu.setApplicationMenu(null)
-    actualizador = crearActualizador({ enviar, dirDatos, estaJugando: () => jugando, paginaDescarga: config.paginaDescarga })
+    actualizador = crearActualizador({ enviar, dirDatos, estaJugando: () => jugando, paginaDescarga: config.paginaDescarga, alLista: avisarActualizacionLista })
     registrarIpc()
     crearVentana()
     actualizador.iniciar()

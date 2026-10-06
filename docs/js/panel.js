@@ -35,6 +35,7 @@ const ICONOS = {
   noticias: ['#######.', '#.....##', '#.###..#', '#......#', '#.####.#', '#......#', '#.###..#', '########'],
   evento: ['########', '.#....#.', '..#..#..', '...##...', '...##...', '..####..', '.######.', '########'],
   enlaces: ['.....##.', '....#..#', '....#..#', '...#.##.', '.##.#...', '#..#....', '#..#....', '.##.....'],
+  descargar: ['...##...', '...##...', '...##...', '.######.', '..####..', '...##...', '........', '########'],
   temporada: ['########', '#......#', '#....#.#', '#......#', '#..#...#', '#.###.##', '########', '........'],
   launcher: ['..####..', '.#....#.', '#......#', '#.#..#.#', '#......#', '#.####.#', '.#....#.', '..####..']
 }
@@ -597,39 +598,41 @@ function filaElemento (categoria, e) {
       categoria === 'texturas'
         ? h('label', { class: 'interruptor' }, h('input', { type: 'checkbox', checked: activo, onchange: (ev) => cambiarActivo(e.ruta, ev.target.checked) }), 'Para todos')
         : null,
-      e.icono
-        ? h('button', { class: 'boton-accion', 'aria-label': `Descargar el icono de ${e.nombre || e.ruta.split('/').pop()}`, onclick: (ev) => descargarIcono(e, ev.currentTarget) }, 'Descargar icono')
-        : null,
+      h('button', {
+        class: 'boton-icono',
+        title: 'Descargar el archivo',
+        'aria-label': `Descargar ${e.ruta.split('/').pop()}`,
+        onclick: (ev) => descargarArchivo(e, ev.currentTarget)
+      }, pixel('descargar')),
       h('button', { class: 'boton-quitar', 'aria-label': `Quitar ${e.nombre || e.ruta.split('/').pop()}`, onclick: () => quitar(e) }, 'Quitar')))
 }
 
-/** Guarda el icono del mod en PNG con su nombre (Modrinth a veces los sirve en WebP; los GIF animados se dejan igual). */
-async function descargarIcono (e, boton) {
-  const nombre = (e.nombre || e.ruta.split('/').pop().replace(/\.(jar|zip)$/i, ''))
-    .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'icono'
+/** Descarga el archivo tal y como lo reciben los jugadores (el .jar o el .zip). */
+async function descargarArchivo (e, boton) {
+  const archivo = e.ruta.split('/').pop()
   boton.disabled = true
   try {
-    const res = await fetch(e.icono)
-    if (!res.ok) throw new Error(`respuesta ${res.status}`)
-    let imagen = await res.blob()
-    let extension = 'png'
-    if (imagen.type === 'image/gif') {
-      extension = 'gif'
-    } else if (imagen.type !== 'image/png') {
-      const mapa = await createImageBitmap(imagen)
-      const lienzo = h('canvas', { width: mapa.width, height: mapa.height })
-      lienzo.getContext('2d').drawImage(mapa, 0, 0)
-      imagen = await new Promise((resolve, reject) => lienzo.toBlob((b) => b ? resolve(b) : reject(new Error('sin PNG')), 'image/png'))
+    let datos
+    const nuevo = nuevos.get(e.ruta)
+    if (nuevo) {
+      // Subido pero sin publicar: ya lo tenemos en el navegador
+      datos = new Blob([nuevo.bytes])
+    } else {
+      const { propietario, repositorio, carpeta } = n.CONFIG
+      const url = e.tipo === 'modrinth'
+        ? e.url
+        : `https://raw.githubusercontent.com/${propietario}/${repositorio}/${base.head}/${carpeta}/${n.codificarRuta(e.ruta)}`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`respuesta ${res.status}`)
+      datos = await res.blob()
     }
-    const url = URL.createObjectURL(imagen)
-    const enlace = h('a', { href: url, download: `${nombre}.${extension}`, hidden: true })
+    const enlace = h('a', { href: URL.createObjectURL(datos), download: archivo, hidden: true })
     document.body.append(enlace)
     enlace.click()
     enlace.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 10000)
+    setTimeout(() => URL.revokeObjectURL(enlace.href), 10000)
   } catch {
-    avisar('No se pudo descargar el icono. Prueba otra vez en un momento.', 'error')
+    avisar(`No se pudo descargar ${archivo}. Prueba otra vez en un momento.`, 'error')
   } finally {
     boton.disabled = false
   }

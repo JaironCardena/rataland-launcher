@@ -536,8 +536,35 @@ fieldset.ajuste { width: 100%; }
 .cuenta__nombre { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 .cuenta__tipo { color: var(--muy-tenue); font-size: 12.5px; }
 .pie__derecha { display: flex; align-items: center; gap: 22px; margin-left: auto; }
-.actualizacion { display: flex; align-items: center; gap: 12px; color: var(--antorcha); font-size: 13px; }
-.actualizacion--hecha { color: var(--hierba-luz); }
+/* Aviso de versión nueva del launcher, en la barra de título: siempre a la vista */
+.actualizacion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 28px;
+  margin: 0 12px 0 auto;
+  padding: 0 2px 0 12px;
+  border: 1px solid rgba(246, 196, 69, 0.5);
+  border-radius: 6px;
+  background: rgba(246, 196, 69, 0.12);
+  color: var(--antorcha);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  -webkit-app-region: no-drag;
+}
+.actualizacion--hecha { padding-right: 12px; border-color: rgba(134, 207, 85, 0.5); background: rgba(134, 207, 85, 0.1); color: var(--hierba-luz); }
+.actualizacion__boton {
+  height: 22px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--antorcha);
+  color: #1b120b;
+  font-size: 12px;
+  font-weight: 700;
+}
+.actualizacion__boton:hover { background: #ffd866; }
 
 /* Pantalla de actualización del launcher (tapa todo menos la barra de título) */
 .actualizando {

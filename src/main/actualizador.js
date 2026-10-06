@@ -6,15 +6,16 @@ const path = require('path')
 /**
  * Actualizaciones del propio launcher desde GitHub Releases.
  *
- * Al abrir: si hay versión nueva se descarga mostrando el progreso, se instala en silencio
- * y el launcher se vuelve a abrir solo. Si aparece mientras el launcher está abierto,
- * se descarga en segundo plano y se ofrece "Actualizar ahora".
+ * Al abrir y al cerrar Minecraft: si hay versión nueva se descarga mostrando el progreso, se
+ * instala en silencio y el launcher se vuelve a abrir solo. Si aparece mientras el launcher está
+ * abierto (se mira cada 15 minutos y al volver a la ventana) se descarga en segundo plano, se
+ * avisa y se ofrece "Actualizar ahora"; si se está jugando, se instala al cerrar el juego.
  *
  * El instalador lo lanzamos nosotros (no con quitAndInstall) para no cerrar el launcher
  * hasta saber que Windows lo ha dejado arrancar, y para no recurrir a elevate.exe,
  * que pide permisos de administrador sin motivo: la instalación es solo para el usuario.
  */
-function crearActualizador ({ enviar, dirDatos, estaJugando, paginaDescarga }) {
+function crearActualizador ({ enviar, dirDatos, estaJugando, paginaDescarga, alLista = () => {} }) {
   // Ojo: no leer package.json "build" aquí; electron-builder lo quita al empaquetar.
   const PAGINA_DESCARGA = paginaDescarga
   const marcaActualizado = path.join(dirDatos, 'actualizado.json')
@@ -38,7 +39,12 @@ function crearActualizador ({ enviar, dirDatos, estaJugando, paginaDescarga }) {
 
   const api = {
     estado: () => ({ ...estado, recienActualizado, versionActual: app.getVersion() }),
-    iniciar () {}
+    iniciar () {},
+    /** Al volver a la ventana: busca si hace rato que no se mira. */
+    comprobar () {},
+    /** Al cerrar Minecraft: instala lo que esté listo, o busca si hay algo nuevo. */
+    alTerminarJuego () {},
+    instalar () {}
   }
   ipcMain.on('abrir-descarga-launcher', () => shell.openExternal(PAGINA_DESCARGA))
   ipcMain.on('seguir-sin-actualizar', () => avisar({ fase: estado.version ? 'lista' : 'nada', modo: 'fondo' }))
@@ -91,27 +97,47 @@ function crearActualizador ({ enviar, dirDatos, estaJugando, paginaDescarga }) {
   autoUpdater.on('update-downloaded', (info) => {
     avisar({ fase: 'lista', version: info.version })
     if (estado.modo === 'arranque' && !estaJugando()) instalar()
+    else alLista(info.version)
   })
   autoUpdater.on('error', (e) => {
     log('error', e?.message || String(e))
     if (estado.fase === 'descargando') avisar({ fase: 'nada', modo: 'fondo' })
   })
 
-  ipcMain.on('instalar-actualizacion', () => {
+  api.instalar = () => {
     if (estado.fase === 'lista' || estado.fase === 'error') instalar()
-  })
+  }
+  ipcMain.on('instalar-actualizacion', api.instalar)
+
+  // modo "arranque": lo que se encuentre se instala enseguida (al abrir o al salir del juego).
+  // modo "fondo": se descarga sin molestar y se ofrece con un botón.
+  let ultimaBusqueda = 0
+  function buscar (modo) {
+    if (estado.fase !== 'nada') return
+    ultimaBusqueda = Date.now()
+    avisar({ modo })
+    autoUpdater.checkForUpdates()
+      .then((r) => { if (!r?.isUpdateAvailable && estado.fase === 'nada') avisar({ modo: 'fondo' }) })
+      .catch(() => { if (estado.fase === 'nada') avisar({ modo: 'fondo' }) })
+  }
 
   api.iniciar = () => {
-    autoUpdater.checkForUpdates()
-      .then((r) => { if (!r?.isUpdateAvailable) avisar({ modo: 'fondo' }) })
-      .catch(() => avisar({ modo: 'fondo' }))
-    // A partir de ahora, lo que se encuentre se descarga en segundo plano y se ofrece con un botón.
-    setInterval(() => {
-      if (estado.fase === 'nada') {
-        avisar({ modo: 'fondo' })
-        autoUpdater.checkForUpdates().catch(() => {})
-      }
-    }, 60 * 60 * 1000)
+    buscar('arranque')
+    setInterval(() => buscar('fondo'), 15 * 60 * 1000)
+  }
+  api.comprobar = () => {
+    if (Date.now() - ultimaBusqueda > 5 * 60 * 1000) buscar('fondo')
+  }
+  api.alTerminarJuego = () => {
+    if (estado.fase === 'lista') {
+      avisar({ modo: 'arranque' })
+      instalar()
+    } else if (estado.fase === 'descargando') {
+      // Se instalará en cuanto termine de bajar, enseñando el progreso
+      avisar({ modo: 'arranque' })
+    } else {
+      buscar('arranque')
+    }
   }
   return api
 }
