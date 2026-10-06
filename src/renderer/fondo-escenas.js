@@ -5,7 +5,6 @@ window.ESCENAS_FONDO = {
     "ancho": 320,
     "alto": 180,
     "escala": 2,
-    "sonido": "pesca",
     "capas": {
       "nubes": {
         "ancho": 320,
@@ -172,7 +171,6 @@ window.ESCENAS_FONDO = {
         "cada": 19,
         "desfase": 9,
         "pica": 0.9,
-        "evento": "plop",
         "colores": [
           "#e0533f",
           "#f2f2f2"

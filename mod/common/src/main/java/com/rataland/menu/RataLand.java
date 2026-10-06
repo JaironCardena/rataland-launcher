@@ -56,8 +56,6 @@ public final class RataLand {
 	/** Enlace de Discord para los menús ("" = sin botón). */
 	public static String discord = "";
 	public static String escena = "noche";
-	/** Sonido ambiente del fondo en los menús (el panel puede quitarlo para todos). */
-	public static boolean sonido = true;
 	/** Texto como "Temporada 1" ("" = no se muestra). */
 	public static String temporada = "";
 	public static List<String> frases = FRASES_POR_DEFECTO;
@@ -97,7 +95,6 @@ public final class RataLand {
 				discord = enlace.startsWith("https://") || enlace.startsWith("http://") ? enlace : "";
 			}
 			if (json.has("escena") && FONDOS.containsKey(json.get("escena").getAsString())) escena = json.get("escena").getAsString();
-			if (json.has("sonido")) sonido = json.get("sonido").getAsBoolean();
 			if (json.has("temporada")) temporada = json.get("temporada").getAsString().trim();
 			if (json.has("skinModelo")) skinModelo = json.get("skinModelo").getAsString();
 			if (json.has("evento") && json.get("evento").isJsonObject()) {

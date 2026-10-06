@@ -203,17 +203,6 @@
     for (const { e, datos } of motor.elementos) DIBUJAR[e.tipo](p, t, e, datos, motor)
   }
 
-  /** Sonidos que tocan entre t0 (sin incluir) y t1: por ahora, el «plop» cuando pica el pez. */
-  function eventos (motor, t0, t1) {
-    const lista = []
-    for (const { e } of motor.elementos) {
-      if (e.tipo !== 'corcho' || !e.evento) continue
-      // Pica cuando (t + desfase) es múltiplo de `cada`
-      for (let k = Math.floor((t0 + e.desfase) / e.cada) + 1; k * e.cada - e.desfase <= t1; k++) lista.push(e.evento)
-    }
-    return lista
-  }
-
   const cargar = (src) => new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => resolve(img)
@@ -226,7 +215,7 @@
    * Las imágenes son `${ruta}fondo-${clave}.png` y `${ruta}fondo-${clave}-${capa}.png`.
    * Con "reducir movimiento" activado en el sistema, se queda quieta.
    */
-  function animar (lienzo, { escena, ruta, alEvento }) {
+  function animar (lienzo, { escena, ruta }) {
     const motor = preparar(escena)
     lienzo.width = escena.ancho
     lienzo.height = escena.alto
@@ -236,7 +225,6 @@
     const inicio = performance.now()
     let parado = false
     let ultimo = -Infinity
-    let tAnterior = 0
 
     const nombres = Object.keys(escena.capas)
     Promise.all([cargar(`${ruta}fondo-${escena.clave}.png`), ...nombres.map((n) => cargar(`${ruta}fondo-${escena.clave}-${n}.png`))]).then(([base, ...imagenes]) => {
@@ -267,10 +255,7 @@
         // 24 fotogramas por segundo bastan para el pixel art
         if (ahora - ultimo >= 41) {
           ultimo = ahora
-          const t = (ahora - inicio) / 1000
-          if (alEvento && t - tAnterior < 1) for (const nombre of eventos(motor, tAnterior, t)) alEvento(nombre)
-          tAnterior = t
-          pintar(t)
+          pintar((ahora - inicio) / 1000)
         }
         requestAnimationFrame(fotograma)
       }
@@ -281,7 +266,7 @@
     return { parar () { parado = true } }
   }
 
-  const api = { preparar, dibujar, eventos, animar }
+  const api = { preparar, dibujar, animar }
   if (typeof window !== 'undefined') window.FondoAnimado = api
   if (typeof module === 'object' && module.exports) module.exports = api
 })()

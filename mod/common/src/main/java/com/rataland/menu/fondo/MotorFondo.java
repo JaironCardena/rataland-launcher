@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * Motor de los fondos animados: dibuja una escena descrita en assets/rataland/escenas/*.json
@@ -26,7 +25,6 @@ public final class MotorFondo {
 	private final int ancho;
 	private final int alto;
 	private final int escala;
-	private final String sonido;
 	private final Map<String, int[]> capas = new LinkedHashMap<>();
 	private final Map<String, double[]> vaivenes = new LinkedHashMap<>();
 	private final List<Elemento> elementos = new ArrayList<>();
@@ -36,7 +34,6 @@ public final class MotorFondo {
 		ancho = escena.get("ancho").getAsInt();
 		alto = escena.get("alto").getAsInt();
 		escala = escena.has("escala") ? escena.get("escala").getAsInt() : 1;
-		sonido = escena.has("sonido") ? escena.get("sonido").getAsString() : null;
 		for (Map.Entry<String, JsonElement> c : escena.getAsJsonObject("capas").entrySet()) {
 			JsonObject capa = c.getValue().getAsJsonObject();
 			capas.put(c.getKey(), new int[] {capa.get("ancho").getAsInt(), capa.get("alto").getAsInt()});
@@ -67,11 +64,6 @@ public final class MotorFondo {
 		return escala;
 	}
 
-	/** Sonido ambiente de la escena (null = ninguno). */
-	public String sonido() {
-		return sonido;
-	}
-
 	/** Capas de imagen con su tamaño en píxeles de la escena. */
 	public Map<String, int[]> capas() {
 		return capas;
@@ -80,16 +72,6 @@ public final class MotorFondo {
 	/** Dibuja lo que se mueve en el instante t (segundos). */
 	public void dibujar(Pincel p, double t) {
 		for (Elemento e : elementos) e.dibujar(p, t);
-	}
-
-	/** Sonidos que tocan entre t0 (sin incluir) y t1: por ahora, el «plop» cuando pica el pez. */
-	public void eventos(double t0, double t1, Consumer<String> alEvento) {
-		for (Elemento e : elementos) {
-			if (!e.tipo.equals("corcho") || !e.d.has("evento")) continue;
-			double cada = num(e.d, "cada");
-			double desfase = num(e.d, "desfase");
-			for (double k = StrictMath.floor((t0 + desfase) / cada) + 1; k * cada - desfase <= t1; k++) alEvento.accept(e.d.get("evento").getAsString());
-		}
 	}
 
 	/* ---------- Utilidades (las mismas que en JavaScript) ---------- */

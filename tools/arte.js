@@ -596,7 +596,6 @@ function escenaPesca (capas) {
     ancho: 320,
     alto: 180,
     escala: 2,
-    sonido: 'pesca',
     capas: Object.fromEntries(Object.entries(capas).map(([nombre, lz]) => [nombre, { ancho: lz.ancho, alto: lz.alto }])),
     vaivenes: { barca: { velocidad: 1.3, umbral: 0.2 } },
     elementos: [
@@ -621,7 +620,6 @@ function escenaPesca (capas) {
         cada: 19,
         desfase: 9,
         pica: 0.9,
-        evento: 'plop',
         colores: ['#e0533f', '#f2f2f2'],
         sedal: { desde: [bx + 4, by + 6], mece: 'barca', color: '#c7cfe0', alfa: 0.4 },
         ondas: { cada: 3, radio: 9, aplasta: 0.3, color: '#8fa0cc', alfa: 0.45 }

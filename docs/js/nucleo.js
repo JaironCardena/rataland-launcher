@@ -202,7 +202,6 @@ export async function generarManifiesto ({ gh, ajustes, archivos, manifiestoPrev
     evento,
     temporada: ajustes.temporada || '',
     escena: ESCENAS[ajustes.escena] ? ajustes.escena : 'noche',
-    sonidoFondo: ajustes.sonidoFondo !== false,
     episodio,
     frases: (ajustes.frases || []).filter((t) => t.trim()),
     packsActivos: (ajustes.packsActivos || []).filter((r) => rutas.has(r)),

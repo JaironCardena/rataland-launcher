@@ -13,7 +13,7 @@ if (!window.launcher) {
     actualizacion = { ...actualizacion, ...cambios }
     oyentesActualizacion.forEach((f) => f(actualizacion))
   }
-  let ajustes = { ram: 4096, alJugar: 'segundoPlano', alCerrar: params.get('al-cerrar') || 'preguntar', sonido: 40 }
+  let ajustes = { ram: 4096, alJugar: 'segundoPlano', alCerrar: params.get('al-cerrar') || 'preguntar' }
   let cuenta = params.has('sin-cuenta') ? null
     : params.has('no-premium') ? { tipo: 'sinPremium', nombre: 'JaironEc', uuid: '0' }
       : { tipo: 'microsoft', nombre: 'Steve', uuid: '8667ba71b85a4004af54457a9734eed7' }
@@ -99,8 +99,6 @@ if (!window.launcher) {
     },
     quitarSkin: async () => { await espera(500); return { ok: true, imagen: null, modelo: 'classic' } },
     guardarAjustes: async (a) => (ajustes = { ...ajustes, ...a }),
-    // En el navegador no hay sonidos (la página no puede leer archivos)
-    leerSonido: async () => { throw new Error('sin sonido en la demo') },
     jugar: async () => {
       if (params.has('error')) {
         await espera(900)

@@ -55,15 +55,6 @@ class MotorFondoTest {
 				}, t);
 				comparar(clave, t, fotogramas.get(i).getAsJsonArray(), ops);
 			}
-
-			for (JsonElement tramo : datos.getAsJsonArray("eventos")) {
-				JsonArray a = tramo.getAsJsonArray();
-				List<String> esperados = new ArrayList<>();
-				for (JsonElement e : a.get(2).getAsJsonArray()) esperados.add(e.getAsString());
-				List<String> obtenidos = new ArrayList<>();
-				motor.eventos(a.get(0).getAsDouble(), a.get(1).getAsDouble(), obtenidos::add);
-				assertEquals(esperados, obtenidos, clave + ": sonidos entre " + a.get(0) + " y " + a.get(1));
-			}
 		}
 	}
 

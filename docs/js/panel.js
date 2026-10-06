@@ -281,7 +281,6 @@ function cambios () {
     if (k === 'evento') return v?.fecha ? v : null
     if (k === 'episodio') return v?.url ? v : null
     if (k === 'escena') return v && v !== 'noche' ? v : null
-    if (k === 'sonidoFondo') return v === false ? false : null
     if (k === 'frases') return v?.some((t) => t.trim()) ? v.filter((t) => t.trim()) : null
     if (typeof v === 'string') return v || null
     if (k === 'enlaces') return v && Object.values(v).some(Boolean) ? Object.fromEntries(Object.entries(v).filter(([, url]) => url)) : null
@@ -293,7 +292,6 @@ function cambios () {
   if (!igual('servidor')) lista.push('Cambiar los datos del servidor')
   if (!igual('temporada')) lista.push(ajustes.temporada ? `Llamar a la temporada "${ajustes.temporada}"` : 'Quitar el nombre de la temporada')
   if (!igual('escena')) lista.push(`Cambiar el fondo a ${n.ESCENAS[ajustes.escena] || n.ESCENAS.noche}`)
-  if (!igual('sonidoFondo')) lista.push(ajustes.sonidoFondo === false ? 'Quitar el sonido ambiente del fondo' : 'Poner el sonido ambiente del fondo')
   if (!igual('episodio')) lista.push(ajustes.episodio?.url ? 'Cambiar el último episodio' : 'Quitar el último episodio')
   if (!igual('frases')) lista.push('Cambiar las frases del menú')
   if (!igual('noticias')) lista.push('Cambiar las noticias')
@@ -1440,38 +1438,8 @@ function vistaEscena (clave) {
   const escena = escenaAnimada(clave)
   if (!escena) return h('img', { class: 'escena-opcion__vista', src: `img/fondo-${clave}.png`, alt: '', width: 640, height: 360 })
   const lienzo = h('canvas', { class: 'escena-opcion__vista', width: 320, height: 180 })
-  window.FondoAnimado.animar(lienzo, { escena, ruta: 'img/', alEvento: (nombre) => { if (escuchando?.clave === clave) ambientePanel.evento(nombre) } })
+  window.FondoAnimado.animar(lienzo, { escena, ruta: 'img/' })
   return lienzo
-}
-
-/** Sonido ambiente de un fondo, para oírlo antes de elegirlo (solo suena uno a la vez). */
-let escuchando = null
-let ambientePanel = null
-function botonEscuchar (clave) {
-  const boton = h('button', { type: 'button', class: 'enlace-boton escuchar', 'aria-pressed': 'false' }, 'Escuchar')
-  const pintar = (si) => {
-    boton.textContent = si ? 'Parar' : 'Escuchar'
-    boton.setAttribute('aria-pressed', String(si))
-  }
-  boton.addEventListener('click', () => {
-    if (!ambientePanel) {
-      ambientePanel = window.crearAmbiente({
-        datos: window.AMBIENTES,
-        cargar: (nombre) => fetch(`sonidos/${nombre}.ogg`).then((r) => r.ok ? r.arrayBuffer() : Promise.reject(new Error(nombre)))
-      })
-      ambientePanel.volumen(80)
-    }
-    const era = escuchando?.clave === clave
-    if (escuchando) escuchando.pintar(false)
-    escuchando = era ? null : { clave, pintar }
-    ambientePanel.escena(era ? null : clave)
-    if (!era) pintar(true)
-  })
-  if (escuchando?.clave === clave) {
-    escuchando.pintar = pintar
-    pintar(true)
-  }
-  return boton
 }
 
 function vistaTemporada () {
@@ -1488,8 +1456,7 @@ function vistaTemporada () {
         onchange: () => { ajustes.escena = clave; pintarMarco() }
       }),
       vistaEscena(clave),
-      h('span', {}, nombre, escenaAnimada(clave) ? h('span', { class: 'etiqueta-animada' }, 'Animado') : null)),
-    botonEscuchar(clave))))
+      h('span', {}, nombre, escenaAnimada(clave) ? h('span', { class: 'etiqueta-animada' }, 'Animado') : null)))))
 
   const previa = h('div', { class: 'episodio-previa' })
   const error = h('span', { class: 'campo__ayuda error' }, 'No parece un enlace de un vídeo de YouTube.')
@@ -1522,11 +1489,7 @@ function vistaTemporada () {
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('texturas'), 'Fondo'),
       h('p', { class: 'campo__ayuda' }, 'Se usa en el launcher, en el menú principal y en el menú de pausa. Los animados también se mueven allí.'),
-      escenas,
-      h('label', { class: 'casilla' },
-        h('input', { type: 'checkbox', checked: ajustes.sonidoFondo !== false, onchange: (e) => { ajustes.sonidoFondo = e.target.checked; pintarMarco() } }),
-        h('span', {}, 'Sonido ambiente del fondo', h('br'),
-          h('span', { class: 'campo__ayuda' }, 'Grillos, agua, gotas o pájaros según el fondo, en el launcher y en los menús del juego. Cada jugador puede bajarlo; desmarcado, no suena para nadie.')))),
+      escenas),
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('noticias'), 'Último episodio'),
       h('div', { class: 'formulario' },

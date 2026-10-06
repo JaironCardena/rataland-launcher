@@ -16,7 +16,6 @@ const ESCENAS = path.join(RAIZ, 'mod', 'common', 'src', 'main', 'resources', 'as
 const ESPERADO = path.join(RAIZ, 'mod', 'common', 'src', 'test', 'resources', 'fondos-esperado.json')
 // Instantes variados: el principio, una estrella fugaz, un pez que pica, mucho rato después…
 const TIEMPOS = [0, 0.37, 2.9, 5.2, 9.05, 9.5, 10.02, 12.3, 28.6, 30.7, 61.4, 123.456, 1000.25]
-const TRAMOS = [[0, 30], [9.9, 10.1], [28, 29.5], [100, 200]]
 
 function grabar (escena) {
   const m = motor.preparar(escena)
@@ -28,8 +27,7 @@ function grabar (escena) {
     }, t)
     return ops
   })
-  const eventos = TRAMOS.map(([t0, t1]) => [t0, t1, motor.eventos(m, t0, t1)])
-  return { tiempos: TIEMPOS, fotogramas, eventos }
+  return { tiempos: TIEMPOS, fotogramas }
 }
 
 const resultado = {}

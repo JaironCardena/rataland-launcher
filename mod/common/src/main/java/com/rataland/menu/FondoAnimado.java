@@ -28,7 +28,6 @@ public final class FondoAnimado {
 	private static final long INICIO = Util.getMillis();
 	private static String clave;
 	private static MotorFondo motor;
-	private static double tAnterior = -1;
 
 	/** Motor de la escena actual, o null si esa escena no se mueve. */
 	public static MotorFondo motor() {
@@ -71,10 +70,6 @@ public final class FondoAnimado {
 		m.dibujar(pincel, t);
 		pincel.terminar();
 		matrices.popPose();
-
-		// Sonidos de la escena (el «plop» del corcho); tras una pausa larga no se acumulan
-		if (tAnterior >= 0 && t - tAnterior < 1) m.eventos(tAnterior, t, AmbienteFondo::evento);
-		tAnterior = t;
 	}
 
 	/**

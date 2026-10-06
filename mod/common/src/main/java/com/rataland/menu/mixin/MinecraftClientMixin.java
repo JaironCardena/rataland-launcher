@@ -1,6 +1,5 @@
 package com.rataland.menu.mixin;
 
-import com.rataland.menu.AmbienteFondo;
 import com.rataland.menu.MenuRataLand;
 import com.rataland.menu.PausaRataLand;
 import com.rataland.menu.RataLand;
@@ -34,7 +33,6 @@ public abstract class MinecraftClientMixin {
 	@Inject(method = "tick", at = @At("TAIL"))
 	private void rataland$tick(CallbackInfo ci) {
 		SkinPendiente.tick((Minecraft) (Object) this);
-		AmbienteFondo.tick((Minecraft) (Object) this);
 	}
 
 	@Inject(method = "createTitle", at = @At("HEAD"), cancellable = true)

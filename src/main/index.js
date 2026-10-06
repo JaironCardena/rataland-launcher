@@ -43,7 +43,7 @@ const AL_CERRAR = ['preguntar', 'cerrar', 'segundoPlano']
 
 function ajustesPorDefecto () {
   const ram = Math.max(2048, Math.min(config.ramPredeterminada || 4096, ramTotalMB - 2048))
-  return { ram, alJugar: 'segundoPlano', alCerrar: 'preguntar', sonido: 40 }
+  return { ram, alJugar: 'segundoPlano', alCerrar: 'preguntar' }
 }
 
 /** Ajustes guardados, pasando el antiguo "cerrarAlJugar" a la opción nueva. */
@@ -162,7 +162,6 @@ async function jugar (reparar) {
       destino: servidor?.ip ? `${servidor.ip}:${servidor.puerto}` : '',
       discord: perfil.enlaces?.discord,
       escena: perfil.escena,
-      sonido: perfil.sonidoFondo,
       temporada: perfil.temporada,
       frases: perfil.frases,
       evento: perfil.evento,
@@ -284,19 +283,11 @@ function registrarIpc () {
     if (Number.isFinite(ram)) ajustes.ram = Math.max(1024, Math.min(ram, ramTotalMB))
     if (AL_JUGAR.includes(nuevos?.alJugar)) ajustes.alJugar = nuevos.alJugar
     if (AL_CERRAR.includes(nuevos?.alCerrar)) ajustes.alCerrar = nuevos.alCerrar
-    const sonido = Math.round(Number(nuevos?.sonido))
-    if (Number.isFinite(sonido)) ajustes.sonido = Math.max(0, Math.min(100, sonido))
     await escribirJson(rutaAjustes, ajustes)
     return ajustes
   })
 
   ipcMain.handle('jugar', (_e, opciones) => jugar(Boolean(opciones?.reparar)))
-
-  // Sonidos ambiente de los fondos (la ventana no puede leer archivos por su cuenta)
-  ipcMain.handle('leer-sonido', (_e, nombre) => {
-    if (typeof nombre !== 'string' || !/^[a-z0-9-]+$/.test(nombre)) throw new Error('Nombre de sonido no válido.')
-    return fs.promises.readFile(path.join(__dirname, '..', 'renderer', 'assets', 'sonidos', `${nombre}.ogg`))
-  })
 
   ipcMain.on('ventana', (_e, accion) => {
     if (accion === 'minimizar') ventana?.minimize()

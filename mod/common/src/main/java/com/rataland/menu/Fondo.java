@@ -15,7 +15,6 @@ public final class Fondo {
 		context.blit(RataLand.fondoActual(), x, y, w, h, 0, 0,
 				RataLand.FONDO_ANCHO, RataLand.FONDO_ALTO, RataLand.FONDO_ANCHO, RataLand.FONDO_ALTO);
 		FondoAnimado.dibujar(context, x, y, w, h);
-		AmbienteFondo.visible();
 	}
 
 	/** Oscurece la parte izquierda (donde van el logo y los botones) para que se lean bien. */

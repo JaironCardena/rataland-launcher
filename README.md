@@ -10,7 +10,7 @@ Launcher propio (Electron) para la serie RataLand:
   - cambia la pantalla de carga de Mojang por el logo de RataLand,
   - sustituye el menú principal por el de la serie: **Jugar** (entra al servidor), **Opciones** y **Salir**,
   - sustituye el menú de pausa (Esc): **Volver al juego**, **Progresos**, **Estadísticas**, **Opciones**, **Discord** y **Volver a RataLand**,
-  - usa el paisaje de RataLand como fondo en Opciones, al conectar, etc. (algunos se mueven), con su sonido ambiente,
+  - usa el paisaje de RataLand como fondo en Opciones, al conectar, etc. (algunos se mueven),
   - pone "RataLand" como título de la ventana.
 
 ## Instalarlo (jugadores)
@@ -146,19 +146,13 @@ También genera los datos de los fondos animados (qué se mueve, dónde y a qué
 node tools/comprobar-fondos.js --guardar
 ```
 
-Los sonidos ambiente de los fondos no son grabaciones: los sintetiza `tools/sonidos.js`. Cada fondo tiene una base de 60 s (agua, viento, corriente) que se repite en bucle exacto y sonidos sueltos (grillos, gotas, pájaros, búho, ratas…) que suenan a ratos al azar con volumen y tono variables. Qué suena en cada fondo y cada cuánto está al principio de ese archivo. En el panel se pueden escuchar y quitar para todos.
-
-```bash
-node tools/sonidos.js
-```
-
-Si cambias las texturas, los fondos o los sonidos del mod, vuelve a compilarlo (siguiente apartado).
+Si cambias las texturas o los fondos del mod, vuelve a compilarlo (siguiente apartado).
 
 ## El mod de RataLand (`mod/`)
 
 El launcher escribe `config/rataland.json` con la IP del servidor antes de abrir el juego, así que si cambias de servidor no hace falta recompilar el mod.
 
-El mod está hecho con Architectury: `mod/common` tiene todo (menús, fondos, sonidos, mixins) y `mod/fabric` y `mod/neoforge` solo el punto de entrada de cada cargador. Para compilarlo tras cambiar el código o las texturas necesitas un JDK 25 (Gradle lo usa para compilar; el mod resultante funciona con el Java 21 de Minecraft):
+El mod está hecho con Architectury: `mod/common` tiene todo (menús, fondos, mixins) y `mod/fabric` y `mod/neoforge` solo el punto de entrada de cada cargador. Para compilarlo tras cambiar el código o las texturas necesitas un JDK 25 (Gradle lo usa para compilar; el mod resultante funciona con el Java 21 de Minecraft):
 
 ```bash
 cd mod && ./gradlew build
@@ -193,8 +187,7 @@ npm run publicar
 - `src/renderer/`: la interfaz. `demo.js` permite abrir `index.html` en un navegador para ver el diseño sin Electron.
 - `tools/publicar.js`: genera `manifest.json`.
 - `tools/arte.js`: genera el pixel-art y los datos de los fondos animados.
-- `tools/sonidos.js`: genera los sonidos ambiente de los fondos.
 - `tools/comprobar-fondos.js`: guarda lo que dibuja el motor de fondos de JavaScript para comprobar el de Java.
 - `tools/publicar-mod.js`: coloca los jars del mod de RataLand (`mod/builds/` y `modpack/mods/`).
 - `docs/`: el panel del modpack (GitHub Pages).
-- `mod/`: código del mod de RataLand para Fabric y NeoForge (menús, pantalla de carga, fondos y su sonido, título de la ventana).
+- `mod/`: código del mod de RataLand para Fabric y NeoForge (menús, pantalla de carga, fondos, título de la ventana).
