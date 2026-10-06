@@ -170,19 +170,6 @@
       }
     },
     {
-      "ruta": "mods/sodiumdynamiclights-fabric-1.0.10-1.21.1.jar",
-      "url": "https://cdn.modrinth.com/data/PxQSWIcD/versions/BsbJhy7W/sodiumdynamiclights-fabric-1.0.10-1.21.1.jar",
-      "sha1": "11bff7127c2d01a97c931cda6012c8d2c3e1f39f",
-      "tamano": 899434,
-      "modrinth": {
-        "proyecto": "PxQSWIcD",
-        "version": "BsbJhy7W",
-        "numero": "fabric-1.21.1-1.0.10",
-        "nombre": "Sodium Dynamic Lights",
-        "icono": "https://cdn.modrinth.com/data/PxQSWIcD/a5ab5515213391934e18baaf487c87e4b24ebfa3_96.webp"
-      }
-    },
-    {
       "ruta": "mods/sodiumoptionsapi-fabric-1.0.10-1.21.1.jar",
       "url": "https://cdn.modrinth.com/data/Es5v4eyq/versions/RR1lyQmh/sodiumoptionsapi-fabric-1.0.10-1.21.1.jar",
       "sha1": "ca8c29ad2481ab5fe81095181541d183fa7faf19",
