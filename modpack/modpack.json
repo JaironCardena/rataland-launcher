@@ -25,6 +25,11 @@
   "noticias": [
     {
       "fecha": "2026-10-06",
+      "titulo": "Nuevos cambios",
+      "texto": "Estoy implementando cosas nuevas."
+    },
+    {
+      "fecha": "2026-10-06",
       "titulo": "Bienvenidos a RataLand",
       "texto": "Pulsa Jugar: el launcher descarga todo lo necesario. Dentro del juego, el botón Jugar del menú te lleva directo al servidor. :3"
     }
