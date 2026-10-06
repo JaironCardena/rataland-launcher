@@ -7,7 +7,7 @@
   },
   "servidor": {
     "ip": "Rataland-8RN6.aternos.me",
-    "puerto": 47702,
+    "puerto": 25565,
     "entrarDirecto": false
   },
   "enlaces": {},

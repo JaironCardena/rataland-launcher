@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T08:06:44.789Z",
+  "generado": "2026-10-06T08:10:25.893Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -7,7 +7,7 @@
   },
   "servidor": {
     "ip": "Rataland-8RN6.aternos.me",
-    "puerto": 47702,
+    "puerto": 25565,
     "entrarDirecto": false
   },
   "carpetasSincronizadas": [
