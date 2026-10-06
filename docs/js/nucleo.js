@@ -18,6 +18,13 @@ export const CATEGORIAS = {
   shaders: { carpeta: 'shaderpacks', tipoModrinth: 'shader', loaders: ['iris'], extension: '.zip', nombre: 'shader' }
 }
 
+/** Cargadores de mods que el panel sabe manejar (el launcher también sabe instalarlos). */
+export const LOADERS = { fabric: 'Fabric', neoforge: 'NeoForge' }
+export const nombreLoader = (tipo) => LOADERS[tipo] || tipo || 'Fabric'
+
+/** Con qué "loader" de Modrinth se buscan las versiones: los mods, el del modpack; packs y shaders, los suyos. */
+const loadersDe = (categoria, loader) => categoria === 'mods' ? [loader || 'fabric'] : CATEGORIAS[categoria].loaders
+
 export function categoriaDe (ruta) {
   return Object.keys(CATEGORIAS).find((c) => ruta.startsWith(CATEGORIAS[c].carpeta + '/')) || null
 }
@@ -241,10 +248,10 @@ async function modrinth (ruta, opciones) {
   return res.json()
 }
 
-export async function buscarEnModrinth (categoria, texto, mc) {
+export async function buscarEnModrinth (categoria, texto, mc, loader = 'fabric') {
   const c = CATEGORIAS[categoria]
   const facetas = [[`project_type:${c.tipoModrinth}`], [`versions:${mc}`]]
-  if (categoria === 'mods') facetas.push(['categories:fabric'])
+  if (categoria === 'mods') facetas.push([`categories:${loader}`])
   if (categoria === 'shaders') facetas.push(['categories:iris'])
   const q = new URLSearchParams({ query: texto, facets: JSON.stringify(facetas), limit: '20', index: texto ? 'relevance' : 'downloads' })
   return (await modrinth(`/search?${q}`)).hits
@@ -258,10 +265,9 @@ export async function proyectosModrinth (ids) {
   return modrinth(`/projects?ids=${encodeURIComponent(JSON.stringify(ids))}`)
 }
 
-/** Última versión del proyecto que funciona con esta versión de Minecraft (y Fabric/Iris si toca). */
-export async function versionCompatible (proyecto, categoria, mc) {
-  const c = CATEGORIAS[categoria]
-  const q = new URLSearchParams({ game_versions: JSON.stringify([mc]), loaders: JSON.stringify(c.loaders) })
+/** Última versión del proyecto que funciona con esta versión de Minecraft (y el cargador del modpack, o Iris). */
+export async function versionCompatible (proyecto, categoria, mc, loader = 'fabric') {
+  const q = new URLSearchParams({ game_versions: JSON.stringify([mc]), loaders: JSON.stringify(loadersDe(categoria, loader)) })
   const versiones = await modrinth(`/project/${encodeURIComponent(proyecto)}/version?${q}`)
   return versiones.find((v) => v.version_type === 'release') || versiones[0] || null
 }
@@ -284,7 +290,7 @@ export function entradaDeVersion (version, categoria, proyecto) {
 }
 
 /** Dependencias obligatorias (y las de estas), listas para añadir. Las que no existen para esta versión van en `faltan`. */
-export async function dependenciasDe (version, mc, yaPresentes = new Set()) {
+export async function dependenciasDe (version, mc, yaPresentes = new Set(), loader = 'fabric') {
   const anadir = []
   const faltan = []
   const vistos = new Set(yaPresentes)
@@ -295,7 +301,7 @@ export async function dependenciasDe (version, mc, yaPresentes = new Set()) {
       if (d.dependency_type !== 'required' || !d.project_id || vistos.has(d.project_id)) continue
       vistos.add(d.project_id)
       const proyecto = await proyectoModrinth(d.project_id)
-      const versionDep = d.version_id ? await modrinth(`/version/${d.version_id}`) : await versionCompatible(d.project_id, 'mods', mc)
+      const versionDep = d.version_id ? await modrinth(`/version/${d.version_id}`) : await versionCompatible(d.project_id, 'mods', mc, loader)
       if (!versionDep) { faltan.push(proyecto.title); continue }
       anadir.push(entradaDeVersion(versionDep, 'mods', proyecto))
       pendientes.push(versionDep)
@@ -334,6 +340,25 @@ export async function versionesFabric () {
   const res = await fetch('https://meta.fabricmc.net/v2/versions/loader')
   return (await res.json()).slice(0, 25).map((v) => ({ version: v.version, estable: v.stable }))
 }
+
+/**
+ * Versiones de NeoForge para esta versión de Minecraft, de la más nueva a la más vieja.
+ * NeoForge numera según Minecraft: 1.21.1 → 21.1.x; 26.1 → 26.1.0.x.
+ */
+export async function versionesNeoForge (mc) {
+  const res = await fetch('https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge')
+  if (!res.ok) throw new Error('No se pudo consultar NeoForge.')
+  const { versions } = await res.json()
+  const p = mc.split('.')
+  const prefijo = p[0] === '1' ? `${p[1]}.${p[2] ?? 0}.` : `${p[0]}.${p[1] ?? 0}.${p[2] ?? 0}.`
+  return versions.filter((v) => v.startsWith(prefijo))
+    .sort((a, b) => compararVersion(b.replace(/-.*$/, ''), a.replace(/-.*$/, '')))
+    .slice(0, 25)
+    .map((v) => ({ version: v, estable: !/beta|alpha/i.test(v) }))
+}
+
+/** Versiones del cargador elegido para esa versión de Minecraft. */
+export const versionesLoader = (tipo, mc) => tipo === 'neoforge' ? versionesNeoForge(mc) : versionesFabric()
 
 /* ---------- Estado del servidor y del repositorio ---------- */
 
@@ -491,12 +516,93 @@ async function leerFabricModJson (zip) {
 }
 
 /**
+ * Lee lo justo de un archivo TOML (neoforge.mods.toml): las tablas ([x] y [[x]]) con sus claves de
+ * texto, número o sí/no. Las cadenas de varias líneas (descripciones) se saltan.
+ */
+function leerToml (texto) {
+  const tablas = [{ nombre: '', datos: {} }]
+  const lineas = texto.split(/\r?\n/)
+  for (let i = 0; i < lineas.length; i++) {
+    const linea = lineas[i].trim()
+    if (!linea || linea.startsWith('#')) continue
+    const tabla = /^\[\[\s*([^\]]+?)\s*\]\]/.exec(linea) || /^\[\s*([^\]]+?)\s*\]/.exec(linea)
+    if (tabla) { tablas.push({ nombre: tabla[1], datos: {} }); continue }
+    const par = /^([A-Za-z0-9_.-]+)\s*=\s*(.*)$/.exec(linea)
+    if (!par) continue
+    const datos = tablas.at(-1).datos
+    const valor = par[2]
+    const triple = /^('''|""")/.exec(valor)
+    if (triple) {
+      if (!valor.slice(3).includes(triple[1])) while (++i < lineas.length && !lineas[i].includes(triple[1]));
+      continue
+    }
+    const cadena = /^"((?:[^"\\]|\\.)*)"/.exec(valor) || /^'([^']*)'/.exec(valor)
+    if (cadena) datos[par[1]] = cadena[1]
+    else if (/^(true|false)\b/.test(valor)) datos[par[1]] = valor.startsWith('true')
+    else datos[par[1]] = valor.replace(/\s+#.*$/, '').trim()
+  }
+  return tablas
+}
+
+/** Datos de un mod de NeoForge (META-INF/neoforge.mods.toml), con la misma forma que los de Fabric. */
+async function leerNeoForge (zip) {
+  const archivo = zip.file('META-INF/neoforge.mods.toml')
+  if (!archivo) return null
+  const tablas = leerToml(await archivo.async('string'))
+  const mods = tablas.filter((t) => t.nombre === 'mods').map((t) => t.datos).filter((m) => m.modId)
+  if (!mods.length) return null
+  // "${file.jarVersion}": la versión está en el MANIFEST.MF
+  let versionJar = null
+  const manifiesto = zip.file('META-INF/MANIFEST.MF')
+  if (manifiesto) versionJar = /Implementation-Version:\s*(\S+)/.exec(await manifiesto.async('string'))?.[1] || null
+  const version = (m) => /\$\{/.test(m.version || '') ? versionJar : m.version
+  const principal = mods[0]
+  const depende = {}
+  const rompe = {}
+  for (const t of tablas) {
+    const d = /^dependencies\.(.+)$/.exec(t.nombre)
+    if (!d || !mods.some((m) => m.modId === d[1]) || !t.datos.modId) continue
+    const tipo = String(t.datos.type || (t.datos.mandatory === false ? 'optional' : 'required')).toLowerCase()
+    const rango = t.datos.versionRange || '*'
+    if (tipo === 'required') depende[t.datos.modId] = rango
+    else if (tipo === 'incompatible') rompe[t.datos.modId] = rango
+  }
+  return {
+    id: principal.modId,
+    nombre: principal.displayName || principal.modId,
+    version: version(principal),
+    depende,
+    rompe,
+    ofrece: mods.map((m) => ({ id: m.modId, version: version(m) }))
+  }
+}
+
+/** Mod de NeoForge contando los que lleva dentro (en META-INF/jarjar o META-INF/jars). */
+async function infoNeoForge (JSZip, zip) {
+  const neo = await leerNeoForge(zip)
+  if (!neo) return null
+  for (const ruta of Object.keys(zip.files).filter((r) => /^META-INF\/(jarjar|jars)\/.+\.jar$/i.test(r))) {
+    try {
+      const sub = await leerNeoForge(await JSZip.loadAsync(await zip.file(ruta).async('uint8array')))
+      if (sub) neo.ofrece.push(...sub.ofrece)
+    } catch { /* un jar interno raro no impide lo demás */ }
+  }
+  return { ...neo, entorno: '*' }
+}
+
+/**
  * Datos de fabric.mod.json: id, nombre, versión, si es solo para el cliente, qué necesita
  * ("depends"), con qué no funciona ("breaks") y qué ids ofrece, contando los mods que lleva
  * dentro (Fabric API, por ejemplo, son unos 40 módulos que otros mods piden por su nombre).
  */
-export async function infoDeMod (JSZip, bytes) {
+export async function infoDeMod (JSZip, bytes, loader = 'fabric') {
   const zip = await JSZip.loadAsync(bytes)
+  // Hay jars para varios cargadores (o con un fabric.mod.json de aviso, como JourneyMap para
+  // NeoForge): se leen primero los datos del cargador del modpack.
+  if (loader === 'neoforge' || !zip.file('fabric.mod.json')) {
+    const neo = await infoNeoForge(JSZip, zip)
+    if (neo) return neo
+  }
   const info = await leerFabricModJson(zip)
   if (!info) return null
   const ofrece = [{ id: info.id, version: info.version }, ...[].concat(info.provides || []).map((id) => ({ id, version: info.version }))]
@@ -520,7 +626,7 @@ export async function infoDeMod (JSZip, bytes) {
 }
 
 // Lo que pone el propio juego: no son mods del modpack
-const INTEGRADOS = new Set(['java', 'fabricloader', 'fabric-loader'])
+const INTEGRADOS = new Set(['java', 'fabricloader', 'fabric-loader', 'neoforge', 'forge', 'javafml'])
 
 /** ¿La versión `tiene` cumple el requisito? Ante algo que no se entiende, se da por bueno (mejor no avisar en falso). */
 function satisface (requisito, tiene) {
@@ -617,8 +723,30 @@ function compararVersion (a, b) {
   return 0
 }
 
-/** ¿La versión `mc` cumple el requisito de fabric.mod.json (">=1.21", "~1.21.1", "1.21.x", "*"…)? */
+/** Rango de versiones al estilo de Maven (el de NeoForge): "[1.21.1,1.22)", "[21.1,)", "[1.0]"; varios separados por comas. */
+function cumpleRangoMaven (rango, v) {
+  const partes = String(rango).match(/[[(][^\])]*[\])]/g)
+  if (!partes) return true
+  const limpia = (x) => x.trim().replace(/\+.*$/, '').replace(/-.*$/, '')
+  return partes.some((p) => {
+    const dentro = p.slice(1, -1)
+    if (!dentro.includes(',')) return compararVersion(v, limpia(dentro)) === 0
+    const [min, max] = dentro.split(',')
+    if (limpia(min)) {
+      const c = compararVersion(v, limpia(min))
+      if (c < 0 || (c === 0 && p[0] === '(')) return false
+    }
+    if (limpia(max)) {
+      const c = compararVersion(v, limpia(max))
+      if (c > 0 || (c === 0 && p.at(-1) === ')')) return false
+    }
+    return true
+  })
+}
+
+/** ¿La versión `mc` cumple el requisito de fabric.mod.json (">=1.21", "~1.21.1", "1.21.x", "*"…) o de NeoForge ("[1.21.1,1.22)")? */
 export function cumpleRequisito (requisito, mc) {
+  if (typeof requisito === 'string' && /^\s*[[(]/.test(requisito)) return cumpleRangoMaven(requisito, mc)
   const opciones = [].concat(requisito)
   return opciones.some((op) => String(op).trim().split(/\s+/).every((parte) => {
     if (parte === '*' || parte === '') return true
@@ -648,7 +776,7 @@ export function cumpleRequisito (requisito, mc) {
  * Revisa un archivo antes de añadirlo. Devuelve { error } si no sirve,
  * o { nombre, version, aviso } (aviso = sirve pero conviene revisarlo).
  */
-export async function analizarArchivo (JSZip, categoria, nombreArchivo, bytes, mc) {
+export async function analizarArchivo (JSZip, categoria, nombreArchivo, bytes, mc, loader = 'fabric') {
   const c = CATEGORIAS[categoria]
   if (!nombreArchivo.toLowerCase().endsWith(c.extension)) return { error: `Un ${c.nombre} tiene que ser un archivo ${c.extension}.` }
   if (bytes.length > LIMITE_SUBIDA) return { error: 'GitHub no admite archivos de más de 95 MB. Para un pack tan grande, usa el pack de recursos del servidor.' }
@@ -659,10 +787,25 @@ export async function analizarArchivo (JSZip, categoria, nombreArchivo, bytes, m
     return { error: 'El archivo está dañado o no es un .zip/.jar válido.' }
   }
 
+  if (categoria === 'mods' && loader === 'neoforge') {
+    if (!zip.file('META-INF/neoforge.mods.toml')) {
+      if (zip.file('fabric.mod.json')) return { error: 'Este mod es para Fabric y el modpack usa NeoForge. Descarga la versión para NeoForge.' }
+      if (zip.file('META-INF/mods.toml')) return { error: 'Este mod es para Forge, no para NeoForge. Descarga la versión para NeoForge.' }
+      return { error: 'Este archivo no es un mod de NeoForge (le falta META-INF/neoforge.mods.toml).' }
+    }
+    const info = await leerNeoForge(zip).catch(() => null)
+    if (!info) return { nombre: nombreArchivo, aviso: `No se pudo leer la información del mod; revisa que sea para NeoForge ${mc}.` }
+    const requisito = info.depende.minecraft
+    const aviso = requisito && !cumpleRequisito(requisito, mc)
+      ? `Este mod pide Minecraft ${requisito} y el modpack usa ${mc}. Puede que no funcione.`
+      : null
+    return { nombre: info.nombre || nombreArchivo, version: info.version, aviso }
+  }
+
   if (categoria === 'mods') {
     const fmj = zip.file('fabric.mod.json')
     if (!fmj) {
-      if (zip.file('META-INF/neoforge.mods.toml')) return { error: 'Este mod es para NeoForge, no para Fabric. Descarga la versión para Fabric.' }
+      if (zip.file('META-INF/neoforge.mods.toml')) return { error: 'Este mod es para NeoForge y el modpack usa Fabric. Descarga la versión para Fabric.' }
       if (zip.file('META-INF/mods.toml')) return { error: 'Este mod es para Forge, no para Fabric. Descarga la versión para Fabric.' }
       if (zip.file('quilt.mod.json')) return { error: 'Este mod es para Quilt. Descarga la versión para Fabric.' }
       return { error: 'Este archivo no es un mod de Fabric (le falta fabric.mod.json).' }

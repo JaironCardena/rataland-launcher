@@ -79,6 +79,10 @@ const NOMBRES_ENLACE = { discord: 'Discord', youtube: 'YouTube', tiktok: 'TikTok
 
 /* ---------- Formatos ---------- */
 
+/** Cargador de mods del modpack ("fabric" o "neoforge") y su nombre para mostrar. */
+const loaderDe = () => ajustes?.loader?.tipo || 'fabric'
+const nombreLoader = () => n.nombreLoader(loaderDe())
+
 const tamano = (bytes) => bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
 const descargas = (x) => x >= 1e6 ? `${(x / 1e6).toFixed(1).replace('.', ',')} M` : x >= 1000 ? `${Math.round(x / 1000)} mil` : String(x)
 const fecha = (iso) => new Date(iso).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -284,7 +288,7 @@ function cambios () {
     return v ?? null
   }
   const igual = (k) => JSON.stringify(normal(k, base.ajustes[k])) === JSON.stringify(normal(k, ajustes[k]))
-  if (!igual('minecraft') || !igual('loader')) lista.push(`Cambiar a Minecraft ${ajustes.minecraft} con Fabric ${ajustes.loader?.version}`)
+  if (!igual('minecraft') || !igual('loader')) lista.push(`Cambiar a Minecraft ${ajustes.minecraft} con ${nombreLoader()} ${ajustes.loader?.version}`)
   if (!igual('servidor')) lista.push('Cambiar los datos del servidor')
   if (!igual('temporada')) lista.push(ajustes.temporada ? `Llamar a la temporada "${ajustes.temporada}"` : 'Quitar el nombre de la temporada')
   if (!igual('escena')) lista.push(`Cambiar el fondo a ${n.ESCENAS[ajustes.escena] || n.ESCENAS.noche}`)
@@ -518,7 +522,7 @@ function vistaResumen () {
       h('section', { class: 'bloque' },
         h('h2', {}, pixel('mods'), 'Modpack'),
         h('dl', { class: 'datos' },
-          h('dt', {}, 'Versión'), h('dd', {}, `Minecraft ${ajustes.minecraft} con Fabric ${ajustes.loader?.version}`),
+          h('dt', {}, 'Versión'), h('dd', {}, `Minecraft ${ajustes.minecraft} con ${nombreLoader()} ${ajustes.loader?.version}`),
           h('dt', {}, 'Contenido'), h('dd', {}, `${cuentas.mods} mods, ${cuentas.texturas} packs de texturas y ${cuentas.shaders} shaders`),
           h('dt', {}, 'Publicado'), h('dd', {}, p === undefined ? 'Cargando…' : p ? [h('a', { href: p.url, target: '_blank', rel: 'noopener' }, haceCuanto(p.fecha)), `: ${p.mensaje}`] : 'Sin datos')),
         h('p', { class: 'bloque__pie' }, h('button', { class: 'boton boton--pequeno', onclick: () => irA('mods') }, 'Gestionar mods'))),
@@ -544,7 +548,7 @@ function vistaCategoria (categoria) {
   const c = n.CATEGORIAS[categoria]
   const elementos = elementosDe(categoria)
   const descripciones = {
-    mods: `Los jugadores reciben estos mods al pulsar Jugar. Solo valen mods de Fabric para Minecraft ${ajustes.minecraft}.`,
+    mods: `Los jugadores reciben estos mods al pulsar Jugar. Solo valen mods de ${nombreLoader()} para Minecraft ${ajustes.minecraft}.`,
     texturas: 'Los marcados "Para todos" se activan solos en el juego de cada jugador. Los demás quedan disponibles en Opciones → Paquetes de recursos.',
     shaders: 'Los jugadores los eligen en Opciones → Gráficos → Paquetes de shaders. Necesitan el mod Iris.'
   }
@@ -630,7 +634,7 @@ function abrirCajon (categoria, texto = '') {
   cajon = { categoria, texto, resultados: null, cargando: false }
   const d = $('[data-dialogo="anadir"]')
   $('[data-anadir-titulo]').textContent = `Añadir ${NOMBRE_CATEGORIA[categoria]}`
-  $('[data-anadir-nota]').textContent = `Solo aparecen los compatibles con Minecraft ${ajustes.minecraft}${categoria === 'mods' ? ' y Fabric' : ''}. Sin buscar nada, salen los más populares.`
+  $('[data-anadir-nota]').textContent = `Solo aparecen los compatibles con Minecraft ${ajustes.minecraft}${categoria === 'mods' ? ` y ${nombreLoader()}` : ''}. Sin buscar nada, salen los más populares.`
   const entrada = $('[data-anadir-buscador] input')
   entrada.value = texto
   entrada.placeholder = `Buscar ${NOMBRE_CATEGORIA[categoria]} en Modrinth`
@@ -643,7 +647,7 @@ async function buscarEnCajon (texto) {
   cajon = { ...cajon, texto, cargando: true, resultados: null }
   pintarCajon()
   try {
-    cajon.resultados = await n.buscarEnModrinth(cajon.categoria, texto.trim(), ajustes.minecraft)
+    cajon.resultados = await n.buscarEnModrinth(cajon.categoria, texto.trim(), ajustes.minecraft, loaderDe())
   } catch (e) {
     avisar(e.message, 'error')
     cajon.resultados = []
@@ -678,14 +682,14 @@ async function anadirDeModrinth (categoria, resultado, boton) {
   if (boton) { boton.disabled = true; boton.textContent = 'Añadiendo…' }
   try {
     const proyecto = await n.proyectoModrinth(resultado.project_id)
-    const version = await n.versionCompatible(proyecto.id, categoria, ajustes.minecraft)
-    if (!version) throw new Error(`${proyecto.title} no tiene versión para Minecraft ${ajustes.minecraft}${categoria === 'mods' ? ' con Fabric' : ''}.`)
+    const version = await n.versionCompatible(proyecto.id, categoria, ajustes.minecraft, loaderDe())
+    if (!version) throw new Error(`${proyecto.title} no tiene versión para Minecraft ${ajustes.minecraft}${categoria === 'mods' ? ` con ${nombreLoader()}` : ''}.`)
     const entrada = n.entradaDeVersion(version, categoria, proyecto)
     if (rutaOcupada(entrada.ruta)) throw new Error(`${proyecto.title} ya está en el modpack.`)
     let extra = []
     let faltan = []
     if (categoria === 'mods') {
-      ({ anadir: extra, faltan } = await n.dependenciasDe(version, ajustes.minecraft, proyectosPresentes()))
+      ({ anadir: extra, faltan } = await n.dependenciasDe(version, ajustes.minecraft, proyectosPresentes(), loaderDe()))
       extra = extra.filter((x) => !rutaOcupada(x.ruta))
     }
     ajustes.externos = [...(ajustes.externos || []), entrada, ...extra]
@@ -706,7 +710,7 @@ async function subirArchivos (categoria, archivos) {
     try {
       const nombre = archivo.name.replace(/[\\/:*?"<>|]/g, '_')
       const bytes = new Uint8Array(await archivo.arrayBuffer())
-      const analisis = await n.analizarArchivo(window.JSZip, categoria, nombre, bytes, ajustes.minecraft)
+      const analisis = await n.analizarArchivo(window.JSZip, categoria, nombre, bytes, ajustes.minecraft, loaderDe())
       if (analisis.error) { avisar(`${archivo.name}: ${analisis.error}`, 'error'); continue }
       const ruta = `${c.carpeta}/${nombre}`
       if ((ajustes.externos || []).some((e) => e.ruta === ruta)) { avisar(`Ya hay un ${c.nombre} de Modrinth con el nombre ${nombre}.`, 'error'); continue }
@@ -743,6 +747,11 @@ async function quitar (e) {
     aceptar: 'Quitar el mod',
     cancelar: 'Dejarlo'
   })) return
+  quitarElemento(e)
+  pintar()
+}
+
+function quitarElemento (e) {
   if (e.tipo === 'repo') borrados.add(e.ruta)
   if (e.tipo === 'nuevo') {
     nuevos.delete(e.ruta)
@@ -751,7 +760,6 @@ async function quitar (e) {
   if (e.tipo === 'modrinth') ajustes.externos = ajustes.externos.filter((x) => x.ruta !== e.ruta)
   ajustes.packsActivos = (ajustes.packsActivos || []).filter((r) => r !== e.ruta)
   actualizaciones.delete(e.ruta)
-  pintar()
 }
 
 function cambiarActivo (ruta, activo) {
@@ -770,7 +778,7 @@ async function buscarActualizaciones (categoria, boton) {
       const actual = e.tipo === 'modrinth'
         ? ajustes.externos.find((x) => x.ruta === e.ruta).modrinth.version
         : identificados.get(sha1DeRepo(e.ruta))?.version
-      const v = await n.versionCompatible(e.proyecto, categoria, ajustes.minecraft)
+      const v = await n.versionCompatible(e.proyecto, categoria, ajustes.minecraft, loaderDe())
       if (v && v.id !== actual) {
         actualizaciones.set(e.ruta, { entrada: n.entradaDeVersion(v, categoria, { id: e.proyecto, title: e.nombre, icon_url: e.icono }), origen: e.tipo })
         encontradas++
@@ -803,13 +811,23 @@ function vistaServidor () {
   const s = ajustes.servidor || (ajustes.servidor = {})
   const alCambiar = (fn) => (e) => { fn(e.target); pintarMarco() }
 
-  const mc = h('select', { onchange: (e) => cambiarMinecraft(e.target.value) },
-    [...new Set([ajustes.minecraft, ...versionesMc])].map((v) => h('option', { value: v, selected: v === ajustes.minecraft }, v)))
-  const loaderActual = ajustes.loader?.version
-  const loader = h('select', { onchange: alCambiar((t) => { ajustes.loader = { tipo: 'fabric', version: t.value } }) },
-    [...new Map([[loaderActual, null], ...versionesLoader.map((v) => [v.version, v])]).entries()].filter(([v]) => v).map(([v, info]) =>
-      h('option', { value: v, selected: v === loaderActual }, info?.estable ? `${v} (recomendada)` : v)))
-  if (!versionesMc.length) cargarVersiones()
+  // Lo que se ve elegido: el cambio que se está planeando o lo que hay
+  const objetivo = compatibilidad || { mc: ajustes.minecraft, tipo: loaderDe(), version: ajustes.loader?.version }
+  const ocupado = compatibilidad?.cargando
+  const mc = h('select', { disabled: ocupado, onchange: (e) => planificarCambio(e.target.value, objetivo.tipo) },
+    [...new Set([objetivo.mc, ...versionesMc])].map((v) => h('option', { value: v, selected: v === objetivo.mc }, v)))
+  const tipo = h('select', { disabled: ocupado, onchange: (e) => planificarCambio(objetivo.mc, e.target.value) },
+    Object.entries(n.LOADERS).map(([clave, nombre]) => h('option', { value: clave, selected: clave === objetivo.tipo }, nombre)))
+  // La recomendada es la estable más nueva
+  const recomendada = versionesLoader.find((v) => v.estable)?.version
+  const loader = h('select', {
+    disabled: ocupado,
+    onchange: compatibilidad
+      ? (e) => { compatibilidad.version = e.target.value; pintar() }
+      : alCambiar((t) => { ajustes.loader = { tipo: loaderDe(), version: t.value } })
+  }, [...new Map([[objetivo.version, null], ...versionesLoader.map((v) => [v.version, v])]).entries()].filter(([v]) => v).map(([v]) =>
+    h('option', { value: v, selected: v === objetivo.version }, v === recomendada ? `${v} (recomendada)` : v)))
+  if (!cargandoVersiones && versionesCargadas !== `${objetivo.tipo}|${objetivo.mc}`) cargarVersiones(objetivo.tipo, objetivo.mc)
 
   return h('section', { class: 'seccion' },
     encabezado('Servidor y versión', 'Al publicar, los launchers de los jugadores se adaptan solos: usan la dirección y las versiones que elijas aquí.'),
@@ -826,68 +844,164 @@ function vistaServidor () {
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('mods'), 'Versión del juego'),
       h('div', { class: 'formulario' },
-        h('div', { class: 'fila' },
+        h('div', { class: 'fila fila--tres' },
           campo('Minecraft', mc),
-          campo('Fabric', loader)),
+          campo('Cargador de mods', tipo),
+          campo(`Versión de ${n.nombreLoader(objetivo.tipo)}`, loader)),
+        compatibilidad ? null : h('p', { class: 'campo__ayuda' }, 'Si cambias la versión de Minecraft o el cargador, antes de tocar nada verás qué pasará con cada mod.'),
         vistaCompatibilidad())),
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('resumen'), 'Comparar mods con el servidor'),
-      vistaComparacion()))
+      loaderDe() === 'fabric'
+        ? vistaComparacion()
+        : h('p', { class: 'campo__ayuda' }, `Por ahora solo sabe leer el registro de servidores con Fabric. Con ${nombreLoader()}, usa "Mods para el servidor" en la sección Mods.`)))
 }
 
-async function cargarVersiones () {
+/** Versiones de Minecraft y del cargador; se recargan si cambia el cargador o la versión de Minecraft. */
+let cargandoVersiones = false
+let versionesCargadas = ''
+async function cargarVersiones (tipo, mc) {
+  cargandoVersiones = true
+  versionesCargadas = `${tipo}|${mc}`
   try {
-    ;[versionesMc, versionesLoader] = await Promise.all([n.versionesMinecraft(), n.versionesFabric()])
+    ;[versionesMc, versionesLoader] = await Promise.all([versionesMc.length ? versionesMc : n.versionesMinecraft(), n.versionesLoader(tipo, mc)])
     if (seccion === 'servidor') pintar()
   } catch {
-    avisar('No se pudieron cargar las versiones de Minecraft y Fabric.', 'error')
+    avisar(`No se pudieron cargar las versiones de Minecraft y ${n.nombreLoader(tipo)}.`, 'error')
   }
+  cargandoVersiones = false
 }
 
-async function cambiarMinecraft (version) {
-  const anterior = ajustes.minecraft
-  ajustes.minecraft = version
-  compatibilidad = version === base.ajustes.minecraft ? null : { version, anterior, cargando: true, filas: [] }
-  pintar()
-  if (!compatibilidad) return
-  const filas = []
-  for (const c of Object.keys(n.CATEGORIAS)) {
-    for (const e of elementosDe(c)) {
-      if (!e.proyecto) { filas.push({ e, categoria: c, nueva: undefined }); continue }
-      const v = await n.versionCompatible(e.proyecto, c, version).catch(() => null)
-      filas.push({ e, categoria: c, nueva: v ? n.entradaDeVersion(v, c, { id: e.proyecto, title: e.nombre, icon_url: e.icono }) : null })
-    }
+/**
+ * Cambio de versión de Minecraft o de cargador (Fabric ↔ NeoForge). Antes de tocar nada se hace un
+ * plan: cada mod de Modrinth se cambia por su versión para lo nuevo si la tiene y, si no, se quita
+ * (un mod de otro cargador u otra versión impediría arrancar el juego). Los packs de texturas y los
+ * shaders se cambian si tienen versión nueva y si no se quedan (suelen seguir funcionando).
+ */
+async function planificarCambio (mc, tipo) {
+  const actual = { mc: ajustes.minecraft, tipo: loaderDe() }
+  if (mc === actual.mc && tipo === actual.tipo) {
+    compatibilidad = null
+    pintar()
+    return
   }
-  if (compatibilidad?.version !== version) return
-  compatibilidad = { version, anterior, cargando: false, filas }
+  const plan = { mc, tipo, version: null, anterior: actual, cargando: true, progreso: '', filas: [], error: null }
+  compatibilidad = plan
   pintar()
+  const sigue = () => compatibilidad === plan
+
+  try {
+    // Versión del cargador para esa versión de Minecraft
+    const versiones = await n.versionesLoader(tipo, mc)
+    if (!sigue()) return
+    versionesLoader = versiones
+    versionesCargadas = `${tipo}|${mc}`
+    plan.version = (versiones.find((v) => v.estable) || versiones[0])?.version
+    if (!plan.version) throw new Error(`${n.nombreLoader(tipo)} no tiene versión para Minecraft ${mc}.`)
+
+    const cambiaLoader = tipo !== actual.tipo
+    const cache = leerCacheMods()
+    const elementos = Object.keys(n.CATEGORIAS).flatMap((c) => elementosDe(c).map((e) => ({ e, categoria: c })))
+    let i = 0
+    for (const { e, categoria } of elementos) {
+      plan.progreso = `${++i} de ${elementos.length}`
+      pintarCompatibilidad()
+      const nombre = e.nombre || e.ruta.split('/').pop()
+      const rataland = /rataland-menu/i.test(e.ruta)
+      let fila
+      if (e.proyecto) {
+        const v = await n.versionCompatible(e.proyecto, categoria, mc, tipo).catch(() => null)
+        const nueva = v ? n.entradaDeVersion(v, categoria, { id: e.proyecto, title: e.nombre, icon_url: e.icono }) : null
+        const mismo = nueva && (nueva.sha1 && e.sha1 ? nueva.sha1 === e.sha1 : nueva.ruta === e.ruta)
+        if (nueva && !mismo) fila = { accion: 'cambiar', nueva }
+        else if (nueva) fila = { accion: 'mantener', motivo: cambiaLoader ? 'el mismo archivo sirve para los dos' : 'ya vale para esta versión' }
+        else fila = categoria === 'mods' ? { accion: 'quitar', motivo: 'no tiene versión' } : { accion: 'mantener', motivo: 'sin versión nueva; suele seguir funcionando' }
+      } else if (categoria !== 'mods') {
+        fila = { accion: 'mantener' }
+      } else if (rataland) {
+        // Dice "~1.21.1" (cualquier 1.21.x), pero toca el código del juego: solo vale para la versión con la que se hizo
+        fila = { accion: 'quitar', motivo: `está hecho para Minecraft ${actual.mc} con ${n.nombreLoader(actual.tipo)}` }
+      } else if (cambiaLoader) {
+        fila = { accion: 'quitar', motivo: `es para ${n.nombreLoader(actual.tipo)}` }
+      } else {
+        // Subido a mano y sin datos de Modrinth: se mira la versión de Minecraft que pide
+        const info = await infoDeElemento(e, cache).catch(() => null)
+        const pide = info?.depende?.minecraft
+        fila = pide && !n.cumpleRequisito(pide, mc)
+          ? { accion: 'quitar', motivo: `pide Minecraft ${[].concat(pide).join(' o ')}` }
+          : { accion: 'mantener', motivo: 'súbelo de nuevo si sale una versión para esta' }
+      }
+      plan.filas.push({ e, categoria, nombre, rataland, ...fila })
+      if (!sigue()) return
+    }
+  } catch (err) {
+    if (!sigue()) return
+    plan.error = err.message
+  }
+  plan.cargando = false
+  pintar()
+}
+
+function pintarCompatibilidad () {
+  const caja = $('[data-compatibilidad]')
+  if (caja) caja.replaceWith(vistaCompatibilidad())
 }
 
 function vistaCompatibilidad () {
-  if (!compatibilidad) return null
-  if (compatibilidad.cargando) return h('p', { class: 'aviso-caja' }, `Comprobando qué mods tienen versión para ${compatibilidad.version}…`)
-  const sinVersion = compatibilidad.filas.filter((f) => f.nueva === null)
-  const manuales = compatibilidad.filas.filter((f) => f.nueva === undefined)
-  const cambiables = compatibilidad.filas.filter((f) => f.nueva && f.nueva.ruta !== f.e.ruta)
-  return h('div', { class: 'aviso-caja' },
-    h('strong', {}, `Cambiar a Minecraft ${compatibilidad.version}`),
-    cambiables.length ? h('p', {}, `${cambiables.length} de Modrinth tienen versión para ${compatibilidad.version}.`) : null,
-    sinVersion.length ? [h('p', {}, 'No tienen versión para esta versión de Minecraft (quítalos o vuelve a la anterior):'), h('ul', {}, sinVersion.map((f) => h('li', {}, f.e.nombre || f.e.ruta)))] : null,
-    manuales.length ? [h('p', {}, 'Revisa a mano (subidos sin datos de Modrinth):'), h('ul', {}, manuales.map((f) => h('li', {}, f.e.nombre || f.e.ruta.split('/').pop(), /rataland-menu/i.test(f.e.ruta) ? ': el mod de RataLand hay que recompilarlo para la nueva versión.' : '')))] : null,
-    h('p', {},
-      cambiables.length ? h('button', { class: 'boton boton--pequeno', onclick: aplicarCambioVersion }, 'Cambiar los de Modrinth a su versión nueva') : null,
-      ' ',
-      h('button', { class: 'enlace-boton', onclick: () => { ajustes.minecraft = compatibilidad.anterior; compatibilidad = null; pintar() } }, `Volver a ${compatibilidad.anterior}`)))
+  const plan = compatibilidad
+  if (!plan) return h('div', { 'data-compatibilidad': '' })
+  const destino = `Minecraft ${plan.mc} con ${n.nombreLoader(plan.tipo)}${plan.version ? ` ${plan.version}` : ''}`
+  const cancelar = h('button', { class: 'enlace-boton', onclick: () => planificarCambio(plan.anterior.mc, plan.anterior.tipo) }, 'Cancelar el cambio')
+  let contenido
+  if (plan.cargando) {
+    contenido = [h('strong', {}, `Cambiar a ${destino}`), h('p', {}, `Mirando qué pasa con cada mod…${plan.progreso ? ` (${plan.progreso})` : ''}`), h('p', {}, cancelar)]
+  } else if (plan.error) {
+    contenido = [h('strong', {}, 'No se puede hacer este cambio'), h('p', {}, plan.error), h('p', {}, cancelar)]
+  } else {
+    const de = (accion) => plan.filas.filter((f) => f.accion === accion)
+    const lista = (filas, conMotivo) => h('ul', {}, filas.map((f) => h('li', {}, f.nombre, conMotivo && f.motivo ? `: ${f.motivo}` : '')))
+    const cambian = de('cambiar')
+    const quitan = de('quitar')
+    const quedan = de('mantener')
+    const sinRataland = quitan.some((f) => f.rataland)
+    const servidor = ajustes.servidor || {}
+    contenido = [
+      h('strong', {}, `Cambiar a ${destino}`),
+      cambian.length ? [h('p', {}, `Se cambiarán a su versión para ${plan.mc} (${cambian.length}):`), lista(cambian)] : null,
+      quitan.length ? [h('p', {}, `Se quitarán (${quitan.length}):`), lista(quitan, true)] : null,
+      quedan.length ? h('details', {}, h('summary', {}, `Se quedan como están (${quedan.length})`), lista(quedan, true)) : null,
+      sinRataland
+        ? h('p', { class: 'aviso-caja aviso-caja--mal' },
+          `El mod de RataLand (menús, pantalla de carga, skin sin premium, sin aviso de chat) está hecho para Minecraft ${plan.anterior.mc} con ${n.nombreLoader(plan.anterior.tipo)}; para otra versión hay que adaptarlo y volver a subirlo. Mientras, los jugadores verán los menús normales de Minecraft. `,
+          servidor.entrarDirecto
+            ? 'Tienes activado "Entrar al servidor nada más abrir el juego", así que entrarán directos.'
+            : h('button', { class: 'enlace-boton', onclick: () => { servidor.entrarDirecto = true; ajustes.servidor = servidor; pintar() } }, 'Activar "Entrar al servidor nada más abrir el juego"'))
+        : null,
+      h('p', {}, `Cambia también el servidor de Aternos a ${destino} y haz antes una copia del mundo: un mundo abierto en una versión más nueva ya no se puede abrir en una más vieja.`),
+      h('p', { class: 'campo__ayuda' }, 'Los jugadores no tienen que hacer nada: al pulsar Jugar, el launcher instala la nueva versión y deja solo los mods de la lista.'),
+      h('p', { class: 'acciones-cambio' },
+        h('button', { class: 'boton boton--principal boton--pequeno', onclick: aplicarCambioVersion }, 'Aplicar el cambio'),
+        ' ', cancelar)
+    ]
+  }
+  return h('div', { class: 'aviso-caja', 'data-compatibilidad': '' }, contenido)
 }
 
+/** Aplica el plan: cambia o quita cada elemento y pone la nueva versión (queda pendiente de publicar). */
 function aplicarCambioVersion () {
-  for (const f of compatibilidad.filas) {
-    if (!f.nueva || f.nueva.ruta === f.e.ruta) continue
-    actualizaciones.set(f.e.ruta, { entrada: f.nueva, origen: f.e.tipo })
-    aplicarActualizacion(f.e.ruta)
+  const plan = compatibilidad
+  for (const f of plan.filas) {
+    if (f.accion === 'cambiar') {
+      actualizaciones.set(f.e.ruta, { entrada: f.nueva, origen: f.e.tipo })
+      aplicarActualizacion(f.e.ruta)
+    } else if (f.accion === 'quitar') {
+      quitarElemento(f.e)
+    }
   }
-  compatibilidad.filas = compatibilidad.filas.filter((f) => !f.nueva)
-  avisar('Mods de Modrinth cambiados a la nueva versión.')
+  ajustes.minecraft = plan.mc
+  ajustes.loader = { tipo: plan.tipo, version: plan.version }
+  compatibilidad = null
+  avisar(`Cambio a Minecraft ${plan.mc} con ${n.nombreLoader(plan.tipo)} preparado. Revísalo y publícalo.`)
   pintar()
 }
 
@@ -919,10 +1033,11 @@ function guardarArchivo (datos, nombre) {
 }
 
 async function infoDeElemento (e, cache) {
-  if (e.sha1 && cache[e.sha1]) return cache[e.sha1]
-  const info = await n.infoDeMod(window.JSZip, await bytesDe(e))
-  if (info && e.sha1) {
-    cache[e.sha1] = info
+  const clave = e.sha1 && (loaderDe() === 'fabric' ? e.sha1 : `${loaderDe()}:${e.sha1}`)
+  if (clave && cache[clave]) return cache[clave]
+  const info = await n.infoDeMod(window.JSZip, await bytesDe(e), loaderDe())
+  if (info && clave) {
+    cache[clave] = info
     try { localStorage.setItem(CLAVE_INFO_MODS, JSON.stringify(cache)) } catch { /* sin espacio: no pasa nada */ }
   }
   return info
@@ -1085,7 +1200,7 @@ async function anadirLoQueNecesita (versionId, nombre, boton, silencioso = false
   if (boton) boton.disabled = true
   try {
     const version = await n.versionModrinth(versionId)
-    const { anadir, faltan } = await n.dependenciasDe(version, ajustes.minecraft, proyectosPresentes())
+    const { anadir, faltan } = await n.dependenciasDe(version, ajustes.minecraft, proyectosPresentes(), loaderDe())
     const nuevas = anadir.filter((x) => !rutaOcupada(x.ruta))
     if (nuevas.length) {
       ajustes.externos = [...(ajustes.externos || []), ...nuevas]
@@ -1238,7 +1353,7 @@ function pintarZip () {
       h('li', {}, 'Descomprime el .zip.'),
       h('li', {}, 'En Aternos, entra en Archivos y abre la carpeta mods.'),
       h('li', {}, 'Borra los mods que ya no estén en esta lista y sube los .jar del .zip.'),
-      h('li', {}, `Comprueba que el servidor usa Minecraft ${ajustes.minecraft} con Fabric ${ajustes.loader?.version}.`)))
+      h('li', {}, `Comprueba que el servidor usa Minecraft ${ajustes.minecraft} con ${nombreLoader()} ${ajustes.loader?.version}.`)))
   boton.disabled = !marcados
 }
 
@@ -1254,7 +1369,7 @@ async function descargarZip (boton) {
       zip.file(`mods/${x.e.ruta.split('/').pop()}`, await bytesDe(x.e))
     }
     zip.file('LEEME.txt', [
-      `Mods para el servidor: Minecraft ${ajustes.minecraft} con Fabric ${ajustes.loader?.version}.`,
+      `Mods para el servidor: Minecraft ${ajustes.minecraft} con ${nombreLoader()} ${ajustes.loader?.version}.`,
       'Sube los archivos de la carpeta "mods" a la carpeta "mods" del servidor.',
       '',
       ...marcados.map((x) => `- ${x.nombre} (${x.e.ruta.split('/').pop()})`)

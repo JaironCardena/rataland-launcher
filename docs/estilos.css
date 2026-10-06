@@ -324,6 +324,10 @@ h1, h2, h3 { margin: 0; }
 .campo textarea.registro { min-height: 160px; font: 12.5px/1.45 ui-monospace, Consolas, monospace; }
 .campo input::placeholder, .buscador input::placeholder, .campo textarea::placeholder { color: var(--muy-tenue); }
 .fila { display: grid; grid-template-columns: 1fr 160px; gap: 14px; }
+.fila--tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.acciones-cambio { display: flex; align-items: center; gap: 12px; margin-top: 10px !important; }
+[data-compatibilidad] details { margin-top: 6px; }
+[data-compatibilidad] summary { cursor: pointer; color: var(--tenue); }
 .casilla { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
 .casilla input { margin-top: 4px; accent-color: var(--hierba); }
 .tarjetas { display: grid; gap: 14px; }
