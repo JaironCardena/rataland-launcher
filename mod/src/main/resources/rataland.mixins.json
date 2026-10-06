@@ -7,6 +7,7 @@
     "MinecraftClientMixin",
     "ScreenMixin",
     "SplashOverlayMixin",
+    "ToastManagerMixin",
     "WindowMixin"
   ],
   "injectors": {

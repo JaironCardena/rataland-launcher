@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ServerInfo;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -13,7 +12,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
 
 /**
  * Skin elegida en el launcher por un jugador sin premium. El servidor la pone con SkinRestorer
@@ -43,7 +41,7 @@ public final class SkinPendiente {
 	public static void tick(MinecraftClient client) {
 		if (cuentaAtras < 0 || --cuentaAtras > 0) return;
 		cuentaAtras = -1;
-		if (client.player == null || client.getNetworkHandler() == null || !esElServidor(client.getCurrentServerEntry())) return;
+		if (client.player == null || client.getNetworkHandler() == null || !RataLand.esElServidor(client.getCurrentServerEntry())) return;
 
 		Path ruta = archivo();
 		if (!Files.exists(ruta)) return;
@@ -70,11 +68,4 @@ public final class SkinPendiente {
 		}
 	}
 
-	/** Solo en el servidor de la serie (no se mandan comandos a otros servidores). */
-	private static boolean esElServidor(ServerInfo servidor) {
-		if (servidor == null || servidor.address == null) return false;
-		String direccion = servidor.address.toLowerCase(Locale.ROOT);
-		String ip = RataLand.ip.toLowerCase(Locale.ROOT);
-		return direccion.equals(ip) || direccion.startsWith(ip + ":");
-	}
 }

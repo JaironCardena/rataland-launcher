@@ -113,6 +113,14 @@ public class RataLand implements ClientModInitializer {
 		return FONDOS.getOrDefault(escena, FONDOS.get("noche"));
 	}
 
+	/** ¿Es el servidor de la serie? (para no mandar comandos ni ocultar avisos en otros servidores) */
+	public static boolean esElServidor(net.minecraft.client.network.ServerInfo servidor) {
+		if (servidor == null || servidor.address == null) return false;
+		String direccion = servidor.address.toLowerCase(java.util.Locale.ROOT);
+		String propia = ip.toLowerCase(java.util.Locale.ROOT);
+		return direccion.equals(propia) || direccion.startsWith(propia + ":");
+	}
+
 	public static String direccion() {
 		return puerto == 25565 ? ip : ip + ":" + puerto;
 	}
