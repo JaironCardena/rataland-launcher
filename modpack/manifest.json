@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T18:14:36.108Z",
+  "generado": "2026-10-06T18:19:05.331Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -22,7 +22,7 @@
   ],
   "enlaces": {},
   "evento": null,
-  "temporada": "Los Pibes",
+  "temporada": "",
   "escena": "noche",
   "episodio": null,
   "frases": [
