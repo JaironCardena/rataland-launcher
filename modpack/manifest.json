@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T05:38:58.484Z",
+  "generado": "2026-10-06T06:11:47.840Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -20,12 +20,16 @@
       "texto": "Pulsa Jugar: el launcher descarga todo lo necesario. Dentro del juego, el botón Jugar del menú te lleva directo al servidor."
     }
   ],
+  "enlaces": {
+    "discord": ""
+  },
+  "evento": null,
   "archivos": [
     {
-      "ruta": "mods/rataland-menu-1.0.0.jar",
-      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-1.0.0.jar",
-      "sha1": "848432a4299aa4ccc94ce19329c89325141ec68d",
-      "tamano": 31307
+      "ruta": "mods/rataland-menu-1.1.0.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-1.1.0.jar",
+      "sha1": "df1a9543c8f418861dfb20bffe9f3aaf7b9792d8",
+      "tamano": 34474
     }
   ]
 }

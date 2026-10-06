@@ -1,6 +1,7 @@
 {
   "nombre": "RataLand",
   "carpeta": ".rataland",
+  "paginaDescarga": "https://github.com/JaironCardena/rataland-launcher/releases/latest",
   "manifiesto": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/manifest.json",
 
   "minecraft": "1.21.1",

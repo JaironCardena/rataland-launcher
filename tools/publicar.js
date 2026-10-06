@@ -48,6 +48,14 @@ async function main () {
     })
   }
 
+  const evento = ajustes.evento?.fecha ? ajustes.evento : null
+  if (evento) {
+    const fecha = new Date(evento.fecha)
+    if (Number.isNaN(fecha.getTime())) throw new Error(`La fecha del evento no es válida: "${evento.fecha}". Usa el formato 2026-10-10T20:00:00-05:00`)
+    if (!/[zZ]|[+-]\d\d:\d\d$/.test(evento.fecha)) console.warn('Aviso: la fecha del evento no lleva zona horaria; cada jugador la verá en su hora local.')
+    console.log(`Evento: ${evento.titulo || 'sin título'} el ${fecha.toLocaleString('es')}`)
+  }
+
   const manifiesto = {
     generado: new Date().toISOString(),
     minecraft: ajustes.minecraft,
@@ -55,6 +63,8 @@ async function main () {
     servidor: ajustes.servidor,
     carpetasSincronizadas: ajustes.carpetasSincronizadas || ['mods'],
     noticias: ajustes.noticias || [],
+    enlaces: ajustes.enlaces || {},
+    evento,
     archivos
   }
   fs.writeFileSync(path.join(carpeta, 'manifest.json'), JSON.stringify(manifiesto, null, 2) + '\n')

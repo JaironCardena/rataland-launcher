@@ -50,11 +50,12 @@ async function prepararPrimerArranque (dirJuego, { nombre, ip, puerto }) {
   }
 }
 
-/** Nombre e IP del servidor para el botón Jugar del menú del mod de la serie (config/rataland.json). */
-async function escribirConfigMenu (dirJuego, { nombre, ip, puerto }) {
+/** Nombre, IP y Discord para los menús del mod de la serie (config/rataland.json). */
+async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, discord }) {
   const ruta = path.join(dirJuego, 'config', 'rataland.json')
   await fsp.mkdir(path.dirname(ruta), { recursive: true })
-  await fsp.writeFile(ruta, JSON.stringify({ nombre, ip, puerto: Number(puerto) || 25565 }, null, 2))
+  const enlaceDiscord = /^https?:\/\//.test(discord || '') ? discord : ''
+  await fsp.writeFile(ruta, JSON.stringify({ nombre, ip, puerto: Number(puerto) || 25565, discord: enlaceDiscord }, null, 2))
 }
 
 module.exports = { prepararPrimerArranque, escribirConfigMenu, serversDat }

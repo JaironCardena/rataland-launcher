@@ -23,6 +23,9 @@ for (const f of archivos) {
   if (!fs.existsSync(f)) throw new Error(`No se generó ${f}`)
 }
 
+// Si el launcher empaquetado no arranca, no se publica (si no, ni siquiera podría actualizarse solo).
+ejecutar(process.execPath, [path.join(__dirname, 'comprobar-paquete.js')])
+
 ejecutar('git', ['push', 'origin', 'HEAD', '--follow-tags'])
 ejecutar('gh', ['release', 'create', `v${version}`, ...archivos,
   '--title', `RataLand ${version}`,

@@ -3,6 +3,14 @@
   "minecraft": "1.21.1",
   "loader": { "tipo": "fabric", "version": "0.19.5" },
   "servidor": { "ip": "Rataland-8RN6.aternos.me", "puerto": 47702, "entrarDirecto": false },
+  "enlaces": {
+    "discord": ""
+  },
+  "evento": {
+    "titulo": "",
+    "fecha": "",
+    "duracionHoras": 3
+  },
   "carpetasSincronizadas": ["mods"],
   "soloSiFalta": ["options.txt"],
   "noticias": [

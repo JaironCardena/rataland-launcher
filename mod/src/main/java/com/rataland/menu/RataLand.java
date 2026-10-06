@@ -36,6 +36,8 @@ public class RataLand implements ClientModInitializer {
 	public static String nombre = "RataLand";
 	public static String ip = "Rataland-8RN6.aternos.me";
 	public static int puerto = 47702;
+	/** Enlace de Discord para el menú de pausa ("" = sin botón). */
+	public static String discord = "";
 
 	/** Solo para pruebas: con -Drataland.captura=true guarda capturas del menú y la carga y cierra el juego. */
 	public static final boolean MODO_CAPTURA = Boolean.getBoolean("rataland.captura");
@@ -49,6 +51,10 @@ public class RataLand implements ClientModInitializer {
 			if (json.has("nombre")) nombre = json.get("nombre").getAsString();
 			if (json.has("ip")) ip = json.get("ip").getAsString();
 			if (json.has("puerto")) puerto = json.get("puerto").getAsInt();
+			if (json.has("discord")) {
+				String enlace = json.get("discord").getAsString();
+				discord = enlace.startsWith("https://") || enlace.startsWith("http://") ? enlace : "";
+			}
 		} catch (Exception e) {
 			LOG.warn("No se pudo leer {}: {}", archivo, e.toString());
 		}

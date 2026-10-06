@@ -72,7 +72,7 @@ async function jugar (reparar) {
     let instalacion = await prepararJuego(perfil, raiz, { reportar, reparar })
     await sincronizar(manifiesto, raiz, { reportar, reparar })
     await prepararPrimerArranque(raiz, { nombre: config.nombre, ...perfil.servidor })
-    await escribirConfigMenu(raiz, { nombre: config.nombre, ...perfil.servidor })
+    await escribirConfigMenu(raiz, { nombre: config.nombre, ...perfil.servidor, discord: perfil.enlaces?.discord })
 
     const lanzar = () => {
       reportar({ etapa: 'iniciando', texto: 'Abriendo Minecraft', actual: 0, total: 0 })
@@ -120,8 +120,7 @@ function registrarIpc () {
       nombre: config.nombre,
       version: app.getVersion(),
       cuentas: config.cuentas,
-      apariencia: config.apariencia || {},
-      enlaces: Object.keys(config.enlaces || {}).filter((k) => /^https?:\/\//.test(config.enlaces[k]))
+      apariencia: config.apariencia || {}
     },
     cuenta: await cuentas.actual(),
     ajustes,
@@ -173,7 +172,7 @@ function registrarIpc () {
     if (accion === 'cerrar') ventana?.close()
   })
   ipcMain.on('abrir-enlace', (_e, clave) => {
-    const url = config.enlaces?.[clave]
+    const url = perfil.enlaces?.[clave]
     if (typeof url === 'string' && /^https?:\/\//.test(url)) shell.openExternal(url)
   })
   ipcMain.on('abrir-registros', () => {
@@ -232,7 +231,7 @@ if (!app.requestSingleInstanceLock()) {
     await prepararCarpeta()
     ajustes = { ...ajustesPorDefecto(), ...await leerJson(rutaAjustes, {}) }
     Menu.setApplicationMenu(null)
-    actualizador = crearActualizador({ enviar, dirDatos, estaJugando: () => jugando })
+    actualizador = crearActualizador({ enviar, dirDatos, estaJugando: () => jugando, paginaDescarga: config.paginaDescarga })
     registrarIpc()
     crearVentana()
     actualizador.iniciar()

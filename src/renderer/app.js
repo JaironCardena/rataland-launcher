@@ -95,11 +95,55 @@ function pintarPerfil () {
     return li
   }))
   $('.noticias__vacio').hidden = Boolean(noticias?.length)
+  pintarEvento()
+  pintarEnlaces()
+}
+
+let relojEvento = null
+
+function formatearTiempo (ms) {
+  const s = Math.floor(ms / 1000)
+  const dos = (n) => String(n).padStart(2, '0')
+  const [d, h, m, seg] = [Math.floor(s / 86400), Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60]
+  return d > 0 ? `${d}d ${dos(h)}h ${dos(m)}m ${dos(seg)}s` : `${dos(h)}h ${dos(m)}m ${dos(seg)}s`
+}
+
+/** Cuenta atrás del evento de modpack.json. Al llegar la hora dice "¡Ya empezó!" durante `duracionHoras`. */
+function pintarEvento () {
+  clearInterval(relojEvento)
+  const caja = $('.cuenta-atras')
+  const ev = estado.perfil?.evento
+  const inicio = ev?.fecha ? new Date(ev.fecha).getTime() : NaN
+  if (Number.isNaN(inicio)) {
+    caja.hidden = true
+    return
+  }
+  const fin = inicio + (Number(ev.duracionHoras) || 3) * 3600 * 1000
+  const nombre = ev.titulo || 'El próximo evento'
+  const fecha = new Date(inicio).toLocaleString('es', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+  caja.querySelector('.cuenta-atras__fecha').textContent = fecha[0].toUpperCase() + fecha.slice(1)
+
+  const actualizar = () => {
+    const ahora = Date.now()
+    if (ahora > fin) {
+      caja.hidden = true
+      clearInterval(relojEvento)
+      return
+    }
+    caja.hidden = false
+    const empezado = ahora >= inicio
+    caja.querySelector('.cuenta-atras__titulo').textContent = empezado ? nombre : `${nombre} empieza en`
+    caja.querySelector('.cuenta-atras__tiempo').textContent = empezado ? '¡Ya empezó!' : formatearTiempo(inicio - ahora)
+  }
+  actualizar()
+  relojEvento = setInterval(actualizar, 1000)
 }
 
 function pintarEnlaces () {
   const nav = $('.enlaces')
-  nav.replaceChildren(...(estado.launcher.enlaces || []).map((clave) => {
+  const enlaces = estado.perfil?.enlaces || {}
+  const claves = Object.keys(enlaces).filter((k) => /^https?:\/\//.test(enlaces[k] || ''))
+  nav.replaceChildren(...claves.map((clave) => {
     const b = document.createElement('button')
     b.className = 'enlace'
     b.textContent = NOMBRE_ENLACE[clave] || clave[0].toUpperCase() + clave.slice(1)
@@ -412,7 +456,6 @@ api.alJuego(({ estado: fase, error }) => {
   pintarMarca()
   pintarCuenta()
   pintarPerfil()
-  pintarEnlaces()
   pintarAjustes()
   if (estado.actualizacion) {
     pintarActualizacion(estado.actualizacion)

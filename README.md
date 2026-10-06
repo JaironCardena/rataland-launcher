@@ -9,6 +9,7 @@ Launcher propio (Electron) para la serie RataLand:
 - Incluye el **mod de RataLand** (`mod/`), que dentro del juego:
   - cambia la pantalla de carga de Mojang por el logo de RataLand,
   - sustituye el menú principal por el de la serie: **Jugar** (entra al servidor), **Opciones** y **Salir**,
+  - sustituye el menú de pausa (Esc): **Volver al juego**, **Progresos**, **Estadísticas**, **Opciones**, **Discord** y **Volver a RataLand**,
   - usa el paisaje de RataLand como fondo en Opciones, al conectar, etc.,
   - pone "RataLand" como título de la ventana.
 
@@ -80,6 +81,27 @@ Los mods se sirven desde la carpeta `modpack/` de este repositorio de GitHub. Pa
 
 La próxima vez que cada jugador pulse *Jugar*, el launcher deja sus mods igual que tu carpeta. No hace falta repartir un launcher nuevo. GitHub puede tardar unos minutos en servir los cambios y no acepta archivos de más de 100 MB.
 
+### Noticias, Discord y cuenta atrás (`modpack/modpack.json`)
+
+Se publican igual que los mods (`npm.cmd run publicar` y subir):
+
+```json
+"noticias": [
+  { "fecha": "2026-10-06", "titulo": "Bienvenidos a RataLand", "texto": "..." }
+],
+"enlaces": {
+  "discord": "https://discord.gg/tu-invitacion"
+},
+"evento": {
+  "titulo": "Episodio 2",
+  "fecha": "2026-10-10T20:00:00-05:00",
+  "duracionHoras": 3
+}
+```
+
+- `enlaces.discord` añade el botón Discord abajo en el launcher y en el menú de pausa del juego. También valen `youtube`, `twitch`, `tiktok`, `x` y `web`.
+- `evento` muestra en el launcher una cuenta atrás ("Episodio 2 empieza en 3d 04h 12m"). Al llegar la hora pone "¡Ya empezó!" durante `duracionHoras` y luego desaparece. Escribe la fecha con la zona horaria al final (`-05:00` es la hora de Ecuador) para que cada jugador la vea en su hora. Con `"fecha": ""` no se muestra nada.
+
 ## Publicar una versión nueva del launcher
 
 Cuando cambies el código o el diseño del launcher:
@@ -92,7 +114,7 @@ npm.cmd version patch
 npm.cmd run release
 ```
 
-El primero sube la versión (1.0.0 → 1.0.1). El segundo crea el instalador y lo publica en GitHub Releases; los launchers instalados lo descargan solos. Necesita `gh` con tu sesión de GitHub iniciada.
+El primero sube la versión (1.0.0 → 1.0.1). El segundo crea el instalador, **comprueba que el launcher empaquetado arranca** (si no, no publica nada) y lo publica en GitHub Releases; los launchers instalados lo descargan solos. Necesita `gh` con tu sesión de GitHub iniciada.
 
 ## El arte
 

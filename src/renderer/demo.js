@@ -17,6 +17,8 @@ if (!window.launcher) {
     minecraft: '1.21.1',
     loader: { tipo: 'fabric', version: '0.19.5' },
     servidor: { ip: 'Rataland-8RN6.aternos.me', puerto: 47702 },
+    enlaces: { discord: 'https://discord.gg/ejemplo', web: '' },
+    evento: params.has('sin-evento') ? null : { titulo: 'Episodio 2', fecha: new Date(Date.now() + (params.has('empezado') ? -60000 : 2 * 86400000 + 4 * 3600000 + 754000)).toISOString(), duracionHoras: 3 },
     noticias: [
       { fecha: '2026-10-05', titulo: 'Empieza la temporada', texto: 'El mundo nuevo abre hoy a las 18:00. Pulsa Jugar y el launcher te mete directo al servidor.' },
       { fecha: '2026-10-02', titulo: 'Nuevos mods de decoración', texto: 'Hemos añadido muebles y más bloques de construcción. Se descargan solos al abrir el juego.' },
@@ -26,7 +28,7 @@ if (!window.launcher) {
 
   window.launcher = {
     inicio: async () => ({
-      launcher: { nombre: 'RataLand', version: '1.0.0', cuentas: { microsoft: true, noPremium: true }, enlaces: ['discord', 'web'], apariencia: { logo: 'assets/logo.png', fondo: 'assets/fondo.png' } },
+      launcher: { nombre: 'RataLand', version: '1.0.0', cuentas: { microsoft: true, noPremium: true }, apariencia: { logo: 'assets/logo.png', fondo: 'assets/fondo.png' } },
       cuenta,
       ajustes: { ram: 4096, cerrarAlJugar: false },
       sistema: { ramTotalMB: 16384 },

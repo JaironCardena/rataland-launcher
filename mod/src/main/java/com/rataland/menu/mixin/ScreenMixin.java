@@ -4,6 +4,7 @@ import com.rataland.menu.Fondo;
 import com.rataland.menu.RataLand;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
@@ -40,7 +41,9 @@ public abstract class ScreenMixin {
 			ScreenshotRecorder.saveScreenshot(client.runDirectory, "rataland-opciones.png", client.getFramebuffer(), t -> {});
 			client.setScreen(new MultiplayerScreen(new TitleScreen()));
 			RataLand.LOG.info("Prueba: al abrir Multijugador se muestra {}", client.currentScreen.getClass().getSimpleName());
-			client.scheduleStop();
+			// Sigue con el menú de pausa; PausaRataLand hace su captura y cierra el juego.
+			client.setScreen(new GameMenuScreen(true));
+			RataLand.LOG.info("Prueba: al pausar se muestra {}", client.currentScreen.getClass().getSimpleName());
 		}
 	}
 }

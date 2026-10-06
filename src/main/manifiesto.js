@@ -65,7 +65,10 @@ function combinarPerfil (config, manifiesto) {
     minecraft: manifiesto.minecraft || config.minecraft,
     loader: { tipo: 'vanilla', ...(manifiesto.loader || config.loader) },
     servidor: { puerto: 25565, ...config.servidor, ...manifiesto.servidor },
-    noticias: Array.isArray(manifiesto.noticias) ? manifiesto.noticias : []
+    noticias: Array.isArray(manifiesto.noticias) ? manifiesto.noticias : [],
+    // Un enlace vacío en el modpack no borra el de la configuración del launcher.
+    enlaces: { ...config.enlaces, ...Object.fromEntries(Object.entries(manifiesto.enlaces || {}).filter(([, url]) => url)) },
+    evento: manifiesto.evento?.fecha ? manifiesto.evento : null
   }
 }
 

@@ -149,6 +149,19 @@ button { cursor: pointer; }
 [data-estado-servidor='cerrado'] .estado-servidor__luz { background: var(--error); }
 [data-estado-servidor='abierto'] .estado-servidor__texto { color: var(--texto); }
 
+/* Cuenta atrás para el próximo episodio o evento */
+.cuenta-atras { margin: -14px 0 28px; }
+.cuenta-atras p { margin: 0; }
+.cuenta-atras__titulo { color: var(--tenue); font-size: 13.5px; }
+.cuenta-atras__tiempo {
+  margin-top: 2px !important;
+  font: 700 30px/1.15 var(--pixel);
+  color: var(--antorcha);
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+  font-variant-numeric: tabular-nums;
+}
+.cuenta-atras__fecha { margin-top: 2px !important; color: var(--muy-tenue); font-size: 12.5px; }
+
 /* Login */
 .zona__titulo { margin: 0 0 14px; font-size: 17px; font-weight: 600; }
 .boton-microsoft {

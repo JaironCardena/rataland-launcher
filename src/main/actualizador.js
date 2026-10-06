@@ -2,9 +2,6 @@ const { app, ipcMain, shell } = require('electron')
 const { spawn } = require('child_process')
 const fs = require('fs')
 const path = require('path')
-const { publish } = require('../../package.json').build
-
-const PAGINA_DESCARGA = `https://github.com/${publish[0].owner}/${publish[0].repo}/releases/latest`
 
 /**
  * Actualizaciones del propio launcher desde GitHub Releases.
@@ -17,7 +14,9 @@ const PAGINA_DESCARGA = `https://github.com/${publish[0].owner}/${publish[0].rep
  * hasta saber que Windows lo ha dejado arrancar, y para no recurrir a elevate.exe,
  * que pide permisos de administrador sin motivo: la instalación es solo para el usuario.
  */
-function crearActualizador ({ enviar, dirDatos, estaJugando }) {
+function crearActualizador ({ enviar, dirDatos, estaJugando, paginaDescarga }) {
+  // Ojo: no leer package.json "build" aquí; electron-builder lo quita al empaquetar.
+  const PAGINA_DESCARGA = paginaDescarga
   const marcaActualizado = path.join(dirDatos, 'actualizado.json')
   const registro = path.join(dirDatos, 'actualizador.log')
   const log = (nivel, mensaje) => fs.appendFile(registro, `${new Date().toISOString()} [${nivel}] ${mensaje}\n`, () => {})
