@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T22:50:10.988Z",
+  "generado": "2026-10-06T22:55:32.563Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -24,7 +24,6 @@
   "evento": null,
   "temporada": "",
   "escena": "pesca",
-  "sonidoFondo": false,
   "episodio": null,
   "frases": [
     "Los Pibes"
@@ -46,11 +45,11 @@
       "git": "62ecc5f93ffe590d6ec510f148886ded7c6a24af"
     },
     {
-      "ruta": "mods/rataland-menu-fabric-1.21.1-1.4.1.jar",
-      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-fabric-1.21.1-1.4.1.jar",
-      "sha1": "c53ec8cd1d723ea92b3b622e3b7a32fdb6d1dc17",
-      "tamano": 981655,
-      "git": "441cb32171cf57b788ee73d0ce181d319fbd6ca5"
+      "ruta": "mods/rataland-menu-fabric-1.21.1-1.4.2.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-fabric-1.21.1-1.4.2.jar",
+      "sha1": "6eb140828ed4414ef3ac9e0815985141f93d30f8",
+      "tamano": 98455,
+      "git": "239e590a2a64d1987ce6585bbf326a4fbe6b0e7f"
     },
     {
       "ruta": "mods/sodium-fabric-0.8.13+mc1.21.1.jar",
