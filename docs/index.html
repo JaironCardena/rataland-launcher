@@ -84,6 +84,18 @@
     </form>
   </dialog>
 
+  <dialog class="dialogo dialogo--confirmar" data-dialogo="confirmar" aria-labelledby="titulo-confirmar" aria-describedby="texto-confirmar">
+    <div class="dialogo__caja">
+      <h2 id="titulo-confirmar" data-confirmar-titulo></h2>
+      <p id="texto-confirmar" data-confirmar-texto></p>
+      <ul class="cambios" data-confirmar-lista hidden></ul>
+      <div class="dialogo__botones">
+        <button type="button" class="boton boton--secundario" data-confirmar-cancelar></button>
+        <button type="button" class="boton boton--peligro-lleno" data-confirmar-aceptar></button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="avisos" aria-live="polite" data-avisos></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"

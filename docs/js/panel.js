@@ -60,6 +60,42 @@ function avisar (texto, tipo = 'ok') {
   setTimeout(() => el.remove(), tipo === 'error' ? 9000 : 5000)
 }
 
+/**
+ * Pide confirmación con un diálogo del panel (no el del navegador).
+ * El foco empieza en "cancelar" para que un Enter sin querer no borre nada.
+ */
+function confirmar ({ titulo, texto, lista = [], aceptar, cancelar = 'Cancelar' }) {
+  const d = $('[data-dialogo="confirmar"]')
+  $('[data-confirmar-titulo]', d).textContent = titulo
+  $('[data-confirmar-texto]', d).textContent = texto
+  const ul = $('[data-confirmar-lista]', d)
+  ul.replaceChildren(...lista.map((x) => h('li', {}, x)))
+  ul.hidden = !lista.length
+  const botonAceptar = $('[data-confirmar-aceptar]', d)
+  const botonCancelar = $('[data-confirmar-cancelar]', d)
+  botonAceptar.textContent = aceptar
+  botonCancelar.textContent = cancelar
+  d.showModal()
+  botonCancelar.focus()
+
+  // Se responde al botón pulsado (o a Escape) directamente, sin esperar al evento "close".
+  return new Promise((resolve) => {
+    const terminar = (respuesta) => (e) => {
+      e.preventDefault()
+      botonAceptar.removeEventListener('click', alAceptar)
+      botonCancelar.removeEventListener('click', alCancelar)
+      d.removeEventListener('cancel', alCancelar)
+      if (d.open) d.close()
+      resolve(respuesta)
+    }
+    const alAceptar = terminar(true)
+    const alCancelar = terminar(false)
+    botonAceptar.addEventListener('click', alAceptar)
+    botonCancelar.addEventListener('click', alCancelar)
+    d.addEventListener('cancel', alCancelar)
+  })
+}
+
 /* ---------- Datos derivados ---------- */
 
 function sha1DeRepo (ruta) {
@@ -357,8 +393,13 @@ async function subirArchivos (categoria, archivos) {
   pintar()
 }
 
-function quitar (e) {
-  if (/rataland-menu/i.test(e.ruta) && !confirm('Es el mod de RataLand (menú, pantalla de carga y pausa). ¿Quitarlo de todas formas?')) return
+async function quitar (e) {
+  if (/rataland-menu/i.test(e.ruta) && !await confirmar({
+    titulo: '¿Quitar el mod de RataLand?',
+    texto: 'Sin él, los jugadores volverán a ver la pantalla de carga, el menú principal y el menú de pausa normales de Minecraft.',
+    aceptar: 'Quitar el mod',
+    cancelar: 'Dejarlo'
+  })) return
   if (e.tipo === 'repo') borrados.add(e.ruta)
   if (e.tipo === 'nuevo') {
     nuevos.delete(e.ruta)
@@ -725,13 +766,26 @@ document.addEventListener('click', (e) => {
   const accion = e.target.closest('[data-accion]')?.dataset.accion
   if (accion === 'abrir-publicar') abrirPublicar()
   if (accion === 'cerrar-dialogo') e.target.closest('dialog').close()
-  if (accion === 'descartar' && confirm('¿Descartar todos los cambios sin publicar?')) {
-    ajustes = structuredClone(base.ajustes)
-    nuevos = new Map()
-    borrados = new Set()
-    actualizaciones = new Map()
-    compatibilidad = null
-    pintar()
+  if (accion === 'descartar') {
+    const lista = cambios()
+    confirmar({
+      titulo: '¿Descartar los cambios?',
+      texto: lista.length === 1
+        ? 'Se perderá este cambio, que aún no has publicado:'
+        : `Se perderán estos ${lista.length} cambios, que aún no has publicado:`,
+      lista,
+      aceptar: 'Descartar cambios',
+      cancelar: 'Seguir editando'
+    }).then((si) => {
+      if (!si) return
+      ajustes = structuredClone(base.ajustes)
+      nuevos = new Map()
+      borrados = new Set()
+      actualizaciones = new Map()
+      compatibilidad = null
+      pintar()
+      avisar('Cambios descartados.')
+    })
   }
 })
 

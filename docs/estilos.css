@@ -92,6 +92,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .boton--principal:hover:not(:disabled) { background: #6cb846; }
 .boton--peligro { color: var(--error); }
+.boton--peligro-lleno {
+  border: 2px solid #1b120b;
+  border-radius: 0;
+  background: #b5452f;
+  color: #fff;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.18);
+}
+.boton--peligro-lleno:hover:not(:disabled) { background: #c8533b; }
 .boton--pequeno { min-height: 30px; padding: 0 10px; font-size: 13px; }
 .enlace-boton { padding: 0; border: 0; background: none; color: var(--queso); text-decoration: underline; cursor: pointer; font-size: inherit; }
 
@@ -184,6 +193,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .dialogo__botones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
 .pasos { margin: 0; padding-left: 20px; color: var(--tenue); display: grid; gap: 4px; }
 .cambios { margin: 0; padding-left: 20px; max-height: 200px; overflow: auto; }
+.dialogo--confirmar { width: min(460px, calc(100vw - 32px)); }
+.dialogo--confirmar p { color: var(--texto); }
 .error { color: var(--error) !important; }
 .progreso__barra { height: 10px; border: 2px solid #000; background: #262a22; }
 .progreso__relleno { width: 0; height: 100%; background: linear-gradient(#b6ff7a 0 30%, #80ff20 30% 72%, #57b80c 72%); transition: width 200ms linear; }
