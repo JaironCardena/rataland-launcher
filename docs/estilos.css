@@ -59,8 +59,53 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .cabecera__logo { height: 34px; width: auto; image-rendering: pixelated; }
 .cabecera__titulo { color: var(--tenue); font-size: 14px; }
-.cabecera__cuenta { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--tenue); }
-.publicar { display: flex; align-items: center; gap: 10px; }
+.publicar { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.cabecera__cuenta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+  padding-left: 18px;
+  border-left: 1px solid var(--linea);
+  font-size: 13.5px;
+  color: var(--tenue);
+}
+
+/* Cuenta conectada: botón con foto y menú desplegable */
+.cuenta-boton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 3px 10px 3px 4px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--texto);
+  cursor: pointer;
+}
+.cuenta-boton:hover, .cuenta-boton[aria-expanded='true'] { border-color: var(--linea); background: rgba(255, 255, 255, 0.05); }
+.cuenta-boton__foto { width: 28px; height: 28px; border-radius: 50%; background: var(--panel-claro); }
+.cuenta-boton__flecha { width: 0; height: 0; margin-top: 3px; border: 4px solid transparent; border-top-color: var(--tenue); }
+.menu-cuenta {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 10;
+  display: grid;
+  gap: 10px;
+  width: 280px;
+  padding: 16px;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: var(--panel-claro);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  color: var(--texto);
+}
+.menu-cuenta p { margin: 0; }
+.menu-cuenta__nota { color: var(--tenue); font-size: 13px; }
+.menu-cuenta__separador { height: 1px; background: var(--linea); }
 .publicar__estado { font-size: 13.5px; color: var(--tenue); }
 .publicar__estado--pendiente { color: var(--queso); }
 
@@ -208,7 +253,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (max-width: 760px) {
   .cabecera { flex-wrap: wrap; padding: 10px 16px; }
   .cabecera__titulo { display: none; }
-  .publicar { width: 100%; justify-content: flex-end; }
+  .publicar { order: 3; width: 100%; justify-content: flex-end; margin-left: 0; }
+  .cabecera__cuenta { margin-left: auto; padding-left: 0; border-left: 0; }
   .cuerpo { grid-template-columns: 1fr; }
   .menu { flex-direction: row; overflow-x: auto; padding: 10px 12px; border-right: 0; border-bottom: 1px solid var(--linea); }
   .menu__opcion { flex: none; gap: 6px; }

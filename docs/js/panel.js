@@ -207,11 +207,81 @@ function cambios () {
 
 /* ---------- Cabecera y menú ---------- */
 
-function pintarCabecera () {
+let menuCuentaAbierto = false
+
+function llaveRecordada () {
+  try { return Boolean(localStorage.getItem(CLAVE_LLAVE)) } catch { return false }
+}
+
+/** Sin conexión: botón para conectar. Conectado: tu foto y nombre, con un menú donde está "Desconectar". */
+function pintarCuenta () {
   const cuenta = $('[data-cuenta]')
-  cuenta.replaceChildren(...(usuario
-    ? [h('span', {}, `Conectado como ${usuario}`), h('button', { class: 'enlace-boton', onclick: desconectar }, 'Desconectar')]
-    : [h('span', {}, 'Solo lectura'), h('button', { class: 'boton boton--pequeno', onclick: () => abrirDialogo('llave') }, 'Conectar con GitHub')]))
+  if (!usuario) {
+    menuCuentaAbierto = false
+    cuenta.replaceChildren(
+      h('span', {}, 'Solo lectura'),
+      h('button', { class: 'boton boton--pequeno', onclick: () => abrirDialogo('llave') }, 'Conectar con GitHub'))
+    return
+  }
+  const boton = h('button', {
+    class: 'cuenta-boton',
+    'aria-haspopup': 'true',
+    'aria-expanded': String(menuCuentaAbierto),
+    'aria-controls': 'menu-cuenta',
+    'aria-label': `Cuenta de GitHub: ${usuario}`,
+    onclick: () => alternarMenuCuenta()
+  },
+  h('img', { class: 'cuenta-boton__foto', src: `https://github.com/${encodeURIComponent(usuario)}.png?size=56`, alt: '' }),
+  h('span', {}, usuario),
+  h('span', { class: 'cuenta-boton__flecha', 'aria-hidden': 'true' }))
+
+  const menu = h('div', { class: 'menu-cuenta', id: 'menu-cuenta', hidden: !menuCuentaAbierto },
+    h('p', {}, 'Conectado con GitHub como ', h('strong', {}, usuario), '.'),
+    h('p', { class: 'menu-cuenta__nota' }, llaveRecordada()
+      ? 'La llave está guardada en este navegador, así que puedes publicar desde aquí.'
+      : 'La llave solo dura mientras esta pestaña esté abierta.'),
+    h('div', { class: 'menu-cuenta__separador' }),
+    h('button', { class: 'boton boton--pequeno boton--peligro', onclick: pedirDesconectar }, 'Desconectar este navegador'))
+  cuenta.replaceChildren(boton, menu)
+}
+
+function alternarMenuCuenta (abrir = !menuCuentaAbierto) {
+  if (menuCuentaAbierto === abrir) return
+  menuCuentaAbierto = abrir
+  pintarCuenta()
+  if (abrir) $('#menu-cuenta button')?.focus()
+}
+
+async function pedirDesconectar () {
+  alternarMenuCuenta(false)
+  const pendientes = base ? cambios().length : 0
+  const si = await confirmar({
+    titulo: '¿Desconectar este navegador?',
+    texto: 'Se borrará la llave de GitHub de este navegador y el panel quedará en solo lectura. ' +
+      'Para volver a publicar tendrás que pegar la llave otra vez, o crear una nueva si no la guardaste.' +
+      (pendientes === 1 ? ' Tu cambio sin publicar no se pierde.' : pendientes > 1 ? ` Tus ${pendientes} cambios sin publicar no se pierden.` : ''),
+    aceptar: 'Desconectar',
+    cancelar: 'Seguir conectado'
+  })
+  if (!si) return
+  desconectar()
+  avisar('Desconectado. El panel está en modo solo lectura.')
+}
+
+// El menú de la cuenta se cierra al pulsar fuera o con Escape.
+// (composedPath, porque el botón se redibuja al pulsarlo y deja de estar dentro de [data-cuenta])
+document.addEventListener('click', (e) => {
+  if (menuCuentaAbierto && !e.composedPath().includes($('[data-cuenta]'))) alternarMenuCuenta(false)
+})
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && menuCuentaAbierto) {
+    alternarMenuCuenta(false)
+    $('.cuenta-boton')?.focus()
+  }
+})
+
+function pintarCabecera () {
+  pintarCuenta()
   const total = base ? cambios().length : 0
   const estado = $('[data-pendientes]')
   estado.textContent = total ? `${total} ${total === 1 ? 'cambio' : 'cambios'} sin publicar` : 'Sin cambios'
