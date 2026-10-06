@@ -163,6 +163,7 @@ button { cursor: pointer; }
 }
 [data-estado-servidor='abierto'] .estado-servidor__luz { background: var(--hierba-luz); box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35), 0 0 12px rgba(134, 207, 85, 0.55); }
 [data-estado-servidor='cerrado'] .estado-servidor__luz { background: var(--error); }
+[data-estado-servidor='encendiendo'] .estado-servidor__luz { background: var(--antorcha); }
 [data-estado-servidor='abierto'] .estado-servidor__texto { color: var(--texto); }
 .estado-servidor__cabezas { display: flex; gap: 4px; margin-left: 4px; }
 .estado-servidor__cabezas img {

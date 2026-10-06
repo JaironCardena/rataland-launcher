@@ -426,6 +426,8 @@ async function consultarServidor (forzar = false) {
   pintar()
   try {
     servidor = { cargando: false, datos: await n.estadoServidor(ip, puerto), error: null, hora: Date.now() }
+    // Mientras arranca, se vuelve a mirar en 30 segundos
+    if (servidor.datos.encendiendo) setTimeout(() => { if (seccion === 'resumen' || seccion === 'servidor') consultarServidor(true) }, 30000)
   } catch (e) {
     servidor = { cargando: false, datos: null, error: e.message, hora: Date.now() }
   }
@@ -459,24 +461,32 @@ function vistaEstado () {
   } else if (d.encendido) {
     titulo = 'Servidor encendido'
     luz = 'luz--encendido'
-    lineas.push(h('p', {}, `${d.jugadores} de ${d.maximo} ${d.maximo === 1 ? 'jugador conectado' : 'jugadores conectados'}. Minecraft ${d.versionMinecraft || d.version}.`))
+    lineas.push(h('p', {}, d.sinDatos
+      ? 'Acaba de encenderse: el número de jugadores aparecerá en unos minutos.'
+      : `${d.jugadores} de ${d.maximo} ${d.maximo === 1 ? 'jugador conectado' : 'jugadores conectados'}. Minecraft ${d.versionMinecraft || d.version}.`))
     if (d.lista.length) {
       lineas.push(h('div', { class: 'cabezas' }, d.lista.map((p) => h('img', { src: `https://mc-heads.net/avatar/${encodeURIComponent(p.uuid || p.nombre)}/26`, alt: p.nombre, title: p.nombre }))))
     }
     if (d.versionMinecraft && d.versionMinecraft !== ajustes.minecraft) {
       lineas.push(h('p', { class: 'aviso-caja aviso-caja--mal' }, `El servidor está en Minecraft ${d.versionMinecraft} y el modpack en ${ajustes.minecraft}. Los jugadores no podrán entrar hasta que coincidan.`))
     }
+  } else if (d.encendiendo) {
+    titulo = 'Encendiéndose…'
+    luz = 'luz--encendiendo'
+    lineas.push(h('p', {}, 'Aternos está arrancando el servidor. En un momento los jugadores podrán entrar.'))
   } else {
     titulo = 'Servidor apagado'
     luz = 'luz--apagado'
     lineas.push(h('p', {}, 'Los jugadores no pueden entrar ahora mismo. ', h('a', { href: PAGINA_ATERNOS, target: '_blank', rel: 'noopener' }, 'Enciéndelo en Aternos'), '.'))
   }
 
+  // El dato puede tener unos minutos (la web que consulta el servidor lo guarda en caché)
+  const viejo = d?.comprobado && Date.now() - d.comprobado > 60000
   return h('div', { class: 'estado' },
     h('h2', { class: 'estado__titulo' }, h('span', { class: `luz ${luz}`, 'aria-hidden': 'true' }), titulo),
     h('p', {}, h('span', { class: 'direccion' }, direccion, copiar)),
     lineas,
-    h('p', {}, actualizar))
+    h('p', { class: 'estado__pie' }, actualizar, viejo ? h('span', { class: 'campo__ayuda' }, `Comprobado ${haceCuanto(new Date(d.comprobado).toISOString())}`) : null))
 }
 
 /* ---------- Resumen ---------- */

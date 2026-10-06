@@ -475,10 +475,11 @@ async function consultarServidor () {
 
   const p = $('.estado-servidor')
   const r = await api.estadoServidor().catch(() => ({ enLinea: false }))
-  p.dataset.estadoServidor = r.enLinea ? 'abierto' : 'cerrado'
+  p.dataset.estadoServidor = r.enLinea ? 'abierto' : r.encendiendo ? 'encendiendo' : 'cerrado'
   p.querySelector('.estado-servidor__texto').textContent = r.enLinea
     ? 'Servidor abierto'
-    : r.apagado ? 'El servidor está apagado' : 'No se pudo conectar con el servidor'
+    : r.encendiendo ? 'El servidor se está encendiendo'
+      : r.apagado ? 'El servidor está apagado' : 'No se pudo conectar con el servidor'
 
   // Cabezas de algunos de los que están dentro, y cuántos son
   const cabezas = p.querySelector('.estado-servidor__cabezas')

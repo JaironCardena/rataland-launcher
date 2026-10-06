@@ -96,6 +96,20 @@ async function direccionDeJuego (ip, puerto = 25565) {
   return { ip, puerto }
 }
 
+// Se presenta como Minecraft 1.21.1: el aviso de Aternos no contesta a quien manda -1.
+const PROTOCOLO = 767
+
+/**
+ * Mientras el servidor no está listo, Aternos contesta con un aviso en su lugar: "● Offline",
+ * "◌ Starting...", "◌ Waiting in queue"... Devuelve 'apagado', 'encendiendo' o null si es el servidor.
+ */
+function avisoDelHost (nombre, protocolo) {
+  const texto = String(nombre || '').replace(/§./g, '')
+  if (protocolo < 0 || /offline|apagado|stopping|saving/i.test(texto)) return 'apagado'
+  if (/[●◌]|starting|loading|preparing|queue|waiting|restarting/i.test(texto)) return 'encendiendo'
+  return null
+}
+
 async function consultarUnaVez (ip, destino, espera) {
   return new Promise((resolve) => {
     const inicio = Date.now()
@@ -115,7 +129,7 @@ async function consultarUnaVez (ip, destino, espera) {
       const p = Buffer.alloc(2)
       p.writeUInt16BE(destino.puerto)
       // Saludo y petición de estado en un solo envío: algunos proxies (Aternos) no contestan si llegan separados.
-      socket.write(Buffer.concat([paquete(0x00, varint(-1), cadena(ip), p, varint(1)), paquete(0x00)]))
+      socket.write(Buffer.concat([paquete(0x00, varint(PROTOCOLO), cadena(ip), p, varint(1)), paquete(0x00)]))
     })
     socket.on('data', (trozo) => {
       datos = Buffer.concat([datos, trozo])
@@ -127,9 +141,8 @@ async function consultarUnaVez (ip, destino, espera) {
         const [, o2] = leerVarint(datos, o1)
         const [largoJson, o3] = leerVarint(datos, o2)
         const json = JSON.parse(datos.subarray(o3, o3 + largoJson).toString('utf8'))
-        // Hosts como Aternos contestan aunque el servidor esté apagado, con protocolo -1 o "Offline".
-        const apagado = json.version?.protocol < 0 || /offline|apagado/i.test(json.version?.name || '')
-        if (apagado) return terminar({ enLinea: false, apagado: true })
+        const aviso = avisoDelHost(json.version?.name, json.version?.protocol)
+        if (aviso) return terminar({ enLinea: false, apagado: aviso === 'apagado', encendiendo: aviso === 'encendiendo' })
         terminar({
           enLinea: true,
           jugadores: json.players?.online ?? 0,
@@ -157,7 +170,7 @@ async function consultarServidor (ip, puerto = 25565, { intentos = 3, espera = 6
   for (let i = 1; i <= intentos; i++) {
     for (const destino of await destinosDe(ip, puerto)) {
       r = await consultarUnaVez(ip, destino, espera).catch((e) => ({ enLinea: false, motivo: e.code || e.message }))
-      if (r.enLinea || r.apagado) return { ...r, puertoReal: destino.puerto }
+      if (r.enLinea || r.apagado || r.encendiendo) return { ...r, puertoReal: destino.puerto }
     }
     if (i < intentos) await new Promise((res) => setTimeout(res, 1500))
   }

@@ -343,6 +343,17 @@ export async function versionesFabric () {
 const sinColores = (texto) => String(texto || '').replace(/§./g, '').trim()
 
 /**
+ * Mientras el servidor no está listo, Aternos contesta con un aviso en su lugar: "● Offline",
+ * "◌ Starting...", "◌ Waiting in queue"... Devuelve 'apagado', 'encendiendo' o null si es el servidor.
+ */
+function avisoDelHost (nombre, protocolo) {
+  const texto = String(nombre || '').replace(/§./g, '')
+  if (protocolo < 0 || /offline|apagado|stopping|saving/i.test(texto)) return 'apagado'
+  if (/[●◌]|starting|loading|preparing|queue|waiting|restarting/i.test(texto)) return 'encendiendo'
+  return null
+}
+
+/**
  * Pregunta a mcapi.us, que sí llega a los servidores de Aternos (mcstatus.io los da siempre por apagados).
  * Sin puerto, mcapi.us usa el registro SRV: en Aternos es el puerto de ahora aunque haya cambiado.
  */
@@ -350,14 +361,20 @@ async function estadoMcapi (ip, puerto) {
   const url = new URL('https://mcapi.us/server/status')
   url.searchParams.set('ip', ip)
   if (puerto && puerto !== 25565) url.searchParams.set('port', puerto)
+  // Sin esto la caché de su web devuelve el mismo resultado durante 5 minutos
+  url.searchParams.set('_', Math.floor(Date.now() / 20000))
   const res = await fetch(url, { cache: 'no-store' })
   if (!res.ok) throw new Error('No se pudo consultar el estado del servidor.')
   const j = await res.json()
   if (j.status !== 'success') throw new Error(j.error || 'No se pudo consultar el estado del servidor.')
   const version = sinColores(j.server?.name)
   const motd = typeof j.motd_json === 'string' ? j.motd_json : j.motd
+  const aviso = j.online ? avisoDelHost(j.server?.name, j.server?.protocol) : 'apagado'
   return {
-    encendido: Boolean(j.online) && (j.server?.protocol ?? 0) >= 0 && !/offline/i.test(version),
+    encendido: !aviso,
+    encendiendo: aviso === 'encendiendo',
+    // mcapi.us guarda cada consulta unos minutos: se muestra de cuándo es el dato
+    comprobado: Number(j.last_updated) * 1000 || null,
     version,
     versionMinecraft: (/\d+\.\d+(?:\.\d+)?/.exec(version) || [])[0] || null,
     jugadores: j.players?.now ?? 0,
@@ -367,11 +384,19 @@ async function estadoMcapi (ip, puerto) {
   }
 }
 
-export async function estadoServidor (ip, puerto) {
-  puerto = Number(puerto) || 25565
+/** Puerto del registro SRV de Minecraft, preguntado al DNS de Google (responde al momento y admite CORS). */
+async function puertoSrv (ip) {
+  const res = await fetch(`https://dns.google/resolve?name=_minecraft._tcp.${encodeURIComponent(ip)}&type=SRV`, { cache: 'no-store' })
+  if (!res.ok) return null
+  const j = await res.json()
+  const registro = (j.Answer || []).find((a) => a.type === 33)
+  return registro ? Number(String(registro.data).trim().split(/\s+/)[2]) || null : null
+}
+
+async function estadoSinAternos (ip, puerto) {
   try {
     const r = await estadoMcapi(ip, puerto)
-    // Con un puerto fijo que ya no vale (Aternos lo cambia al reiniciar), se prueba la dirección sin puerto.
+    // Con un puerto fijo que ya no vale, se prueba la dirección sin puerto.
     if (r.encendido || puerto === 25565) return r
     const sinPuerto = await estadoMcapi(ip, 25565).catch(() => null)
     return sinPuerto?.encendido ? sinPuerto : r
@@ -380,14 +405,35 @@ export async function estadoServidor (ip, puerto) {
   }
 }
 
+/**
+ * Estado del servidor. En Aternos manda el registro SRV, que cambia al momento: apunta al puerto
+ * del servidor solo mientras está encendido, y al 25565 (su aviso de "apagado") cuando no.
+ * Los jugadores salen de mcapi.us, que puede tener unos minutos de retraso.
+ */
+export async function estadoServidor (ip, puerto) {
+  puerto = Number(puerto) || 25565
+  if (!/\.aternos\.me$/i.test(ip)) return estadoSinAternos(ip, puerto)
+  const srv = await puertoSrv(ip).catch(() => null)
+  if (!srv) return estadoSinAternos(ip, puerto)
+  const r = await estadoMcapi(ip, srv).catch(() => null)
+  if (srv !== 25565) {
+    // Encendido. Si mcapi.us aún tiene guardado el "apagado" de antes, no hay número de jugadores.
+    return r?.encendido ? r : { encendido: true, encendiendo: false, sinDatos: true, comprobado: Date.now(), version: '', versionMinecraft: null, jugadores: 0, maximo: 0, lista: [], motd: '' }
+  }
+  // Apagado o arrancando: lo que diga el aviso de Aternos, sin fiarse de un "encendido" guardado.
+  return r && !r.encendido ? r : { encendido: false, encendiendo: false, comprobado: Date.now(), version: '', versionMinecraft: null, jugadores: 0, maximo: 0, lista: [], motd: '' }
+}
+
 async function estadoMcstatus (ip, puerto) {
   const res = await fetch(`https://api.mcstatus.io/v2/status/java/${encodeURIComponent(ip)}:${Number(puerto) || 25565}`)
   if (!res.ok) throw new Error('No se pudo consultar el estado del servidor.')
   const j = await res.json()
   const version = j.version?.name_clean || ''
-  const encendido = Boolean(j.online) && (j.version?.protocol ?? 0) >= 0 && !/offline/i.test(version)
+  const aviso = j.online ? avisoDelHost(j.version?.name, j.version?.protocol) : 'apagado'
   return {
-    encendido,
+    encendido: !aviso,
+    encendiendo: aviso === 'encendiendo',
+    comprobado: j.retrieved_at || null,
     version,
     versionMinecraft: (/\d+\.\d+(?:\.\d+)?/.exec(version) || [])[0] || null,
     jugadores: j.players?.online ?? 0,

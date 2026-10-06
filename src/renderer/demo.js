@@ -44,6 +44,7 @@ if (!window.launcher) {
       await espera(700)
       if (params.has('cerrado')) return { enLinea: false, motivo: 'sin respuesta' }
       if (params.has('apagado')) return { enLinea: false, apagado: true }
+      if (params.has('encendiendo')) return { enLinea: false, encendiendo: true }
       return { enLinea: true, jugadores: 3, maximo: 20, lista: [{ nombre: 'Notch' }, { nombre: 'jeb_' }, { nombre: 'Dinnerbone' }] }
     },
     loginMicrosoft: async () => {

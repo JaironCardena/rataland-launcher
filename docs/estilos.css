@@ -238,6 +238,8 @@ h1, h2, h3 { margin: 0; }
 .luz { flex: none; width: 14px; height: 14px; background: var(--muy-tenue); box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35); }
 .luz--encendido { background: var(--hierba-luz); box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35), 0 0 16px rgba(134, 207, 85, 0.6); }
 .luz--apagado { background: var(--error); }
+.luz--encendiendo { background: var(--queso); }
+.estado__pie { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 .direccion { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px 4px 12px; border: 1px solid var(--linea-fuerte); border-radius: 999px; background: rgba(10, 16, 32, 0.7); color: var(--texto); font-size: 14px; }
 .cabezas { display: flex; flex-wrap: wrap; gap: 6px; }
 .cabezas img { width: 26px; height: 26px; image-rendering: pixelated; border: 2px solid rgba(0, 0, 0, 0.5); }
