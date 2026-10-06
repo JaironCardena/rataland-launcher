@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('launcher', {
   jugar: (opciones) => ipcRenderer.invoke('jugar', opciones),
   ventana: (accion) => ipcRenderer.send('ventana', accion),
   abrirEnlace: (clave) => ipcRenderer.send('abrir-enlace', clave),
+  abrirEpisodio: () => ipcRenderer.send('abrir-episodio'),
   abrirRegistros: () => ipcRenderer.send('abrir-registros'),
   instalarActualizacion: () => ipcRenderer.send('instalar-actualizacion'),
   abrirDescargaLauncher: () => ipcRenderer.send('abrir-descarga-launcher'),
@@ -24,5 +25,7 @@ contextBridge.exposeInMainWorld('launcher', {
   alActualizacionLauncher: escuchar('actualizacion-launcher'),
   alProgreso: escuchar('progreso'),
   alJuego: escuchar('juego'),
-  alPerfil: escuchar('perfil')
+  alPerfil: escuchar('perfil'),
+  alSincronizacion: escuchar('sincronizacion'),
+  alPedirCierre: escuchar('pedir-cierre')
 })

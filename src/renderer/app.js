@@ -6,6 +6,20 @@ const $$ = (s) => document.querySelectorAll(s)
 
 const NOMBRE_LOADER = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge' }
 const NOMBRE_ENLACE = { discord: 'Discord', web: 'Web', youtube: 'YouTube', twitch: 'Twitch', tiktok: 'TikTok', x: 'X', twitter: 'X' }
+const FONDO_ESCENA = { cloacas: 'assets/fondo-cloacas.png', amanecer: 'assets/fondo-amanecer.png' }
+
+const AYUDA = {
+  alJugar: {
+    segundoPlano: 'El launcher se esconde junto al reloj de Windows y vuelve solo cuando cierras Minecraft.',
+    cerrar: 'El launcher se cierra del todo. Minecraft sigue abierto.',
+    abierto: 'El launcher se queda a la vista mientras juegas.'
+  },
+  alCerrar: {
+    preguntar: 'Te pregunta cada vez si lo cierras o lo dejas en segundo plano.',
+    segundoPlano: 'Se esconde junto al reloj de Windows. Para cerrarlo del todo, haz clic derecho en su icono.',
+    cerrar: 'Se cierra del todo.'
+  }
+}
 
 const estado = {
   launcher: null,
@@ -32,9 +46,12 @@ function pintarMarca () {
     logo.addEventListener('load', () => { logo.hidden = false }, { once: true })
     logo.src = apariencia.logo
   }
-  if (apariencia.fondo) {
-    document.documentElement.style.setProperty('--imagen-fondo', `url("${apariencia.fondo}")`)
-  }
+  pintarFondo()
+}
+
+function pintarFondo () {
+  const fondo = FONDO_ESCENA[estado.perfil?.escena] || estado.launcher.apariencia?.fondo
+  if (fondo) document.documentElement.style.setProperty('--imagen-fondo', `url("${fondo}")`)
 }
 
 function pintarCuenta () {
@@ -60,7 +77,13 @@ function pintarCuenta () {
 }
 
 function pintarPerfil () {
-  const { minecraft, loader, noticias } = estado.perfil
+  const { minecraft, loader, noticias, temporada } = estado.perfil
+  const chip = $('.temporada')
+  chip.textContent = temporada || ''
+  chip.hidden = !temporada
+  pintarFondo()
+  pintarEpisodio()
+
   const nombreLoader = NOMBRE_LOADER[loader?.tipo]
   $('[data-version]').textContent = nombreLoader
     ? `Minecraft ${minecraft} con ${nombreLoader}`
@@ -94,7 +117,7 @@ function pintarPerfil () {
     }
     return li
   }))
-  $('.noticias__vacio').hidden = Boolean(noticias?.length)
+  $('.noticias__vacio').hidden = Boolean(noticias?.length || estado.perfil.episodio)
   pintarEvento()
   pintarEnlaces()
 }
@@ -139,14 +162,41 @@ function pintarEvento () {
   relojEvento = setInterval(actualizar, 1000)
 }
 
+/** Último episodio: miniatura de YouTube, título y enlace. */
+function pintarEpisodio () {
+  const ep = estado.perfil?.episodio
+  const tarjeta = $('.episodio')
+  tarjeta.hidden = !ep
+  if (!ep) return
+  const img = tarjeta.querySelector('img')
+  const src = `https://i.ytimg.com/vi/${ep.id}/hqdefault.jpg`
+  if (img.getAttribute('src') !== src) {
+    img.hidden = true
+    img.onload = () => { img.hidden = false }
+    img.src = src
+  }
+  tarjeta.querySelector('.episodio__titulo').textContent = ep.titulo || 'Último episodio'
+  tarjeta.setAttribute('aria-label', `${ep.titulo || 'Último episodio'}: ver en YouTube`)
+}
+
 function pintarEnlaces () {
   const nav = $('.enlaces')
   const enlaces = estado.perfil?.enlaces || {}
-  const claves = Object.keys(enlaces).filter((k) => /^https?:\/\//.test(enlaces[k] || ''))
+  // Discord va el último y destacado: es por donde se une la gente a la serie.
+  const claves = Object.keys(enlaces)
+    .filter((k) => /^https?:\/\//.test(enlaces[k] || ''))
+    .sort((a, b) => (a === 'discord') - (b === 'discord'))
   nav.replaceChildren(...claves.map((clave) => {
     const b = document.createElement('button')
-    b.className = 'enlace'
-    b.textContent = NOMBRE_ENLACE[clave] || clave[0].toUpperCase() + clave.slice(1)
+    const nombre = NOMBRE_ENLACE[clave] || clave[0].toUpperCase() + clave.slice(1)
+    if (clave === 'discord') {
+      b.className = 'boton-discord'
+      b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v13H10l-5 4v-4H3z" /></svg>'
+      b.append('Únete al Discord')
+    } else {
+      b.className = 'enlace'
+      b.textContent = nombre
+    }
     b.addEventListener('click', () => api.abrirEnlace(clave))
     return b
   }))
@@ -159,13 +209,19 @@ function pintarAjustes () {
   ram.value = estado.ajustes.ram
   $('.ajuste__valor').textContent = gb(Number(ram.value))
   $('[data-ayuda-ram]').textContent = `Tu equipo tiene ${gb(total)}. Con muchos mods, entre 4 y 6 GB suele ir bien.`
-  $('#cerrar-al-jugar').checked = estado.ajustes.cerrarAlJugar
+  for (const clave of ['alJugar', 'alCerrar']) {
+    const valor = estado.ajustes[clave]
+    const radio = document.querySelector(`input[name="${clave}"][value="${valor}"]`)
+    if (radio) radio.checked = true
+    $(`[data-ayuda="${clave}"]`).textContent = AYUDA[clave][valor] || ''
+  }
   $('[data-version-launcher]').textContent = `Launcher de ${estado.launcher.nombre}, versión ${estado.launcher.version}`
 }
 
 function actualizarBoton () {
   const boton = $('.jugar')
   boton.disabled = estado.ocupado
+  document.body.classList.toggle('ocupado', estado.ocupado)
   $('.jugar__texto').textContent = estado.jugando ? 'Jugando' : estado.ocupado ? 'Preparando' : 'Jugar'
 }
 
@@ -260,6 +316,35 @@ function avisarRecienActualizado (version) {
   setTimeout(() => { if (aviso.classList.contains('actualizacion--hecha')) aviso.hidden = true }, 15000)
 }
 
+/** Lista corta de nombres: "A, B y C" o "A, B, C y 4 más". */
+function nombres (lista, max = 3) {
+  if (lista.length <= max) return lista.length > 1 ? `${lista.slice(0, -1).join(', ')} y ${lista.at(-1)}` : lista[0]
+  return `${lista.slice(0, max).join(', ')} y ${lista.length - max} más`
+}
+
+/** Tras sincronizar: qué mods se añadieron, actualizaron, repararon o quitaron. */
+function pintarResumen (r) {
+  const p = $('.resumen-mods')
+  const grupos = [
+    [r.actualizados, 'Actualizado', 'Actualizados'],
+    [r.anadidos, 'Añadido', 'Añadidos'],
+    [r.reparados, 'Reparado', 'Reparados'],
+    [r.quitados, 'Quitado', 'Quitados']
+  ].filter(([lista]) => lista?.length)
+
+  if (!grupos.length) {
+    p.textContent = r.total ? `Mods al día: los ${r.total} están bien.` : 'Mods al día.'
+  } else {
+    p.replaceChildren(...grupos.flatMap(([lista, uno, varios], i) => {
+      const b = document.createElement('b')
+      b.textContent = `${lista.length === 1 ? uno : varios}:`
+      return [b, ` ${nombres(lista)}${i < grupos.length - 1 ? '. ' : '.'}`]
+    }))
+  }
+  p.title = grupos.map(([lista, uno, varios]) => `${lista.length === 1 ? uno : varios}: ${lista.join(', ')}`).join('\n')
+  p.hidden = false
+}
+
 function ocultarProgreso () {
   $('.progreso').hidden = true
 }
@@ -290,6 +375,7 @@ async function jugar (reparar = false) {
   cerrarAjustes()
   ocultarError()
   aviso('')
+  $('.resumen-mods').hidden = true
   estado.ocupado = true
   actualizarBoton()
   mostrarProgreso({ texto: reparar ? 'Preparando la reparación' : 'Preparando', actual: 0, total: 0 })
@@ -355,6 +441,28 @@ function cerrarAjustes () {
 
 async function guardarAjustes (cambios) {
   estado.ajustes = await api.guardarAjustes(cambios)
+  pintarAjustes()
+}
+
+/* ---------- Cerrar o dejar en segundo plano ---------- */
+
+const dialogoCierre = $('[data-dialogo="cierre"]')
+
+function pedirCierre () {
+  const eleccion = estado.ajustes?.alCerrar
+  if (eleccion === 'cerrar') return api.ventana('cerrar')
+  if (eleccion === 'segundoPlano') return api.ventana('segundo-plano')
+  if (!dialogoCierre.hidden) return
+  dialogoCierre.querySelector('[data-cierre-jugando]').hidden = !estado.jugando
+  dialogoCierre.querySelector('[data-recordar-cierre]').checked = false
+  dialogoCierre.hidden = false
+  dialogoCierre.querySelector('[data-accion="cierre-segundo-plano"]').focus()
+}
+
+async function elegirCierre (eleccion) {
+  dialogoCierre.hidden = true
+  if (dialogoCierre.querySelector('[data-recordar-cierre]').checked) await guardarAjustes({ alCerrar: eleccion })
+  api.ventana(eleccion === 'cerrar' ? 'cerrar' : 'segundo-plano')
 }
 
 const servidor = { comprobando: false, ultima: 0, siguiente: null }
@@ -366,12 +474,28 @@ async function consultarServidor () {
   clearTimeout(servidor.siguiente)
 
   const p = $('.estado-servidor')
-  const texto = p.querySelector('.estado-servidor__texto')
   const r = await api.estadoServidor().catch(() => ({ enLinea: false }))
   p.dataset.estadoServidor = r.enLinea ? 'abierto' : 'cerrado'
-  texto.textContent = r.enLinea
-    ? `Servidor abierto, ${r.jugadores} de ${r.maximo} ${r.maximo === 1 ? 'jugador' : 'jugadores'}`
-    : 'El servidor está apagado o no responde'
+  p.querySelector('.estado-servidor__texto').textContent = r.enLinea
+    ? 'Servidor abierto'
+    : r.apagado ? 'El servidor está apagado' : 'No se pudo conectar con el servidor'
+
+  // Cabezas de algunos de los que están dentro, y cuántos son
+  const cabezas = p.querySelector('.estado-servidor__cabezas')
+  const lista = r.enLinea ? (r.lista || []).slice(0, 5) : []
+  cabezas.replaceChildren(...lista.map(({ nombre }) => {
+    const img = document.createElement('img')
+    img.alt = ''
+    img.title = nombre
+    img.width = img.height = 22
+    img.src = `https://mc-heads.net/avatar/${encodeURIComponent(nombre)}/44`
+    img.addEventListener('error', () => img.remove(), { once: true })
+    return img
+  }))
+  cabezas.hidden = !lista.length
+  const jugadores = p.querySelector('.estado-servidor__jugadores')
+  jugadores.hidden = !r.enLinea
+  if (r.enLinea) jugadores.textContent = `${r.jugadores} de ${r.maximo} ${r.maximo === 1 ? 'jugador' : 'jugadores'}`
 
   servidor.comprobando = false
   servidor.ultima = Date.now()
@@ -399,7 +523,8 @@ async function buscarActualizaciones () {
 
 document.addEventListener('click', (e) => {
   const ventana = e.target.closest('[data-ventana]')
-  if (ventana) return api.ventana(ventana.dataset.ventana)
+  if (ventana) return ventana.dataset.ventana === 'cerrar' ? pedirCierre() : api.ventana(ventana.dataset.ventana)
+  if (e.target === dialogoCierre) dialogoCierre.hidden = true
 
   const accion = e.target.closest('[data-accion]')?.dataset.accion
   if (accion === 'jugar') jugar(false)
@@ -412,20 +537,30 @@ document.addEventListener('click', (e) => {
   if (accion === 'instalar-actualizacion') api.instalarActualizacion()
   if (accion === 'descargar-launcher') api.abrirDescargaLauncher()
   if (accion === 'seguir-sin-actualizar') api.seguirSinActualizar()
+  if (accion === 'episodio') api.abrirEpisodio()
+  if (accion === 'cierre-segundo-plano') elegirCierre('segundoPlano')
+  if (accion === 'cierre-cerrar') elegirCierre('cerrar')
+  if (accion === 'cancelar-cierre') dialogoCierre.hidden = true
 })
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') cerrarAjustes()
+  if (e.key !== 'Escape') return
+  if (!dialogoCierre.hidden) dialogoCierre.hidden = true
+  else cerrarAjustes()
 })
 
 $('.sin-premium').addEventListener('submit', loginSinPremium)
 $('#ram').addEventListener('input', (e) => { $('.ajuste__valor').textContent = gb(Number(e.target.value)) })
 $('#ram').addEventListener('change', (e) => guardarAjustes({ ram: Number(e.target.value) }))
-$('#cerrar-al-jugar').addEventListener('change', (e) => guardarAjustes({ cerrarAlJugar: e.target.checked }))
+$('.ajustes').addEventListener('change', (e) => {
+  if (e.target.type === 'radio') guardarAjustes({ [e.target.name]: e.target.value })
+})
 $('.cuenta__cabeza').addEventListener('error', (e) => { e.target.removeAttribute('src') })
 
 api.alProgreso(mostrarProgreso)
 api.alActualizacionLauncher(pintarActualizacion)
+api.alSincronizacion(pintarResumen)
+api.alPedirCierre(pedirCierre)
 api.alPerfil((perfil) => {
   estado.perfil = perfil
   pintarPerfil()
@@ -437,7 +572,7 @@ api.alJuego(({ estado: fase, error }) => {
     estado.jugando = true
     ocultarProgreso()
     actualizarBoton()
-    aviso('Minecraft está abierto. El launcher volverá cuando lo cierres.')
+    aviso(estado.ajustes.alJugar === 'abierto' ? 'Minecraft está abierto.' : 'Minecraft está abierto. El launcher volverá cuando lo cierres.')
   } else if (fase === 'cerrado') {
     estado.ocupado = false
     estado.jugando = false

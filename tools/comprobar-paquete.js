@@ -35,12 +35,15 @@ const electron = {
     whenReady: () => Promise.resolve(), isReady: () => true, quit () {}, exit () {}
   },
   BrowserWindow: class {
-    constructor () { this.webContents = { send () {}, setWindowOpenHandler () {}, on () {} } }
-    once () {} loadFile () {} isDestroyed () { return false } show () {} hide () {}
+    constructor () { this.webContents = { send () {}, setWindowOpenHandler () {}, on () {}, isCrashed: () => false } }
+    on () {} once () {} loadFile () {} isDestroyed () { return false } isVisible () { return true } isMinimized () { return false }
+    show () {} hide () {} focus () {} restore () {} minimize () {}
   },
+  Tray: class { on () {} setToolTip () {} setContextMenu () {} destroy () {} },
+  nativeImage: { createFromPath: () => ({ resize: () => ({}) }) },
   ipcMain: { handle: (c, f) => { handlers[c] = f }, on () {} },
   shell: { openExternal () {}, openPath () {} },
-  Menu: { setApplicationMenu () {} },
+  Menu: { setApplicationMenu () {}, buildFromTemplate: (t) => t },
   safeStorage: { isEncryptionAvailable: () => false },
   net: { request () { throw new Error('sin red en la comprobación') } }
 }

@@ -35,6 +35,7 @@ const ICONOS = {
   noticias: ['#######.', '#.....##', '#.###..#', '#......#', '#.####.#', '#......#', '#.###..#', '########'],
   evento: ['########', '.#....#.', '..#..#..', '...##...', '...##...', '..####..', '.######.', '########'],
   enlaces: ['.....##.', '....#..#', '....#..#', '...#.##.', '.##.#...', '#..#....', '#..#....', '.##.....'],
+  temporada: ['########', '#......#', '#....#.#', '#......#', '#..#...#', '#.###.##', '########', '........'],
   launcher: ['..####..', '.#....#.', '#......#', '#.#..#.#', '#......#', '#.####.#', '.#....#.', '..####..']
 }
 
@@ -64,7 +65,8 @@ const SECCIONES = [
   { id: 'shaders', nombre: 'Shaders', categoria: true },
   { grupo: 'Servidor' },
   { id: 'servidor', nombre: 'Servidor y versión' },
-  { grupo: 'En el launcher' },
+  { grupo: 'Lo que ven los jugadores' },
+  { id: 'temporada', nombre: 'Temporada y fondo' },
   { id: 'noticias', nombre: 'Noticias' },
   { id: 'evento', nombre: 'Cuenta atrás' },
   { id: 'enlaces', nombre: 'Enlaces' }
@@ -271,6 +273,10 @@ function cambios () {
   // Lo vacío cuenta como "nada" (p. ej. abrir Cuenta atrás sin rellenarla no es un cambio).
   const normal = (k, v) => {
     if (k === 'evento') return v?.fecha ? v : null
+    if (k === 'episodio') return v?.url ? v : null
+    if (k === 'escena') return v && v !== 'noche' ? v : null
+    if (k === 'frases') return v?.some((t) => t.trim()) ? v.filter((t) => t.trim()) : null
+    if (typeof v === 'string') return v || null
     if (k === 'enlaces') return v && Object.values(v).some(Boolean) ? Object.fromEntries(Object.entries(v).filter(([, url]) => url)) : null
     if (Array.isArray(v)) return v.length ? v : null
     return v ?? null
@@ -278,6 +284,10 @@ function cambios () {
   const igual = (k) => JSON.stringify(normal(k, base.ajustes[k])) === JSON.stringify(normal(k, ajustes[k]))
   if (!igual('minecraft') || !igual('loader')) lista.push(`Cambiar a Minecraft ${ajustes.minecraft} con Fabric ${ajustes.loader?.version}`)
   if (!igual('servidor')) lista.push('Cambiar los datos del servidor')
+  if (!igual('temporada')) lista.push(ajustes.temporada ? `Llamar a la temporada "${ajustes.temporada}"` : 'Quitar el nombre de la temporada')
+  if (!igual('escena')) lista.push(`Cambiar el fondo a ${n.ESCENAS[ajustes.escena] || n.ESCENAS.noche}`)
+  if (!igual('episodio')) lista.push(ajustes.episodio?.url ? 'Cambiar el último episodio' : 'Quitar el último episodio')
+  if (!igual('frases')) lista.push('Cambiar las frases del menú')
   if (!igual('noticias')) lista.push('Cambiar las noticias')
   if (!igual('evento')) lista.push(ajustes.evento?.fecha ? 'Cambiar la cuenta atrás' : 'Quitar la cuenta atrás')
   if (!igual('enlaces')) lista.push('Cambiar los enlaces')
@@ -376,7 +386,7 @@ function pintarMarco () {
 function pintar () {
   pintarMarco()
   if (!base) return
-  const vistas = { resumen: vistaResumen, servidor: vistaServidor, noticias: vistaNoticias, evento: vistaEvento, enlaces: vistaEnlaces }
+  const vistas = { resumen: vistaResumen, servidor: vistaServidor, temporada: vistaTemporada, noticias: vistaNoticias, evento: vistaEvento, enlaces: vistaEnlaces }
   const vista = (vistas[seccion] || (() => vistaCategoria(seccion)))()
   $('[data-contenido]').replaceChildren(vista)
 }
@@ -508,6 +518,8 @@ function vistaResumen () {
       h('section', { class: 'bloque' },
         h('h2', {}, pixel('noticias'), 'Lo que ven los jugadores'),
         h('dl', { class: 'datos' },
+          h('dt', {}, 'Temporada'), h('dd', {}, [ajustes.temporada || 'Sin nombre', `, con el fondo ${n.ESCENAS[ajustes.escena] || n.ESCENAS.noche}`]),
+          h('dt', {}, 'Episodio'), h('dd', {}, ajustes.episodio?.url ? (ajustes.episodio.titulo || 'Sin título') : h('button', { class: 'enlace-boton', onclick: () => irA('temporada') }, 'Añadir el último')),
           h('dt', {}, 'Cuenta atrás'), h('dd', {}, evento || h('button', { class: 'enlace-boton', onclick: () => irA('evento') }, 'Añadir una')),
           h('dt', {}, 'Última noticia'), h('dd', {}, noticia?.titulo || h('button', { class: 'enlace-boton', onclick: () => irA('noticias') }, 'Escribir una')),
           h('dt', {}, 'Enlaces'), h('dd', {}, enlaces.length ? enlaces.join(', ') : h('button', { class: 'enlace-boton', onclick: () => irA('enlaces') }, 'Añadir Discord'))))))
@@ -768,7 +780,8 @@ function vistaServidor () {
       h('div', { class: 'formulario' },
         h('div', { class: 'fila' },
           campo('Dirección del servidor', h('input', { value: s.ip || '', onchange: alCambiar((t) => { s.ip = t.value.trim(); servidor.hora = 0 }) })),
-          campo('Puerto', h('input', { type: 'number', min: 1, max: 65535, value: s.puerto || 25565, onchange: alCambiar((t) => { s.puerto = Number(t.value) || 25565; servidor.hora = 0 }) }))),
+          campo('Puerto', h('input', { type: 'number', min: 1, max: 65535, value: s.puerto || 25565, onchange: (e) => { s.puerto = Number(e.target.value) || 25565; servidor.hora = 0; pintar() } }))),
+        avisoPuertoAternos(s),
         h('label', { class: 'casilla' },
           h('input', { type: 'checkbox', checked: s.entrarDirecto === true, onchange: alCambiar((t) => { s.entrarDirecto = t.checked }) }),
           h('span', {}, 'Entrar al servidor nada más abrir el juego', h('br'), h('span', { class: 'campo__ayuda' }, 'Si está desmarcado, los jugadores ven el menú de RataLand y entran con su botón Jugar.'))))),
@@ -782,6 +795,18 @@ function vistaServidor () {
     h('section', { class: 'bloque' },
       h('h2', {}, pixel('resumen'), 'Comparar mods con el servidor'),
       vistaComparacion()))
+}
+
+/**
+ * Aternos da a cada servidor un puerto "dinámico" (p. ej. 47702) que cambia al reiniciarlo.
+ * La dirección sin puerto (25565) siempre apunta al bueno.
+ */
+function avisoPuertoAternos (s) {
+  if (!/\.aternos\.me$/i.test(s.ip || '') || !s.puerto || Number(s.puerto) === 25565) return null
+  return h('div', { class: 'aviso-caja aviso-caja--mal' },
+    h('strong', {}, 'Este puerto cambiará'),
+    h('p', {}, `Aternos cambia el puerto ${s.puerto} cada vez que se reinicia el servidor, y entonces el launcher lo daría por apagado. La dirección sin puerto siempre funciona.`),
+    h('p', {}, h('button', { class: 'boton boton--pequeno', onclick: () => { s.puerto = 25565; servidor.hora = 0; pintar(); consultarServidor(true) } }, 'Usar la dirección sin puerto')))
 }
 
 async function cargarVersiones () {
@@ -961,6 +986,74 @@ function vistaNoticias () {
           campo('Texto', h('textarea', { oninput: (e) => { noticia.texto = e.target.value; pintarMarco() } }, noticia.texto || '')),
           h('p', {}, h('button', { class: 'boton-quitar', onclick: () => { noticias.splice(i, 1); pintar() } }, 'Quitar esta noticia')))))
       : h('p', { class: 'bloque vacio' }, 'No hay noticias. Escribe la primera para que salga en el launcher.')))
+}
+
+/* ---------- Temporada y fondo ---------- */
+
+function vistaTemporada () {
+  const ep = ajustes.episodio || (ajustes.episodio = { titulo: '', url: '' })
+  const escenaActual = n.ESCENAS[ajustes.escena] ? ajustes.escena : 'noche'
+
+  const escenas = h('div', { class: 'escenas', role: 'radiogroup', 'aria-label': 'Fondo' },
+    Object.entries(n.ESCENAS).map(([clave, nombre]) => h('label', { class: 'escena-opcion' },
+      h('input', {
+        type: 'radio',
+        name: 'escena',
+        value: clave,
+        checked: clave === escenaActual,
+        onchange: () => { ajustes.escena = clave; pintarMarco() }
+      }),
+      h('img', { src: `img/fondo-${clave}.png`, alt: '', width: 640, height: 360 }),
+      h('span', {}, nombre))))
+
+  const previa = h('div', { class: 'episodio-previa' })
+  const error = h('span', { class: 'campo__ayuda error' }, 'No parece un enlace de un vídeo de YouTube.')
+  const actualizarPrevia = () => {
+    const id = n.idYoutube(ep.url || '')
+    error.hidden = !ep.url || Boolean(id)
+    previa.replaceChildren(...(id
+      ? [h('img', { src: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`, alt: '', width: 480, height: 360 }), h('span', {}, ep.titulo || 'Sin título')]
+      : []))
+    previa.hidden = !id
+  }
+  actualizarPrevia()
+
+  const frases = h('textarea', {
+    placeholder: '¡Ahora con más queso!\n¡Squeak!',
+    oninput: (e) => { ajustes.frases = e.target.value.split('\n'); pintarMarco() }
+  }, (ajustes.frases || []).join('\n'))
+
+  return h('section', { class: 'seccion' },
+    encabezado('Temporada y fondo', 'La ambientación de la serie: se ve en el launcher y en los menús del juego.'),
+    h('section', { class: 'bloque' },
+      h('h2', {}, pixel('temporada'), 'Temporada'),
+      h('div', { class: 'formulario' },
+        campo('Nombre de la temporada', h('input', {
+          value: ajustes.temporada || '',
+          maxlength: 40,
+          placeholder: 'Temporada 1',
+          oninput: (e) => { ajustes.temporada = e.target.value; pintarMarco() }
+        }), 'Sale encima del logo en el launcher y abajo a la derecha en el menú del juego. Déjalo vacío para no mostrarlo.'))),
+    h('section', { class: 'bloque' },
+      h('h2', {}, pixel('texturas'), 'Fondo'),
+      h('p', { class: 'campo__ayuda' }, 'Se usa en el launcher, en el menú principal y en el menú de pausa.'),
+      escenas),
+    h('section', { class: 'bloque' },
+      h('h2', {}, pixel('noticias'), 'Último episodio'),
+      h('div', { class: 'formulario' },
+        campo('Título', h('input', { value: ep.titulo || '', placeholder: 'RataLand 1x01: La primera noche', oninput: (e) => { ep.titulo = e.target.value; actualizarPrevia(); pintarMarco() } })),
+        campo('Enlace de YouTube', [h('input', {
+          type: 'url',
+          value: ep.url || '',
+          placeholder: 'https://www.youtube.com/watch?v=…',
+          oninput: (e) => { ep.url = e.target.value.trim(); actualizarPrevia(); pintarMarco() }
+        }), error], 'Sale arriba de las noticias, con la miniatura del vídeo.'),
+        previa,
+        ep.url ? h('p', {}, h('button', { class: 'boton-quitar', onclick: () => { ajustes.episodio = { titulo: '', url: '' }; pintar() } }, 'Quitar el episodio')) : null)),
+    h('section', { class: 'bloque' },
+      h('h2', {}, pixel('resumen'), 'Frases del menú'),
+      h('div', { class: 'formulario' },
+        campo('Una frase por línea', frases, 'Salen en amarillo junto al logo del menú del juego, una distinta cada vez. Mejor cortas. Si lo dejas vacío, se usan las de siempre.'))))
 }
 
 /* ---------- Cuenta atrás ---------- */

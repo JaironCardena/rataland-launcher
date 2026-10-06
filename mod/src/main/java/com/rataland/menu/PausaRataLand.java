@@ -6,53 +6,66 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.StatsScreen;
 import net.minecraft.client.gui.screen.advancement.AdvancementsScreen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.text.Text;
 
 /**
- * Menú de pausa de RataLand: sustituye al de Minecraft (tecla Esc dentro del servidor).
+ * Menú de pausa de RataLand: un panel con marco sobre el mundo desenfocado.
  * "Volver a RataLand" desconecta y lleva al menú principal de la serie.
  */
 public class PausaRataLand extends Screen {
+	private static final int ANCHO = 216;
+	private static final int ANCHO_BOTON = 196;
+
 	private int fotogramas;
+	private int panelX;
+	private int panelY;
+	private int panelAlto;
 
 	public PausaRataLand() {
 		super(Text.translatable("menu.game"));
 	}
 
+	private int escalaLogo() {
+		return this.height >= 300 ? 2 : 1;
+	}
+
 	@Override
 	protected void init() {
-		int x = this.width / 2 - 102;
-		int y = Math.max(this.height / 4 + 8, alturaLogo() + 16);
 		boolean hayDiscord = !RataLand.discord.isEmpty();
+		int alturaLogo = RataLand.LOGO_ALTO * escalaLogo();
+		this.panelAlto = 12 + alturaLogo + 10 + 24 + 4 + 20 + 4 + 20 + 8 + 12 + 8 + 20 + 12;
+		this.panelX = (this.width - ANCHO) / 2;
+		this.panelY = Math.max(4, (this.height - panelAlto) / 2);
+		int x = panelX + (ANCHO - ANCHO_BOTON) / 2;
+		int y = panelY + 12 + alturaLogo + 10;
+		int medio = (ANCHO_BOTON - 4) / 2;
 
-		this.addDrawableChild(ButtonWidget.builder(Text.translatable("menu.returnToGame"), b -> {
+		this.addDrawableChild(new BotonRataLand(x, y, ANCHO_BOTON, 24, Text.translatable("menu.returnToGame"), b -> {
 			this.client.setScreen(null);
 			this.client.mouse.lockCursor();
-		}).dimensions(x, y, 204, 20).build());
-
-		this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.advancements"), b -> {
+		}, BotonRataLand.Estilo.HIERBA, 1.5f));
+		y += 28;
+		this.addDrawableChild(new BotonRataLand(x, y, medio, 20, Text.translatable("gui.advancements"), b -> {
 			if (this.client.player != null) {
 				this.client.setScreen(new AdvancementsScreen(this.client.player.networkHandler.getAdvancementHandler(), this));
 			}
-		}).dimensions(x, y + 24, 98, 20).build());
-		this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.stats"), b -> {
+		}, BotonRataLand.Estilo.PIEDRA));
+		this.addDrawableChild(new BotonRataLand(x + medio + 4, y, medio, 20, Text.translatable("gui.stats"), b -> {
 			if (this.client.player != null) {
 				this.client.setScreen(new StatsScreen(this, this.client.player.getStatHandler()));
 			}
-		}).dimensions(x + 106, y + 24, 98, 20).build());
-
-		this.addDrawableChild(ButtonWidget.builder(Text.translatable("menu.options"),
-						b -> this.client.setScreen(new OptionsScreen(this, this.client.options)))
-				.dimensions(x, y + 48, hayDiscord ? 98 : 204, 20).build());
+		}, BotonRataLand.Estilo.PIEDRA));
+		y += 24;
+		this.addDrawableChild(new BotonRataLand(x, y, hayDiscord ? medio : ANCHO_BOTON, 20, Text.translatable("menu.options"),
+				b -> this.client.setScreen(new OptionsScreen(this, this.client.options)), BotonRataLand.Estilo.PIEDRA));
 		if (hayDiscord) {
-			this.addDrawableChild(ButtonWidget.builder(Text.literal("Discord"), ConfirmLinkScreen.opening(this, RataLand.discord))
-					.dimensions(x + 106, y + 48, 98, 20).build());
+			this.addDrawableChild(new BotonRataLand(x + medio + 4, y, medio, 20, Text.literal("Discord"),
+					ConfirmLinkScreen.opening(this, RataLand.discord), BotonRataLand.Estilo.PIEDRA));
 		}
-
-		this.addDrawableChild(ButtonWidget.builder(Text.literal("Volver a " + RataLand.nombre), b -> volverAlMenu())
-				.dimensions(x, y + 80, 204, 20).build());
+		y += 20 + 8 + 12 + 8;
+		this.addDrawableChild(new BotonRataLand(x, y, ANCHO_BOTON, 20, Text.literal("Volver a " + RataLand.nombre),
+				b -> volverAlMenu(), BotonRataLand.Estilo.PELIGRO));
 	}
 
 	private void volverAlMenu() {
@@ -61,12 +74,13 @@ public class PausaRataLand extends Screen {
 		this.client.setScreen(new MenuRataLand());
 	}
 
-	private int escalaLogo() {
-		return Math.max(1, Math.min((int) (this.width * 0.4f / RataLand.LOGO_ANCHO), (int) (this.height * 0.18f / RataLand.LOGO_ALTO)));
-	}
-
-	private int alturaLogo() {
-		return 16 + RataLand.LOGO_ALTO * escalaLogo();
+	@Override
+	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+		super.renderBackground(context, mouseX, mouseY, delta);
+		// Panel con marco: borde oscuro, fondo noche y un filo de color queso
+		context.fill(panelX - 2, panelY - 2, panelX + ANCHO + 2, panelY + panelAlto + 2, 0xFF1B120B);
+		context.fill(panelX, panelY, panelX + ANCHO, panelY + panelAlto, 0xEB0D1424);
+		context.drawBorder(panelX + 1, panelY + 1, ANCHO - 2, panelAlto - 2, 0x59F6C445);
 	}
 
 	@Override
@@ -75,8 +89,15 @@ public class PausaRataLand extends Screen {
 		int escala = escalaLogo();
 		int w = RataLand.LOGO_ANCHO * escala;
 		int h = RataLand.LOGO_ALTO * escala;
-		context.drawTexture(RataLand.LOGO, (this.width - w) / 2, 16, w, h, 0, 0,
+		context.drawTexture(RataLand.LOGO, panelX + (ANCHO - w) / 2, panelY + 12, w, h, 0, 0,
 				RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO);
+
+		// Dirección del servidor (sin datos en vivo)
+		int lineaY = panelY + 12 + h + 10 + 28 + 24 + 20 + 8;
+		context.fill(panelX + 10, lineaY - 2, panelX + ANCHO - 10, lineaY + 11, 0x0FFFFFFF);
+		context.fill(panelX + 15, lineaY + 2, panelX + 19, lineaY + 6, 0xFF86CF55);
+		String texto = this.client.getCurrentServerEntry() != null ? "Conectado a " + RataLand.ip : RataLand.nombre;
+		context.drawTextWithShadow(this.textRenderer, this.textRenderer.trimToWidth(texto, ANCHO - 34), panelX + 24, lineaY, 0xFFA3B0C8);
 
 		if (RataLand.MODO_CAPTURA && ++fotogramas == 60) {
 			ScreenshotRecorder.saveScreenshot(this.client.runDirectory, "rataland-pausa.png", this.client.getFramebuffer(), t -> {});

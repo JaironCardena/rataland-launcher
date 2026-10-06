@@ -7,7 +7,7 @@
   },
   "servidor": {
     "ip": "Rataland-8RN6.aternos.me",
-    "puerto": 47702,
+    "puerto": 25565,
     "entrarDirecto": false
   },
   "enlaces": {},
@@ -28,5 +28,7 @@
       "titulo": "Bienvenidos a RataLand",
       "texto": "Pulsa Jugar: el launcher descarga todo lo necesario. Dentro del juego, el botón Jugar del menú te lleva directo al servidor. :3"
     }
-  ]
+  ],
+  "temporada": "Temporada 1",
+  "escena": "noche"
 }

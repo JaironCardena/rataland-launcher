@@ -87,6 +87,10 @@ async function consultarUnaVez (ip, puerto, espera) {
           enLinea: true,
           jugadores: json.players?.online ?? 0,
           maximo: json.players?.max ?? 0,
+          // Nombres de algunos jugadores conectados (para mostrar sus cabezas)
+          lista: (json.players?.sample || [])
+            .filter((p) => /^[A-Za-z0-9_]{3,16}$/.test(p.name || ''))
+            .map((p) => ({ nombre: p.name, id: p.id })),
           version: json.version?.name ?? '',
           latencia: Date.now() - inicio
         })
@@ -107,6 +111,11 @@ async function consultarServidor (ip, puerto = 25565, { intentos = 3, espera = 6
     r = await consultarUnaVez(ip, puerto, espera).catch((e) => ({ enLinea: false, motivo: e.code || e.message }))
     if (r.enLinea || r.apagado) return r
     if (i < intentos) await new Promise((res) => setTimeout(res, 1500))
+  }
+  // Hosts como Aternos cambian el puerto "dinámico" al reiniciar; la dirección sin puerto (SRV) es la fija.
+  if (puerto !== 25565) {
+    const fija = await consultarUnaVez(ip, 25565, espera).catch((e) => ({ enLinea: false, motivo: e.code || e.message }))
+    if (fija.enLinea || fija.apagado) return { ...fija, puertoCorrecto: 25565 }
   }
   return r
 }

@@ -357,6 +357,126 @@ function fondo ({ lunaX, lunaY, radio = 20, rataX, semilla = 7 }) {
 }
 
 /* ---------- Pantalla de carga: el juego dibuja la textura en dos mitades ---------- */
+/* ---------- Más escenas: Las Cloacas y Amanecer de queso ---------- */
+
+function cloacas () {
+  const W = 320
+  const H = 180
+  const lz = new Lienzo(W, H)
+  const rnd = aleatorio(31)
+  for (let y = 0; y < H; y++) lz.rect(0, y, W, 1, y < 120 ? '#161c2b' : '#121826')
+  // Ladrillos
+  for (let y = 0; y < 132; y += 6) {
+    for (let x = (y / 6) % 2 ? -6 : 0; x < W; x += 12) lz.rect(x, y, 11, 5, ['#1d2537', '#202a3e', '#1a2233'][Math.floor(rnd() * 3)])
+  }
+  // Arco del túnel con una luz al fondo
+  const cx = 160
+  const arriba = 34
+  const r = 64
+  for (let y = arriba; y < 132; y++) {
+    const dy = Math.max(0, arriba + r - y)
+    const mitad = y < arriba + r ? Math.floor(Math.sqrt(Math.max(0, r * r - dy * dy))) : r
+    lz.rect(cx - mitad - 4, y, mitad * 2 + 8, 1, '#2b3550')
+    lz.rect(cx - mitad, y, mitad * 2, 1, '#05070d')
+  }
+  for (let i = 0; i < 6; i++) lz.circulo(cx, 120, 50 - i * 8, '#0b1020', 0.5)
+  lz.circulo(cx, 112, 10, C.queso, 0.08)
+  lz.circulo(cx, 112, 4, C.queso, 0.25)
+  // Pasarela y canal de agua
+  lz.rect(0, 128, W, 6, '#2c3448')
+  lz.rect(0, 128, W, 1, '#3b4560')
+  lz.rect(0, 134, W, 46, '#0e2a33')
+  for (let i = 0; i < 60; i++) lz.rect(Math.floor(rnd() * W), 136 + Math.floor(rnd() * 42), 2 + Math.floor(rnd() * 6), 1, rnd() > 0.6 ? '#2b6a7a' : '#174552')
+  // Tuberías
+  lz.rect(24, 40, 6, 84, '#355b45'); lz.rect(24, 40, 30, 6, '#355b45'); lz.rect(25, 40, 1, 84, '#4d7f5f')
+  lz.rect(282, 60, 6, 64, '#355b45'); lz.rect(262, 60, 26, 6, '#355b45')
+  for (let i = 0; i < 4; i++) lz.rect(27, 126 + i * 3, 1, 2, '#5aa1b3', 0.7)
+  // Faroles
+  for (const fx of [72, 248]) {
+    lz.circulo(fx, 70, 22, C.queso, 0.06)
+    lz.circulo(fx, 70, 12, C.queso, 0.08)
+    lz.rect(fx - 1, 56, 2, 8, '#0b0f1a'); lz.rect(fx - 3, 64, 6, 8, '#0b0f1a'); lz.rect(fx - 2, 65, 4, 6, '#ffd36b')
+  }
+  // Cajas con queso
+  for (const [x, y] of [[40, 116], [52, 116], [46, 104]]) {
+    lz.rect(x, y, 12, 12, '#6b4a2b'); lz.rect(x, y, 12, 1, '#8a6238'); lz.rect(x + 5, y, 2, 12, '#553a21')
+  }
+  lz.rect(48, 98, 8, 6, C.queso); lz.rect(48, 98, 8, 1, C.quesoLuz); lz.pintar(50, 101, C.agujero); lz.pintar(53, 100, C.agujero)
+  // Ratas con ojos brillantes
+  for (const [x, derecha] of [[232, true], [262, false]]) {
+    const filas = RATA_PEQUENA.map((f) => derecha ? f : [...f].reverse().join(''))
+    lz.sprite(x, 113, filas, { d: '#0a0f1c', g: '#0a0f1c', s: '#0a0f1c', p: '#0a0f1c', k: C.queso })
+  }
+  return lz
+}
+
+function amanecer () {
+  const W = 320
+  const H = 180
+  const lz = new Lienzo(W, H)
+  const rnd = aleatorio(7)
+  const cielo = ['#1e1836', '#2c1e45', '#3f2550', '#5a2d58', '#7a3858', '#9c4a55', '#c0614e', '#de8248', '#ee9f45', '#f6bb4a']
+  cielo.forEach((c, i) => lz.rect(0, i * 12, W, 13, c))
+  lz.rect(0, 120, W, H, '#f6bb4a')
+  for (let i = 0; i < 25; i++) lz.pintar(Math.floor(rnd() * W), Math.floor(rnd() * 40), '#fff3d6', 0.3 + rnd() * 0.5)
+  // Sol de queso saliendo
+  lz.circulo(196, 104, 40, C.quesoLuz, 0.12)
+  lz.circulo(196, 104, 30, C.quesoLuz, 0.15)
+  lz.circulo(196, 104, 24, C.queso)
+  lz.circulo(193, 101, 20, '#ffd76a')
+  for (const [dx, dy, r] of [[-9, -6, 3], [7, -12, 2.4], [8, 4, 4], [-14, 6, 2]]) lz.circulo(196 + dx, 104 + dy, r, C.quesoSombra)
+  const relieve = (min, max, paso, color, cambio) => {
+    let y = min + rnd() * (max - min)
+    for (let x = 0; x < W; x += paso) {
+      y = Math.max(min, Math.min(max, y + (rnd() - 0.5) * cambio))
+      lz.rect(x, Math.round(y), paso, H, color)
+    }
+  }
+  relieve(96, 118, 4, '#6a3355', 12)
+  relieve(112, 130, 4, '#3e2142', 10)
+  // Colina y rata mirando el amanecer
+  const rataX = 150
+  const cima = 112
+  for (let x = 100; x < 210; x += 4) {
+    const d = Math.abs(x + 2 - rataX)
+    lz.rect(x, cima + Math.floor(d * d / 50), 4, H, '#2a1530')
+  }
+  lz.sprite(rataX - 14, cima - 19, RATA_SILUETA, { '#': '#170b1c', q: '#170b1c' })
+  for (const [cx, cy] of COLA) lz.pintar(rataX - 14 + cx, cima - 19 + cy, '#170b1c')
+  let y = 150
+  for (let x = 0; x < W; x += 8) {
+    y = Math.max(144, Math.min(156, y + Math.round((rnd() - 0.5) * 6)))
+    lz.rect(x, y, 8, H - y, '#1e1012')
+    lz.rect(x, y, 8, 3, '#4a5e2a')
+  }
+  return lz
+}
+
+/** La rata que corre por la barra de carga. */
+function rataCarga () {
+  const lz = new Lienzo(16, 10)
+  lz.sprite(1, 1, RATA_PEQUENA, { d: C.contorno, g: C.rata, s: C.rataSombra, p: C.rosa, k: C.negro })
+  return lz
+}
+
+/** Texturas de los botones del juego: tierra (16x16) y franja de hierba (16x6). */
+function botonTierra () {
+  const lz = new Lienzo(16, 16)
+  const rnd = aleatorio(5)
+  lz.rect(0, 0, 16, 16, '#7a5538')
+  for (let i = 0; i < 14; i++) lz.pintar(Math.floor(rnd() * 16), Math.floor(rnd() * 16), ['#8f6a49', '#5f412b', '#6b4a30', '#9b7552'][Math.floor(rnd() * 4)])
+  return lz
+}
+
+function botonHierba () {
+  const lz = new Lienzo(16, 6)
+  lz.rect(0, 0, 16, 3, '#5ea83a')
+  lz.rect(0, 0, 16, 1, '#79c14c')
+  for (const [x, h] of [[0, 2], [2, 1], [5, 3], [7, 1], [10, 2], [13, 3], [15, 1]]) lz.rect(x, 3, 1, h, '#5ea83a')
+  lz.pintar(3, 1, '#4d9030'); lz.pintar(9, 2, '#8ad35a'); lz.pintar(12, 1, '#4d9030')
+  return lz
+}
+
 function texturaCarga (lg) {
   // El logo de carga mide 4:1 y la textura guarda la mitad izquierda arriba y la derecha abajo.
   const ancho = Math.max(lg.ancho, lg.alto * 4)
@@ -387,3 +507,17 @@ for (const escala of [1, 2, 4, 8]) {
   icono().guardar(path.join(RAIZ, 'mod', 'src', 'main', 'resources', 'assets', 'rataland', 'icons', `icono_${32 * escala}.png`), escala)
 }
 icono().guardar(path.join(renderer, 'icono.png'), 8)
+
+// Escenas de fondo (se eligen en el panel): launcher, mod y miniaturas del panel
+const escenas = { cloacas: cloacas(), amanecer: amanecer() }
+for (const [nombre, lz] of Object.entries(escenas)) {
+  lz.guardar(path.join(renderer, `fondo-${nombre}.png`), 4)
+  lz.guardar(path.join(texturas, `fondo_${nombre}.png`), 2)
+  lz.guardar(path.join(RAIZ, 'docs', 'img', `fondo-${nombre}.png`), 2)
+}
+fondo({ lunaX: 182, lunaY: 58, rataX: 168 }).guardar(path.join(RAIZ, 'docs', 'img', 'fondo-noche.png'), 2)
+
+// Barra de carga y botones del juego
+rataCarga().guardar(path.join(texturas, 'rata.png'), 1)
+botonTierra().guardar(path.join(texturas, 'boton_tierra.png'), 1)
+botonHierba().guardar(path.join(texturas, 'boton_hierba.png'), 1)

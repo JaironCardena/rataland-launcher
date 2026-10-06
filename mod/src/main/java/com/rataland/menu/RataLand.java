@@ -1,5 +1,6 @@
 package com.rataland.menu;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.api.ClientModInitializer;
@@ -12,32 +13,51 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Mod de RataLand: pantalla de carga con el logo de la serie y un menú principal
- * que solo deja jugar en el servidor, abrir opciones o salir.
+ * Mod de RataLand: pantalla de carga con el logo de la serie y menús propios
+ * (principal y de pausa) con el paisaje de la temporada.
  *
- * El launcher escribe config/rataland.json con el nombre y la IP del servidor.
+ * El launcher escribe config/rataland.json con el servidor, la escena, la temporada,
+ * las frases del menú y el enlace de Discord.
  */
 public class RataLand implements ClientModInitializer {
 	public static final String MOD_ID = "rataland";
 	public static final Logger LOG = LoggerFactory.getLogger("RataLand");
 
-	public static final Identifier FONDO = Identifier.of(MOD_ID, "textures/gui/fondo.png");
 	public static final int FONDO_ANCHO = 640;
 	public static final int FONDO_ALTO = 360;
 	public static final Identifier LOGO = Identifier.of(MOD_ID, "textures/gui/logo.png");
 	public static final int LOGO_ANCHO = 67;
 	public static final int LOGO_ALTO = 23;
+	public static final Identifier RATA = Identifier.of(MOD_ID, "textures/gui/rata.png");
+	public static final Identifier BOTON_TIERRA = Identifier.of(MOD_ID, "textures/gui/boton_tierra.png");
+	public static final Identifier BOTON_HIERBA = Identifier.of(MOD_ID, "textures/gui/boton_hierba.png");
+
+	/** Escenas de fondo: la que se use la elige el panel del modpack. */
+	public static final Map<String, Identifier> FONDOS = Map.of(
+			"noche", Identifier.of(MOD_ID, "textures/gui/fondo.png"),
+			"cloacas", Identifier.of(MOD_ID, "textures/gui/fondo_cloacas.png"),
+			"amanecer", Identifier.of(MOD_ID, "textures/gui/fondo_amanecer.png"));
 
 	/** Color de fondo de la pantalla de carga (ARGB). */
 	public static final int COLOR_CARGA = 0xFF0F1626;
 
+	private static final List<String> FRASES_POR_DEFECTO = List.of(
+			"¡Ahora con más queso!", "¡Squeak!", "¡Cuidado con las cloacas!", "¡Queso para todos!");
+
 	public static String nombre = "RataLand";
 	public static String ip = "Rataland-8RN6.aternos.me";
-	public static int puerto = 47702;
-	/** Enlace de Discord para el menú de pausa ("" = sin botón). */
+	public static int puerto = 25565;
+	/** Enlace de Discord para los menús ("" = sin botón). */
 	public static String discord = "";
+	public static String escena = "noche";
+	/** Texto como "Temporada 1" ("" = no se muestra). */
+	public static String temporada = "";
+	public static List<String> frases = FRASES_POR_DEFECTO;
 
 	/** Solo para pruebas: con -Drataland.captura=true guarda capturas del menú y la carga y cierra el juego. */
 	public static final boolean MODO_CAPTURA = Boolean.getBoolean("rataland.captura");
@@ -55,9 +75,23 @@ public class RataLand implements ClientModInitializer {
 				String enlace = json.get("discord").getAsString();
 				discord = enlace.startsWith("https://") || enlace.startsWith("http://") ? enlace : "";
 			}
+			if (json.has("escena") && FONDOS.containsKey(json.get("escena").getAsString())) escena = json.get("escena").getAsString();
+			if (json.has("temporada")) temporada = json.get("temporada").getAsString().trim();
+			if (json.has("frases") && json.get("frases").isJsonArray()) {
+				List<String> lista = new ArrayList<>();
+				for (JsonElement e : json.getAsJsonArray("frases")) {
+					String frase = e.getAsString().trim();
+					if (!frase.isEmpty()) lista.add(frase);
+				}
+				if (!lista.isEmpty()) frases = lista;
+			}
 		} catch (Exception e) {
 			LOG.warn("No se pudo leer {}: {}", archivo, e.toString());
 		}
+	}
+
+	public static Identifier fondoActual() {
+		return FONDOS.getOrDefault(escena, FONDOS.get("noche"));
 	}
 
 	public static String direccion() {

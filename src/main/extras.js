@@ -50,12 +50,25 @@ async function prepararPrimerArranque (dirJuego, { nombre, ip, puerto }) {
   }
 }
 
-/** Nombre, IP y Discord para los menús del mod de la serie (config/rataland.json). */
-async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, discord }) {
+const ESCENAS = ['noche', 'cloacas', 'amanecer']
+
+/** Servidor, Discord, fondo, temporada y frases para los menús del mod de la serie (config/rataland.json). */
+async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, discord, escena, temporada, frases }) {
   const ruta = path.join(dirJuego, 'config', 'rataland.json')
   await fsp.mkdir(path.dirname(ruta), { recursive: true })
   const enlaceDiscord = /^https?:\/\//.test(discord || '') ? discord : ''
-  await fsp.writeFile(ruta, JSON.stringify({ nombre, ip, puerto: Number(puerto) || 25565, discord: enlaceDiscord }, null, 2))
+  const config = {
+    nombre,
+    ip,
+    puerto: Number(puerto) || 25565,
+    discord: enlaceDiscord,
+    escena: ESCENAS.includes(escena) ? escena : 'noche',
+    temporada: typeof temporada === 'string' ? temporada.trim() : ''
+  }
+  // Sin frases propias, el mod usa las suyas
+  const lista = (Array.isArray(frases) ? frases : []).filter((f) => typeof f === 'string' && f.trim()).map((f) => f.trim())
+  if (lista.length) config.frases = lista
+  await fsp.writeFile(ruta, JSON.stringify(config, null, 2))
 }
 
 /**

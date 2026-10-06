@@ -39,7 +39,14 @@ public class TexturaDelMod extends ResourceTexture {
 	/** Registra las texturas de RataLand. La de carga sustituye al logo de Mojang Studios. */
 	public static void registrar(TextureManager texturas, Identifier logoCarga) {
 		texturas.registerTexture(logoCarga, new TexturaDelMod(logoCarga, "/assets/rataland/textures/gui/carga.png", true));
-		texturas.registerTexture(RataLand.FONDO, new TexturaDelMod(RataLand.FONDO, "/assets/rataland/textures/gui/fondo.png", false));
-		texturas.registerTexture(RataLand.LOGO, new TexturaDelMod(RataLand.LOGO, "/assets/rataland/textures/gui/logo.png", false));
+		for (Identifier id : RataLand.FONDOS.values()) registrarPropia(texturas, id);
+		for (Identifier id : new Identifier[] {RataLand.LOGO, RataLand.RATA, RataLand.BOTON_TIERRA, RataLand.BOTON_HIERBA}) {
+			registrarPropia(texturas, id);
+		}
+	}
+
+	/** Las texturas propias se llaman como su archivo: rataland:textures/gui/x.png → /assets/rataland/textures/gui/x.png */
+	private static void registrarPropia(TextureManager texturas, Identifier id) {
+		texturas.registerTexture(id, new TexturaDelMod(id, "/assets/" + id.getNamespace() + "/" + id.getPath(), false));
 	}
 }

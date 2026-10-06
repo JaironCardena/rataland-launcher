@@ -77,6 +77,10 @@ async function main () {
     noticias: ajustes.noticias || [],
     enlaces: ajustes.enlaces || {},
     evento,
+    temporada: ajustes.temporada || '',
+    escena: ['noche', 'cloacas', 'amanecer'].includes(ajustes.escena) ? ajustes.escena : 'noche',
+    episodio: ajustes.episodio?.url ? ajustes.episodio : null,
+    frases: (ajustes.frases || []).filter((t) => t.trim()),
     packsActivos: (ajustes.packsActivos || []).filter((r) => rutas.has(r)),
     archivos
   }

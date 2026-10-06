@@ -128,6 +128,24 @@ export async function cargarModpack (gh) {
  * Genera manifest.json igual que tools/publicar.js.
  * `archivos`: los archivos del repositorio que quedarán tras publicar ({ ruta, git, tamano, sha1? }).
  */
+export const ESCENAS = {
+  noche: 'Noche de queso',
+  cloacas: 'Las Cloacas',
+  amanecer: 'Amanecer de queso'
+}
+
+/** Id del vídeo de un enlace de YouTube (watch, youtu.be, shorts o live), o null si no lo es. */
+export function idYoutube (url) {
+  try {
+    const u = new URL(url)
+    if (u.protocol !== 'https:') return null
+    let id = null
+    if (/(^|\.)youtu\.be$/.test(u.hostname)) id = u.pathname.slice(1).split('/')[0]
+    else if (/(^|\.)youtube\.com$/.test(u.hostname)) id = u.searchParams.get('v') || u.pathname.match(/^\/(shorts|live|embed)\/([^/]+)/)?.[2]
+    return /^[A-Za-z0-9_-]{6,20}$/.test(id || '') ? id : null
+  } catch { return null }
+}
+
 export async function generarManifiesto ({ gh, ajustes, archivos, manifiestoPrevio, alProgreso }) {
   if (!/^https?:\/\/.+\/$/.test(ajustes.urlBase || '')) throw new Error('Falta "urlBase" en modpack.json.')
   const previo = new Map((manifiestoPrevio?.archivos || []).map((a) => [a.ruta, a]))
@@ -162,6 +180,8 @@ export async function generarManifiesto ({ gh, ajustes, archivos, manifiestoPrev
 
   const evento = ajustes.evento?.fecha ? ajustes.evento : null
   if (evento && Number.isNaN(new Date(evento.fecha).getTime())) throw new Error('La fecha de la cuenta atrás no es válida.')
+  const episodio = ajustes.episodio?.url ? ajustes.episodio : null
+  if (episodio && !idYoutube(episodio.url)) throw new Error('El enlace del episodio no es de un vídeo de YouTube.')
 
   return {
     generado: new Date().toISOString(),
@@ -172,6 +192,10 @@ export async function generarManifiesto ({ gh, ajustes, archivos, manifiestoPrev
     noticias: ajustes.noticias || [],
     enlaces: ajustes.enlaces || {},
     evento,
+    temporada: ajustes.temporada || '',
+    escena: ESCENAS[ajustes.escena] ? ajustes.escena : 'noche',
+    episodio,
+    frases: (ajustes.frases || []).filter((t) => t.trim()),
     packsActivos: (ajustes.packsActivos || []).filter((r) => rutas.has(r)),
     archivos: lista
   }

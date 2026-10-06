@@ -64,6 +64,25 @@ async function obtenerManifiesto (config, dirDatos) {
 }
 
 /** Mezcla la configuración del launcher con lo que diga el manifiesto remoto (el remoto manda). */
+/** Saca el id del vídeo de un enlace de YouTube (watch, youtu.be, shorts o live). */
+function idYoutube (url) {
+  try {
+    const u = new URL(url)
+    if (u.protocol !== 'https:') return null
+    let id = null
+    if (/(^|\.)youtu\.be$/.test(u.hostname)) id = u.pathname.slice(1).split('/')[0]
+    else if (/(^|\.)youtube\.com$/.test(u.hostname)) id = u.searchParams.get('v') || u.pathname.match(/^\/(shorts|live|embed)\/([^/]+)/)?.[2]
+    return /^[A-Za-z0-9_-]{6,20}$/.test(id || '') ? id : null
+  } catch { return null }
+}
+
+function episodioValido (ep) {
+  if (!ep || typeof ep.url !== 'string') return null
+  const id = idYoutube(ep.url)
+  if (!id) return null
+  return { titulo: typeof ep.titulo === 'string' ? ep.titulo : '', url: ep.url, id }
+}
+
 function combinarPerfil (config, manifiesto) {
   return {
     minecraft: manifiesto.minecraft || config.minecraft,
@@ -72,7 +91,12 @@ function combinarPerfil (config, manifiesto) {
     noticias: Array.isArray(manifiesto.noticias) ? manifiesto.noticias : [],
     // Un enlace vacío en el modpack no borra el de la configuración del launcher.
     enlaces: { ...config.enlaces, ...Object.fromEntries(Object.entries(manifiesto.enlaces || {}).filter(([, url]) => url)) },
-    evento: manifiesto.evento?.fecha ? manifiesto.evento : null
+    evento: manifiesto.evento?.fecha ? manifiesto.evento : null,
+    // Ambientación de la temporada: fondo del launcher y del juego, nombre, episodio y frases del menú
+    temporada: typeof manifiesto.temporada === 'string' ? manifiesto.temporada : '',
+    escena: ['noche', 'cloacas', 'amanecer'].includes(manifiesto.escena) ? manifiesto.escena : 'noche',
+    episodio: episodioValido(manifiesto.episodio),
+    frases: Array.isArray(manifiesto.frases) ? manifiesto.frases.filter((f) => typeof f === 'string' && f.trim()) : []
   }
 }
 

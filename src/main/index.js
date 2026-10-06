@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Menu } = require('electron')
+const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage } = require('electron')
 const path = require('path')
 const os = require('os')
 const fs = require('fs')
@@ -32,10 +32,59 @@ let perfil = combinarPerfil(config, {})
 let ventana = null
 let jugando = false
 let actualizador = null
+let bandeja = null
+let saliendo = false
+
+const AL_JUGAR = ['segundoPlano', 'cerrar', 'abierto']
+const AL_CERRAR = ['preguntar', 'cerrar', 'segundoPlano']
 
 function ajustesPorDefecto () {
   const ram = Math.max(2048, Math.min(config.ramPredeterminada || 4096, ramTotalMB - 2048))
-  return { ram, cerrarAlJugar: false }
+  return { ram, alJugar: 'segundoPlano', alCerrar: 'preguntar' }
+}
+
+/** Ajustes guardados, pasando el antiguo "cerrarAlJugar" a la opción nueva. */
+function leerAjustes (guardados) {
+  const a = { ...ajustesPorDefecto(), ...guardados }
+  if (guardados.cerrarAlJugar === true && !guardados.alJugar) a.alJugar = 'cerrar'
+  delete a.cerrarAlJugar
+  if (!AL_JUGAR.includes(a.alJugar)) a.alJugar = 'segundoPlano'
+  if (!AL_CERRAR.includes(a.alCerrar)) a.alCerrar = 'preguntar'
+  return a
+}
+
+/* ---------- Segundo plano: la ventana se oculta y queda un icono junto al reloj ---------- */
+
+function pasarASegundoPlano () {
+  ventana?.hide()
+  if (!bandeja) {
+    const icono = nativeImage.createFromPath(path.join(__dirname, '..', 'renderer', 'assets', 'icono.png')).resize({ width: 16, height: 16 })
+    bandeja = new Tray(icono)
+    bandeja.on('click', mostrarVentana)
+  }
+  bandeja.setToolTip(jugando ? `${config.nombre}: Minecraft está abierto` : `${config.nombre} sigue abierto en segundo plano`)
+  bandeja.setContextMenu(Menu.buildFromTemplate([
+    { label: `Abrir ${config.nombre}`, click: mostrarVentana },
+    { type: 'separator' },
+    { label: `Cerrar ${config.nombre}`, click: cerrarDelTodo }
+  ]))
+}
+
+function mostrarVentana () {
+  if (!ventana || ventana.isDestroyed()) return
+  if (ventana.isMinimized()) ventana.restore()
+  ventana.show()
+  ventana.focus()
+  bandeja?.destroy()
+  bandeja = null
+}
+
+/** Cierra el launcher de verdad (si Minecraft está abierto, sigue abierto). */
+function cerrarDelTodo () {
+  saliendo = true
+  bandeja?.destroy()
+  bandeja = null
+  app.quit()
 }
 
 function enviar (canal, datos) {
@@ -47,6 +96,17 @@ const ERRORES_ARCHIVOS = {
   CorruptedVersionJar: 'El archivo principal del juego está dañado.',
   MissingVersionJson: 'Falta la instalación de esta versión.',
   BadVersionJson: 'La instalación de esta versión está dañada.'
+}
+
+/**
+ * Servidor del modpack. Si el puerto configurado no contesta pero la dirección sin puerto sí
+ * (el puerto dinámico de Aternos cambia al reiniciar), se usa la que funciona.
+ */
+let puertoAprendido = null
+function servidorActual () {
+  const s = { ...perfil.servidor }
+  if (puertoAprendido && puertoAprendido.ip === s.ip && puertoAprendido.de === Number(s.puerto)) s.puerto = puertoAprendido.puerto
+  return s
 }
 
 function mensajeError (e) {
@@ -70,9 +130,18 @@ async function jugar (reparar) {
     enviar('perfil', perfil)
 
     let instalacion = await prepararJuego(perfil, raiz, { reportar, reparar })
-    await sincronizar(manifiesto, raiz, { reportar, reparar })
-    await prepararPrimerArranque(raiz, { nombre: config.nombre, ...perfil.servidor })
-    await escribirConfigMenu(raiz, { nombre: config.nombre, ...perfil.servidor, discord: perfil.enlaces?.discord })
+    const resumen = await sincronizar(manifiesto, raiz, { reportar, reparar })
+    enviar('sincronizacion', resumen)
+    const servidor = servidorActual()
+    await prepararPrimerArranque(raiz, { nombre: config.nombre, ...servidor })
+    await escribirConfigMenu(raiz, {
+      nombre: config.nombre,
+      ...servidor,
+      discord: perfil.enlaces?.discord,
+      escena: perfil.escena,
+      temporada: perfil.temporada,
+      frases: perfil.frases
+    })
     await activarPacks(raiz, manifiesto.packsActivos)
 
     const lanzar = () => {
@@ -82,17 +151,17 @@ async function jugar (reparar) {
         instalacion,
         sesion,
         ramMB: ajustes.ram,
-        servidor: perfil.servidor,
+        servidor,
         launcher: { nombre: config.nombre, version: app.getVersion() }
       }, {
         listo: () => {
           enviar('juego', { estado: 'abierto' })
-          if (ajustes.cerrarAlJugar) app.quit()
-          else ventana?.hide()
+          if (ajustes.alJugar === 'cerrar') cerrarDelTodo()
+          else if (ajustes.alJugar === 'segundoPlano') pasarASegundoPlano()
         },
         salida: ({ error }) => {
           jugando = false
-          if (ventana && !ventana.isDestroyed()) ventana.show()
+          if (ventana && !ventana.isDestroyed() && !ventana.isVisible()) mostrarVentana()
           enviar('juego', { estado: 'cerrado', error })
         }
       })
@@ -144,6 +213,10 @@ function registrarIpc () {
     const { ip, puerto } = perfil.servidor || {}
     if (!ip) return { enLinea: false }
     const r = await consultarServidor(ip, Number(puerto) || 25565)
+    if (r.puertoCorrecto) {
+      puertoAprendido = { ip, de: Number(puerto), puerto: r.puertoCorrecto }
+      fs.appendFile(path.join(dirDatos, 'servidor.log'), `${new Date().toISOString()} ${ip}:${puerto} no contesta; se usa ${ip} sin puerto\n`, () => {})
+    }
     if (!r.enLinea) {
       // Registro para poder ver por qué el launcher creyó que el servidor estaba apagado.
       const linea = `${new Date().toISOString()} ${ip}:${puerto} ${r.apagado ? 'apagado según el host' : r.motivo}\n`
@@ -161,7 +234,8 @@ function registrarIpc () {
   ipcMain.handle('guardar-ajustes', async (_e, nuevos) => {
     const ram = Math.round(Number(nuevos?.ram))
     if (Number.isFinite(ram)) ajustes.ram = Math.max(1024, Math.min(ram, ramTotalMB))
-    if (typeof nuevos?.cerrarAlJugar === 'boolean') ajustes.cerrarAlJugar = nuevos.cerrarAlJugar
+    if (AL_JUGAR.includes(nuevos?.alJugar)) ajustes.alJugar = nuevos.alJugar
+    if (AL_CERRAR.includes(nuevos?.alCerrar)) ajustes.alCerrar = nuevos.alCerrar
     await escribirJson(rutaAjustes, ajustes)
     return ajustes
   })
@@ -170,7 +244,12 @@ function registrarIpc () {
 
   ipcMain.on('ventana', (_e, accion) => {
     if (accion === 'minimizar') ventana?.minimize()
-    if (accion === 'cerrar') ventana?.close()
+    if (accion === 'cerrar') cerrarDelTodo()
+    if (accion === 'segundo-plano') pasarASegundoPlano()
+  })
+  ipcMain.on('abrir-episodio', () => {
+    const url = perfil.episodio?.url
+    if (perfil.episodio?.id) shell.openExternal(url)
   })
   ipcMain.on('abrir-enlace', (_e, clave) => {
     const url = perfil.enlaces?.[clave]
@@ -209,6 +288,13 @@ function crearVentana () {
     })
   }
   ventana.once('ready-to-show', () => ventana.show())
+  // La X de la ventana (o Alt+F4) no cierra sin más: la interfaz pregunta o hace lo elegido en Ajustes.
+  ventana.on('close', (e) => {
+    // Si la interfaz se colgó, nadie contestaría: se deja cerrar.
+    if (saliendo || ventana.webContents.isCrashed()) return
+    e.preventDefault()
+    enviar('pedir-cierre')
+  })
   ventana.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'))
 }
 
@@ -221,16 +307,12 @@ async function prepararCarpeta () {
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
-  app.on('second-instance', () => {
-    if (!ventana) return
-    if (ventana.isMinimized()) ventana.restore()
-    ventana.show()
-    ventana.focus()
-  })
+  app.on('second-instance', mostrarVentana)
+  app.on('before-quit', () => { saliendo = true })
 
   app.whenReady().then(async () => {
     await prepararCarpeta()
-    ajustes = { ...ajustesPorDefecto(), ...await leerJson(rutaAjustes, {}) }
+    ajustes = leerAjustes(await leerJson(rutaAjustes, {}))
     Menu.setApplicationMenu(null)
     actualizador = crearActualizador({ enviar, dirDatos, estaJugando: () => jugando, paginaDescarga: config.paginaDescarga })
     registrarIpc()
