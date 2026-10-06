@@ -2,40 +2,123 @@
   "fondo.pesca": {
     "sounds": [
       {
-        "name": "rataland:fondo/pesca",
-        "stream": true
+        "name": "rataland:fondo/pesca"
       }
     ]
   },
   "fondo.noche": {
     "sounds": [
       {
-        "name": "rataland:fondo/noche",
-        "stream": true
+        "name": "rataland:fondo/noche"
       }
     ]
   },
   "fondo.cloacas": {
     "sounds": [
       {
-        "name": "rataland:fondo/cloacas",
-        "stream": true
+        "name": "rataland:fondo/cloacas"
       }
     ]
   },
   "fondo.amanecer": {
     "sounds": [
       {
-        "name": "rataland:fondo/amanecer",
-        "stream": true
+        "name": "rataland:fondo/amanecer"
+      }
+    ]
+  },
+  "fondo.grillo": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/grillo-1"
+      },
+      {
+        "name": "rataland:fondo/grillo-2"
+      },
+      {
+        "name": "rataland:fondo/grillo-3"
+      }
+    ]
+  },
+  "fondo.chapoteo": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/chapoteo-1"
+      },
+      {
+        "name": "rataland:fondo/chapoteo-2"
+      }
+    ]
+  },
+  "fondo.hojas": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/hojas-1"
+      },
+      {
+        "name": "rataland:fondo/hojas-2"
+      }
+    ]
+  },
+  "fondo.buho": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/buho-1"
+      },
+      {
+        "name": "rataland:fondo/buho-2"
+      }
+    ]
+  },
+  "fondo.gota": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/gota-1"
+      },
+      {
+        "name": "rataland:fondo/gota-2"
+      },
+      {
+        "name": "rataland:fondo/gota-3"
+      },
+      {
+        "name": "rataland:fondo/gota-4"
+      },
+      {
+        "name": "rataland:fondo/gota-5"
+      }
+    ]
+  },
+  "fondo.rata": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/rata-1"
+      },
+      {
+        "name": "rataland:fondo/rata-2"
+      }
+    ]
+  },
+  "fondo.pajaro": {
+    "sounds": [
+      {
+        "name": "rataland:fondo/pajaro-1"
+      },
+      {
+        "name": "rataland:fondo/pajaro-2"
+      },
+      {
+        "name": "rataland:fondo/pajaro-3"
+      },
+      {
+        "name": "rataland:fondo/pajaro-4"
       }
     ]
   },
   "fondo.plop": {
     "sounds": [
       {
-        "name": "rataland:fondo/plop",
-        "stream": false
+        "name": "rataland:fondo/plop"
       }
     ]
   }

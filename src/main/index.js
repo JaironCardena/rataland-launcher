@@ -162,6 +162,7 @@ async function jugar (reparar) {
       destino: servidor?.ip ? `${servidor.ip}:${servidor.puerto}` : '',
       discord: perfil.enlaces?.discord,
       escena: perfil.escena,
+      sonido: perfil.sonidoFondo,
       temporada: perfil.temporada,
       frases: perfil.frases,
       evento: perfil.evento,
@@ -290,6 +291,12 @@ function registrarIpc () {
   })
 
   ipcMain.handle('jugar', (_e, opciones) => jugar(Boolean(opciones?.reparar)))
+
+  // Sonidos ambiente de los fondos (la ventana no puede leer archivos por su cuenta)
+  ipcMain.handle('leer-sonido', (_e, nombre) => {
+    if (typeof nombre !== 'string' || !/^[a-z0-9-]+$/.test(nombre)) throw new Error('Nombre de sonido no válido.')
+    return fs.promises.readFile(path.join(__dirname, '..', 'renderer', 'assets', 'sonidos', `${nombre}.ogg`))
+  })
 
   ipcMain.on('ventana', (_e, accion) => {
     if (accion === 'minimizar') ventana?.minimize()

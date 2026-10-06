@@ -79,6 +79,7 @@ async function main () {
     evento,
     temporada: ajustes.temporada || '',
     escena: ['noche', 'cloacas', 'amanecer', 'pesca'].includes(ajustes.escena) ? ajustes.escena : 'noche',
+    sonidoFondo: ajustes.sonidoFondo !== false,
     episodio: ajustes.episodio?.url ? ajustes.episodio : null,
     frases: (ajustes.frases || []).filter((t) => t.trim()),
     packsActivos: (ajustes.packsActivos || []).filter((r) => rutas.has(r)),

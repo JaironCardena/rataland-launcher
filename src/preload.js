@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('launcher', {
   quitarSkin: () => ipcRenderer.invoke('quitar-skin'),
   guardarAjustes: (ajustes) => ipcRenderer.invoke('guardar-ajustes', ajustes),
   jugar: (opciones) => ipcRenderer.invoke('jugar', opciones),
+  leerSonido: (nombre) => ipcRenderer.invoke('leer-sonido', nombre),
   ventana: (accion) => ipcRenderer.send('ventana', accion),
   abrirEnlace: (clave) => ipcRenderer.send('abrir-enlace', clave),
   abrirEpisodio: () => ipcRenderer.send('abrir-episodio'),

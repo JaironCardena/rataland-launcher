@@ -135,6 +135,8 @@ function combinarPerfil (config, manifiesto) {
     // Ambientación de la temporada: fondo del launcher y del juego, nombre, episodio y frases del menú
     temporada: typeof manifiesto.temporada === 'string' ? manifiesto.temporada : '',
     escena: ['noche', 'cloacas', 'amanecer', 'pesca'].includes(manifiesto.escena) ? manifiesto.escena : 'noche',
+    // Sonido ambiente del fondo (en el launcher y en los menús del juego); el panel puede quitarlo
+    sonidoFondo: manifiesto.sonidoFondo !== false,
     episodio: episodioValido(manifiesto.episodio),
     frases: Array.isArray(manifiesto.frases) ? manifiesto.frases.filter((f) => typeof f === 'string' && f.trim()) : []
   }

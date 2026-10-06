@@ -53,7 +53,7 @@ async function prepararPrimerArranque (dirJuego, { nombre, ip, puerto }) {
 const ESCENAS = ['noche', 'cloacas', 'amanecer', 'pesca']
 
 /** Servidor, Discord, fondo, temporada y frases para los menús del mod de la serie (config/rataland.json). */
-async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, discord, escena, temporada, frases, evento, skinModelo }) {
+async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, discord, escena, sonido, temporada, frases, evento, skinModelo }) {
   const ruta = path.join(dirJuego, 'config', 'rataland.json')
   await fsp.mkdir(path.dirname(ruta), { recursive: true })
   const enlaceDiscord = /^https?:\/\//.test(discord || '') ? discord : ''
@@ -65,6 +65,7 @@ async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, disc
     destino: typeof destino === 'string' ? destino : '',
     discord: enlaceDiscord,
     escena: ESCENAS.includes(escena) ? escena : 'noche',
+    sonido: sonido !== false,
     temporada: typeof temporada === 'string' ? temporada.trim() : ''
   }
   config.skinModelo = skinModelo === 'slim' ? 'slim' : 'classic'
@@ -118,9 +119,14 @@ async function prepararNeoForge (dirJuego) {
   let texto = ''
   try { texto = await fsp.readFile(ruta, 'utf8') } catch { /* aún no existe: NeoForge completa el resto */ }
   const linea = 'earlyWindowControl = false'
-  const nuevo = /^\s*earlyWindowControl\s*=.*$/m.test(texto)
-    ? texto.replace(/^\s*earlyWindowControl\s*=.*$/m, linea)
-    : `${linea}\n${texto}`
+  // NeoForge lo guarda con saltos de línea de Windows: se trabaja línea a línea y se respetan.
+  // (Un \r suelto, como el que dejaba la versión 1.0.17 del launcher, se vuelve un salto de línea normal.)
+  const salto = texto.includes('\r\n') ? '\r\n' : '\n'
+  const lineas = texto.replace(/\r(?!\n)/g, '\n').split(/\r?\n/)
+  const i = lineas.findIndex((l) => /^\s*earlyWindowControl\s*=/.test(l))
+  if (i >= 0) lineas[i] = linea
+  else lineas.unshift(linea)
+  const nuevo = lineas.join(salto)
   if (nuevo === texto) return
   await fsp.mkdir(path.dirname(ruta), { recursive: true })
   await fsp.writeFile(ruta, nuevo)

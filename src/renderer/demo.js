@@ -99,6 +99,8 @@ if (!window.launcher) {
     },
     quitarSkin: async () => { await espera(500); return { ok: true, imagen: null, modelo: 'classic' } },
     guardarAjustes: async (a) => (ajustes = { ...ajustes, ...a }),
+    // En el navegador no hay sonidos (la página no puede leer archivos)
+    leerSonido: async () => { throw new Error('sin sonido en la demo') },
     jugar: async () => {
       if (params.has('error')) {
         await espera(900)

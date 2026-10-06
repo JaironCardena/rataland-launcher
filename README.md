@@ -146,7 +146,7 @@ También genera los datos de los fondos animados (qué se mueve, dónde y a qué
 node tools/comprobar-fondos.js --guardar
 ```
 
-Los sonidos ambiente de los fondos (grillos, agua, gotas, pájaros…) no son grabaciones: los sintetiza `tools/sonidos.js`.
+Los sonidos ambiente de los fondos no son grabaciones: los sintetiza `tools/sonidos.js`. Cada fondo tiene una base de 60 s (agua, viento, corriente) que se repite en bucle exacto y sonidos sueltos (grillos, gotas, pájaros, búho, ratas…) que suenan a ratos al azar con volumen y tono variables. Qué suena en cada fondo y cada cuánto está al principio de ese archivo. En el panel se pueden escuchar y quitar para todos.
 
 ```bash
 node tools/sonidos.js
