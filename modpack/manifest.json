@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T17:01:29.795Z",
+  "generado": "2026-10-06T17:02:03.253Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -179,19 +179,6 @@
         "numero": "0.2.9+mc1.21.1-fabric",
         "nombre": "ObsidianUI",
         "icono": "https://cdn.modrinth.com/data/E0L8mfJZ/ef2aaf4efa20d0cf33213e418c42e5a025720c8e.png"
-      }
-    },
-    {
-      "ruta": "mods/sodiumoptionsapi-fabric-1.0.10-1.21.1.jar",
-      "url": "https://cdn.modrinth.com/data/Es5v4eyq/versions/RR1lyQmh/sodiumoptionsapi-fabric-1.0.10-1.21.1.jar",
-      "sha1": "ca8c29ad2481ab5fe81095181541d183fa7faf19",
-      "tamano": 903592,
-      "modrinth": {
-        "proyecto": "Es5v4eyq",
-        "version": "RR1lyQmh",
-        "numero": "fabric-1.21.1-1.0.10",
-        "nombre": "Sodium Options API",
-        "icono": "https://cdn.modrinth.com/data/Es5v4eyq/7bff17babb498584c0edd74211d97435b651c11f_96.webp"
       }
     }
   ]
