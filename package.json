@@ -1,7 +1,7 @@
 {
   "name": "rataland-launcher",
   "productName": "RataLand",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Launcher de Minecraft de la serie RataLand",
   "main": "src/main/index.js",
   "private": true,

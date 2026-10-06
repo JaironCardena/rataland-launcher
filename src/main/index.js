@@ -153,6 +153,8 @@ async function jugar (reparar) {
       ? { ...perfil.servidor, ...await direccionDeJuego(perfil.servidor.ip, Number(perfil.servidor.puerto) || 25565) }
       : perfil.servidor
     await prepararPrimerArranque(raiz, { nombre: config.nombre, ...perfil.servidor })
+    // Tu skin, para el personaje del menú del juego (premium o la que pondrá SkinRestorer)
+    const skinJuego = await skins.actual().catch(() => null)
     await escribirConfigMenu(raiz, {
       nombre: config.nombre,
       ...perfil.servidor,
@@ -160,8 +162,13 @@ async function jugar (reparar) {
       discord: perfil.enlaces?.discord,
       escena: perfil.escena,
       temporada: perfil.temporada,
-      frases: perfil.frases
+      frases: perfil.frases,
+      evento: perfil.evento,
+      skinModelo: skinJuego?.modelo
     })
+    const pngPersonaje = path.join(raiz, 'config', 'rataland-personaje.png')
+    if (skinJuego?.ok && skinJuego.imagen) await fs.promises.writeFile(pngPersonaje, Buffer.from(skinJuego.imagen.split(',')[1], 'base64'))
+    else await fs.promises.rm(pngPersonaje, { force: true })
     await activarPacks(raiz, manifiesto.packsActivos)
 
     const lanzar = () => {

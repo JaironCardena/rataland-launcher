@@ -53,7 +53,7 @@ async function prepararPrimerArranque (dirJuego, { nombre, ip, puerto }) {
 const ESCENAS = ['noche', 'cloacas', 'amanecer']
 
 /** Servidor, Discord, fondo, temporada y frases para los menús del mod de la serie (config/rataland.json). */
-async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, discord, escena, temporada, frases }) {
+async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, discord, escena, temporada, frases, evento, skinModelo }) {
   const ruta = path.join(dirJuego, 'config', 'rataland.json')
   await fsp.mkdir(path.dirname(ruta), { recursive: true })
   const enlaceDiscord = /^https?:\/\//.test(discord || '') ? discord : ''
@@ -66,6 +66,16 @@ async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, disc
     discord: enlaceDiscord,
     escena: ESCENAS.includes(escena) ? escena : 'noche',
     temporada: typeof temporada === 'string' ? temporada.trim() : ''
+  }
+  config.skinModelo = skinModelo === 'slim' ? 'slim' : 'classic'
+  // Cuenta atrás del próximo episodio: el mod solo compara con la hora actual
+  const inicio = evento?.fecha ? Date.parse(evento.fecha) : NaN
+  if (!Number.isNaN(inicio)) {
+    config.evento = {
+      titulo: typeof evento.titulo === 'string' ? evento.titulo : '',
+      inicio,
+      fin: inicio + (Number(evento.duracionHoras) || 3) * 3600 * 1000
+    }
   }
   // Sin frases propias, el mod usa las suyas
   const lista = (Array.isArray(frases) ? frases : []).filter((f) => typeof f === 'string' && f.trim()).map((f) => f.trim())

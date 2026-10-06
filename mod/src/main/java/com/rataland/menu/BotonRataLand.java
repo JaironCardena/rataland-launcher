@@ -8,11 +8,16 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 /**
- * Botón con el estilo de RataLand: bloque de hierba (el principal), piedra (los demás)
- * o piedra con texto rojizo (salir del servidor).
+ * Botón con el estilo de RataLand: bloque de hierba (el principal), piedra (los demás),
+ * piedra con texto rojizo (salir del servidor) o el azul de Discord (cuadrado, con su icono).
  */
 public class BotonRataLand extends ButtonWidget {
-	public enum Estilo { HIERBA, PIEDRA, PELIGRO }
+	public enum Estilo { HIERBA, PIEDRA, PELIGRO, DISCORD }
+
+	// Icono de Discord en pixel (8×8): una burbuja con dos ojos
+	private static final String[] ICONO_DISCORD = {
+			"........", ".######.", "########", "##.##.##", "########", "########", ".#....#.", "........"
+	};
 
 	private final Estilo estilo;
 	private final float escalaTexto;
@@ -44,13 +49,27 @@ public class BotonRataLand extends ButtonWidget {
 			mosaico(context, RataLand.BOTON_TIERRA, ix, iy, iw, ih, 16, 16);
 			mosaico(context, RataLand.BOTON_HIERBA, ix, iy, iw, Math.min(6, ih), 16, 6);
 		} else {
-			context.fill(ix, iy, ix + iw, iy + ih, estilo == Estilo.PELIGRO ? 0xFF2B2230 : 0xFF3A4152);
+			int fondo = estilo == Estilo.PELIGRO ? 0xFF2B2230 : estilo == Estilo.DISCORD ? 0xFF4F5BD5 : 0xFF3A4152;
+			context.fill(ix, iy, ix + iw, iy + ih, fondo);
 		}
 		// Relieve: luz arriba, sombra abajo
 		context.fill(ix, iy, ix + iw, iy + 1, 0x30FFFFFF);
 		context.fill(ix, iy + ih - 2, ix + iw, iy + ih, 0x4C000000);
 		if (encima) context.fill(ix, iy, ix + iw, iy + ih, 0x22FFFFFF);
 		if (!this.active) context.fill(ix, iy, ix + iw, iy + ih, 0x88000000);
+
+		// Botón cuadrado de Discord: solo el icono
+		if (estilo == Estilo.DISCORD && w <= h + 4) {
+			int p = Math.max(1, Math.min(iw, ih) / 12);
+			int ox = x + (w - 8 * p) / 2;
+			int oy = y + (h - 8 * p) / 2;
+			for (int fy = 0; fy < 8; fy++) {
+				for (int fx = 0; fx < 8; fx++) {
+					if (ICONO_DISCORD[fy].charAt(fx) == '#') context.fill(ox + fx * p, oy + fy * p, ox + (fx + 1) * p, oy + (fy + 1) * p, encima ? 0xFFFFFFA0 : 0xFFFFFFFF);
+				}
+			}
+			return;
+		}
 
 		int color = !this.active ? 0xFFA0A0A0 : encima ? 0xFFFFFFA0 : estilo == Estilo.PELIGRO ? 0xFFFF9A8A : 0xFFFFFFFF;
 		TextRenderer fuente = MinecraftClient.getInstance().textRenderer;

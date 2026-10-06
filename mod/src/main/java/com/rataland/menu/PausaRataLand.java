@@ -10,61 +10,73 @@ import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.text.Text;
 
 /**
- * Menú de pausa de RataLand: un panel con marco sobre el mundo desenfocado.
- * "Volver a RataLand" desconecta y lleva al menú principal de la serie.
+ * Menú de pausa de RataLand: un panel a la izquierda con los botones en columna, que deja ver el
+ * mundo. "Volver a RataLand" (abajo, aparte) desconecta y lleva al menú principal de la serie.
  */
 public class PausaRataLand extends Screen {
-	private static final int ANCHO = 216;
-	private static final int ANCHO_BOTON = 196;
+	private static final int MARGEN = 16;
+	private static final int SEPARACION = 4;
 
 	private int fotogramas;
-	private int panelX;
-	private int panelY;
-	private int panelAlto;
+	private int anchoPanel;
+	private int escalaLogo;
+	private boolean conChip;
 
 	public PausaRataLand() {
 		super(Text.translatable("menu.game"));
 	}
 
-	private int escalaLogo() {
-		return this.height >= 300 ? 2 : 1;
+	private int altoLogo() {
+		return RataLand.LOGO_ALTO * escalaLogo;
+	}
+
+	/** Alto de lo de arriba (logo, temporada y botones) para decidir si cabe a tamaño grande. */
+	private int altoContenido(boolean hayDiscord) {
+		int botones = 24 + SEPARACION + (20 + SEPARACION) * (hayDiscord ? 4 : 3);
+		return 14 + altoLogo() + 8 + (conChip ? 15 + 12 : 4) + botones;
 	}
 
 	@Override
 	protected void init() {
 		boolean hayDiscord = !RataLand.discord.isEmpty();
-		int alturaLogo = RataLand.LOGO_ALTO * escalaLogo();
-		this.panelAlto = 12 + alturaLogo + 10 + 24 + 4 + 20 + 4 + 20 + 12 + 20 + 12;
-		this.panelX = (this.width - ANCHO) / 2;
-		this.panelY = Math.max(4, (this.height - panelAlto) / 2);
-		int x = panelX + (ANCHO - ANCHO_BOTON) / 2;
-		int y = panelY + 12 + alturaLogo + 10;
-		int medio = (ANCHO_BOTON - 4) / 2;
+		this.anchoPanel = Math.min(210, Math.max(160, (int) (this.width * 0.32f)));
+		int anchoBoton = anchoPanel - MARGEN * 2;
 
-		this.addDrawableChild(new BotonRataLand(x, y, ANCHO_BOTON, 24, Text.translatable("menu.returnToGame"), b -> {
+		// Lo más grande que quepa: logo ×2 y la temporada; si no, logo ×1 y sin temporada
+		this.escalaLogo = RataLand.LOGO_ANCHO * 2 <= anchoBoton ? 2 : 1;
+		this.conChip = !RataLand.temporada.isEmpty();
+		int abajo = this.height - 14 - 20;
+		if (altoContenido(hayDiscord) > abajo - 10) this.escalaLogo = 1;
+		if (altoContenido(hayDiscord) > abajo - 10) this.conChip = false;
+
+		int x = MARGEN;
+		int y = 14 + altoLogo() + 8 + (conChip ? 15 + 12 : 4);
+
+		this.addDrawableChild(new BotonRataLand(x, y, anchoBoton, 24, Text.translatable("menu.returnToGame"), b -> {
 			this.client.setScreen(null);
 			this.client.mouse.lockCursor();
 		}, BotonRataLand.Estilo.HIERBA, 1.5f));
-		y += 28;
-		this.addDrawableChild(new BotonRataLand(x, y, medio, 20, Text.translatable("gui.advancements"), b -> {
+		y += 24 + SEPARACION;
+		this.addDrawableChild(new BotonRataLand(x, y, anchoBoton, 20, Text.translatable("gui.advancements"), b -> {
 			if (this.client.player != null) {
 				this.client.setScreen(new AdvancementsScreen(this.client.player.networkHandler.getAdvancementHandler(), this));
 			}
 		}, BotonRataLand.Estilo.PIEDRA));
-		this.addDrawableChild(new BotonRataLand(x + medio + 4, y, medio, 20, Text.translatable("gui.stats"), b -> {
+		y += 20 + SEPARACION;
+		this.addDrawableChild(new BotonRataLand(x, y, anchoBoton, 20, Text.translatable("gui.stats"), b -> {
 			if (this.client.player != null) {
 				this.client.setScreen(new StatsScreen(this, this.client.player.getStatHandler()));
 			}
 		}, BotonRataLand.Estilo.PIEDRA));
-		y += 24;
-		this.addDrawableChild(new BotonRataLand(x, y, hayDiscord ? medio : ANCHO_BOTON, 20, Text.translatable("menu.options"),
+		y += 20 + SEPARACION;
+		this.addDrawableChild(new BotonRataLand(x, y, anchoBoton, 20, Text.translatable("menu.options"),
 				b -> this.client.setScreen(new OptionsScreen(this, this.client.options)), BotonRataLand.Estilo.PIEDRA));
+		y += 20 + SEPARACION;
 		if (hayDiscord) {
-			this.addDrawableChild(new BotonRataLand(x + medio + 4, y, medio, 20, Text.literal("Discord"),
+			this.addDrawableChild(new BotonRataLand(x, y, anchoBoton, 20, Text.literal("Discord"),
 					ConfirmLinkScreen.opening(this, RataLand.discord), BotonRataLand.Estilo.PIEDRA));
 		}
-		y += 20 + 12;
-		this.addDrawableChild(new BotonRataLand(x, y, ANCHO_BOTON, 20, Text.literal("Volver a " + RataLand.nombre),
+		this.addDrawableChild(new BotonRataLand(x, abajo, anchoBoton, 20, Text.literal("Volver a " + RataLand.nombre),
 				b -> volverAlMenu(), BotonRataLand.Estilo.PELIGRO));
 	}
 
@@ -77,20 +89,29 @@ public class PausaRataLand extends Screen {
 	@Override
 	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
 		super.renderBackground(context, mouseX, mouseY, delta);
-		// Panel con marco: borde oscuro, fondo noche y un filo de color queso
-		context.fill(panelX - 2, panelY - 2, panelX + ANCHO + 2, panelY + panelAlto + 2, 0xFF1B120B);
-		context.fill(panelX, panelY, panelX + ANCHO, panelY + panelAlto, 0xEB0D1424);
-		context.drawBorder(panelX + 1, panelY + 1, ANCHO - 2, panelAlto - 2, 0x59F6C445);
+		// Panel de la izquierda: noche casi opaca y un filo de queso
+		context.fill(0, 0, anchoPanel, this.height, 0xEE090E1A);
+		context.fill(anchoPanel - 1, 0, anchoPanel, this.height, 0x80F6C445);
 	}
 
 	@Override
 	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
 		super.render(context, mouseX, mouseY, delta);
-		int escala = escalaLogo();
-		int w = RataLand.LOGO_ANCHO * escala;
-		int h = RataLand.LOGO_ALTO * escala;
-		context.drawTexture(RataLand.LOGO, panelX + (ANCHO - w) / 2, panelY + 12, w, h, 0, 0,
+		int w = RataLand.LOGO_ANCHO * escalaLogo;
+		int h = altoLogo();
+		context.drawTexture(RataLand.LOGO, MARGEN, 14, w, h, 0, 0,
 				RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO);
+		if (conChip) Cartel.chip(context, this.textRenderer, MARGEN, 14 + h + 8, RataLand.temporada);
+
+		// Cuenta atrás del próximo episodio, abajo a la derecha, sobre el mundo
+		if (Cartel.hayCuentaAtras()) {
+			float escala = this.height >= 300 ? 2f : 1.5f;
+			int ancho = Cartel.anchoCuentaAtras(this.textRenderer, escala);
+			int x = this.width - ancho - 14;
+			if (x > anchoPanel + 14) {
+				Cartel.cuentaAtras(context, this.textRenderer, x, this.height - Cartel.altoCuentaAtras(escala) - 14, escala);
+			}
+		}
 
 		if (RataLand.MODO_CAPTURA && ++fotogramas == 60) {
 			ScreenshotRecorder.saveScreenshot(this.client.runDirectory, "rataland-pausa.png", this.client.getFramebuffer(), t -> {});

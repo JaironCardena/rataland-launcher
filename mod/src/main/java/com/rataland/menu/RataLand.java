@@ -60,6 +60,12 @@ public class RataLand implements ClientModInitializer {
 	/** Texto como "Temporada 1" ("" = no se muestra). */
 	public static String temporada = "";
 	public static List<String> frases = FRASES_POR_DEFECTO;
+	/** Próximo episodio o evento (cuenta atrás): título y cuándo empieza y acaba (ms; 0 = no hay). */
+	public static String eventoTitulo = "";
+	public static long eventoInicio = 0;
+	public static long eventoFin = 0;
+	/** Modelo de la skin que dejó el launcher en config/rataland-personaje.png: "classic" o "slim". */
+	public static String skinModelo = "classic";
 
 	/** Solo para pruebas: con -Drataland.captura=true guarda capturas del menú y la carga y cierra el juego. */
 	public static final boolean MODO_CAPTURA = Boolean.getBoolean("rataland.captura");
@@ -80,6 +86,13 @@ public class RataLand implements ClientModInitializer {
 			}
 			if (json.has("escena") && FONDOS.containsKey(json.get("escena").getAsString())) escena = json.get("escena").getAsString();
 			if (json.has("temporada")) temporada = json.get("temporada").getAsString().trim();
+			if (json.has("skinModelo")) skinModelo = json.get("skinModelo").getAsString();
+			if (json.has("evento") && json.get("evento").isJsonObject()) {
+				JsonObject evento = json.getAsJsonObject("evento");
+				eventoTitulo = evento.has("titulo") ? evento.get("titulo").getAsString().trim() : "";
+				eventoInicio = evento.has("inicio") ? evento.get("inicio").getAsLong() : 0;
+				eventoFin = evento.has("fin") ? evento.get("fin").getAsLong() : 0;
+			}
 			if (json.has("frases") && json.get("frases").isJsonArray()) {
 				List<String> lista = new ArrayList<>();
 				for (JsonElement e : json.getAsJsonArray("frases")) {
