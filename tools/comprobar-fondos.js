@@ -45,7 +45,8 @@ if (process.argv.includes('--guardar')) {
   const ops = Object.values(resultado).reduce((n, r) => n + r.fotogramas.reduce((a, f) => a + f.length, 0), 0)
   console.log(`Guardado ${path.relative(RAIZ, ESPERADO)}: ${Object.keys(resultado).join(', ')} (${ops} trazos). Ahora compila el mod para probar el motor de Java.`)
 } else {
-  const antes = fs.existsSync(ESPERADO) ? fs.readFileSync(ESPERADO, 'utf8') : ''
+  // (git puede haberlo dejado con saltos de línea de Windows)
+  const antes = fs.existsSync(ESPERADO) ? fs.readFileSync(ESPERADO, 'utf8').replace(/\r\n/g, '\n') : ''
   if (antes !== texto) {
     console.error('El motor de fondos de JavaScript o una escena han cambiado y el mod no lo sabe.')
     console.error('Ejecuta "node tools/comprobar-fondos.js --guardar" y compila el mod: su prueba dirá si el motor de Java dibuja lo mismo.')

@@ -1,0 +1,18 @@
+[
+  {
+    "cargador": "fabric",
+    "minecraft": "1.21.1",
+    "version": "1.4.0",
+    "archivo": "rataland-menu-fabric-1.21.1-1.4.0.jar",
+    "sha1": "65568349ad4b27cdd7173c1ccd38b1da9d9adde7",
+    "tamano": 761430
+  },
+  {
+    "cargador": "neoforge",
+    "minecraft": "1.21.1",
+    "version": "1.4.0",
+    "archivo": "rataland-menu-neoforge-1.21.1-1.4.0.jar",
+    "sha1": "7e74fa41d567f743edb27fe78b2c0d0b48ad15a0",
+    "tamano": 762925
+  }
+]
