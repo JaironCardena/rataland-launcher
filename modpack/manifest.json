@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-06T18:54:38.568Z",
+  "generado": "2026-10-06T21:16:29.699Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -45,11 +45,11 @@
       "git": "62ecc5f93ffe590d6ec510f148886ded7c6a24af"
     },
     {
-      "ruta": "mods/rataland-menu-1.3.1.jar",
-      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-1.3.1.jar",
-      "sha1": "227d7f3bca95cc6387bc1cf744ac7cc189ff980c",
-      "tamano": 70223,
-      "git": "bdcb187aa24528f82914115e371972e03a1c2326"
+      "ruta": "mods/rataland-menu-1.3.2.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-1.3.2.jar",
+      "sha1": "078ed802435fd925bdf08d38013d01c163441487",
+      "tamano": 90440,
+      "git": "e1b1e2d6d8f36f53fc559bf149ef17adb86496f6"
     },
     {
       "ruta": "mods/sodium-fabric-0.8.13+mc1.21.1.jar",
