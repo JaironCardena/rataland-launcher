@@ -597,7 +597,42 @@ function filaElemento (categoria, e) {
       categoria === 'texturas'
         ? h('label', { class: 'interruptor' }, h('input', { type: 'checkbox', checked: activo, onchange: (ev) => cambiarActivo(e.ruta, ev.target.checked) }), 'Para todos')
         : null,
+      e.icono
+        ? h('button', { class: 'boton-accion', 'aria-label': `Descargar el icono de ${e.nombre || e.ruta.split('/').pop()}`, onclick: (ev) => descargarIcono(e, ev.currentTarget) }, 'Descargar icono')
+        : null,
       h('button', { class: 'boton-quitar', 'aria-label': `Quitar ${e.nombre || e.ruta.split('/').pop()}`, onclick: () => quitar(e) }, 'Quitar')))
+}
+
+/** Guarda el icono del mod en PNG con su nombre (Modrinth a veces los sirve en WebP; los GIF animados se dejan igual). */
+async function descargarIcono (e, boton) {
+  const nombre = (e.nombre || e.ruta.split('/').pop().replace(/\.(jar|zip)$/i, ''))
+    .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'icono'
+  boton.disabled = true
+  try {
+    const res = await fetch(e.icono)
+    if (!res.ok) throw new Error(`respuesta ${res.status}`)
+    let imagen = await res.blob()
+    let extension = 'png'
+    if (imagen.type === 'image/gif') {
+      extension = 'gif'
+    } else if (imagen.type !== 'image/png') {
+      const mapa = await createImageBitmap(imagen)
+      const lienzo = h('canvas', { width: mapa.width, height: mapa.height })
+      lienzo.getContext('2d').drawImage(mapa, 0, 0)
+      imagen = await new Promise((resolve, reject) => lienzo.toBlob((b) => b ? resolve(b) : reject(new Error('sin PNG')), 'image/png'))
+    }
+    const url = URL.createObjectURL(imagen)
+    const enlace = h('a', { href: url, download: `${nombre}.${extension}`, hidden: true })
+    document.body.append(enlace)
+    enlace.click()
+    enlace.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
+  } catch {
+    avisar('No se pudo descargar el icono. Prueba otra vez en un momento.', 'error')
+  } finally {
+    boton.disabled = false
+  }
 }
 
 /* Cajón lateral para añadir desde Modrinth */
