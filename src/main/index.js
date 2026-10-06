@@ -22,7 +22,7 @@ const { prepararPrimerArranque, escribirConfigMenu } = require('./extras')
 const { lanzarJuego } = require('./juego')
 const { consultarServidor } = require('./servidor')
 const { crearCuentas } = require('./cuentas')
-const { iniciarActualizador } = require('./actualizador')
+const { crearActualizador } = require('./actualizador')
 
 const cuentas = crearCuentas(dirDatos)
 const ramTotalMB = Math.floor(os.totalmem() / 1048576)
@@ -31,6 +31,7 @@ let ajustes
 let perfil = combinarPerfil(config, {})
 let ventana = null
 let jugando = false
+let actualizador = null
 
 function ajustesPorDefecto () {
   const ram = Math.max(2048, Math.min(config.ramPredeterminada || 4096, ramTotalMB - 2048))
@@ -125,7 +126,8 @@ function registrarIpc () {
     cuenta: await cuentas.actual(),
     ajustes,
     sistema: { ramTotalMB },
-    perfil
+    perfil,
+    actualizacion: actualizador.estado()
   }))
 
   ipcMain.handle('actualizaciones', async () => {
@@ -230,9 +232,10 @@ if (!app.requestSingleInstanceLock()) {
     await prepararCarpeta()
     ajustes = { ...ajustesPorDefecto(), ...await leerJson(rutaAjustes, {}) }
     Menu.setApplicationMenu(null)
+    actualizador = crearActualizador({ enviar, dirDatos, estaJugando: () => jugando })
     registrarIpc()
     crearVentana()
-    iniciarActualizador(enviar)
+    actualizador.iniciar()
   })
 
   app.on('window-all-closed', () => {

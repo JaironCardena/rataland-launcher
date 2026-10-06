@@ -14,9 +14,16 @@ Launcher propio (Electron) para la serie RataLand:
 
 ## Instalarlo (jugadores)
 
-Descarga `RataLand-Setup-X.Y.Z.exe` de la página de [Releases](https://github.com/JaironCardena/rataland-launcher/releases/latest) y ábrelo. Se instala solo y crea un acceso directo en el escritorio. Cuando publiques una versión nueva del launcher, se descarga sola y aparece el botón "Reiniciar y actualizar".
+Descarga `RataLand-Setup-X.Y.Z.exe` de la página de [Releases](https://github.com/JaironCardena/rataland-launcher/releases/latest) y ábrelo. Se instala solo y crea un acceso directo en el escritorio.
 
-El instalador no está firmado, así que Windows mostrará el aviso de SmartScreen la primera vez ("Más información" → "Ejecutar de todas formas").
+Actualizaciones del launcher: al abrirlo, si hay una versión nueva aparece la pantalla "Actualizando el launcher", se instala sola y el launcher se vuelve a abrir con el aviso "Launcher actualizado a la versión X". Si sale una versión mientras está abierto, abajo aparece "Actualizar ahora". Si Windows bloquea la instalación, el launcher lo explica y ofrece descargarla a mano. Todo queda anotado en `%APPDATA%\.rataland\.launcher\actualizador.log`.
+
+**El launcher no está firmado digitalmente.** Por eso:
+
+- SmartScreen avisa la primera vez ("Más información" → "Ejecutar de todas formas").
+- En los PC con **Control inteligente de aplicaciones** activado (Windows 11), Windows bloquea el instalador y las actualizaciones, sin opción de saltarlo.
+
+La solución de verdad es firmar el instalador con un certificado de firma de código.
 
 ## Probarlo desde el código
 

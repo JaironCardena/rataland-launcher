@@ -420,6 +420,27 @@ button { cursor: pointer; }
 .cuenta__tipo { color: var(--muy-tenue); font-size: 12.5px; }
 .pie__derecha { display: flex; align-items: center; gap: 22px; margin-left: auto; }
 .actualizacion { display: flex; align-items: center; gap: 12px; color: var(--antorcha); font-size: 13px; }
+.actualizacion--hecha { color: var(--hierba-luz); }
+
+/* Pantalla de actualización del launcher (tapa todo menos la barra de título) */
+.actualizando {
+  position: fixed;
+  inset: 40px 0 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(9, 14, 26, 0.9);
+  backdrop-filter: blur(6px);
+}
+.actualizando__caja { width: min(440px, 100%); text-align: center; }
+.actualizando__titulo {
+  margin: 0 0 10px;
+  font: 700 32px/1.1 var(--pixel);
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+}
+.actualizando__texto { margin: 0 0 24px; color: var(--tenue); }
+.actualizando__acciones { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .boton-secundario--pequeno { height: 32px; padding: 0 12px; font-size: 13px; color: var(--texto); }
 .enlaces { display: flex; gap: 18px; }
 .enlaces .enlace { color: var(--tenue); font-size: 13px; }

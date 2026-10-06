@@ -146,12 +146,29 @@
     <div class="pie__derecha">
       <div class="actualizacion" role="status" hidden>
         <span class="actualizacion__texto"></span>
-        <button class="boton-secundario boton-secundario--pequeno" data-accion="instalar-actualizacion" hidden>Reiniciar y actualizar</button>
+        <button class="boton-secundario boton-secundario--pequeno" data-accion="instalar-actualizacion" hidden>Actualizar ahora</button>
       </div>
       <nav class="enlaces" aria-label="Enlaces"></nav>
       <span class="pie__version" data-version></span>
     </div>
   </footer>
+
+  <div class="actualizando" role="dialog" aria-modal="true" aria-labelledby="titulo-actualizando" hidden>
+    <div class="actualizando__caja">
+      <h2 class="actualizando__titulo" id="titulo-actualizando">Actualizando el launcher</h2>
+      <p class="actualizando__texto"></p>
+      <div class="actualizando__progreso">
+        <div class="progreso__numero" aria-hidden="true"></div>
+        <div class="xp" role="progressbar" aria-label="Progreso de la actualización" aria-valuemin="0" aria-valuemax="100">
+          <div class="xp__relleno"></div>
+        </div>
+      </div>
+      <div class="actualizando__acciones" hidden>
+        <button class="boton-microsoft" data-accion="descargar-launcher">Descargar la versión nueva</button>
+        <button class="enlace" data-accion="seguir-sin-actualizar">Seguir con esta versión</button>
+      </div>
+    </div>
+  </div>
 
   <script src="demo.js"></script>
   <script src="app.js"></script>

@@ -5,6 +5,12 @@ if (!window.launcher) {
   const oyentes = { progreso: [], juego: [], perfil: [] }
   const emitir = (canal, datos) => oyentes[canal].forEach((f) => f(datos))
   const params = new URLSearchParams(location.search)
+  const oyentesActualizacion = []
+  let actualizacion = { fase: 'nada', modo: 'arranque', versionActual: '1.0.1' }
+  const emitirActualizacion = (cambios) => {
+    actualizacion = { ...actualizacion, ...cambios }
+    oyentesActualizacion.forEach((f) => f(actualizacion))
+  }
   let cuenta = params.has('sin-cuenta') ? null : { tipo: 'microsoft', nombre: 'Steve', uuid: '8667ba71b85a4004af54457a9734eed7' }
 
   const perfil = {
@@ -24,7 +30,8 @@ if (!window.launcher) {
       cuenta,
       ajustes: { ram: 4096, cerrarAlJugar: false },
       sistema: { ramTotalMB: 16384 },
-      perfil: { ...perfil, noticias: [] }
+      perfil: { ...perfil, noticias: [] },
+      actualizacion: { ...actualizacion, recienActualizado: params.has('actualizado') ? '1.0.2' : null }
     }),
     buscarActualizaciones: async () => { await espera(400); return { ok: true, origen: 'red', perfil } },
     estadoServidor: async () => {
@@ -66,7 +73,27 @@ if (!window.launcher) {
     abrirEnlace () {},
     abrirRegistros () {},
     instalarActualizacion () {},
-    alActualizacionLauncher: (f) => { if (params.has('actualizacion')) setTimeout(() => f({ estado: 'lista', version: '1.0.1' }), 1500) },
+    abrirDescargaLauncher () {},
+    seguirSinActualizar () { emitirActualizacion({ fase: 'lista', modo: 'fondo' }) },
+    // ?actualizacion (aviso abajo), ?actualizando (al abrir), ?actualizacion-error
+    alActualizacionLauncher: (f) => {
+      oyentesActualizacion.push(f)
+      if (params.has('actualizacion')) setTimeout(() => emitirActualizacion({ fase: 'lista', modo: 'fondo', version: '1.0.2' }), 1500)
+      if (params.has('actualizando') || params.has('actualizacion-error')) {
+        ;(async () => {
+          await espera(500)
+          for (let p = 0; p <= 100; p += 5) {
+            emitirActualizacion({ fase: 'descargando', modo: 'arranque', version: '1.0.2', porcentaje: p })
+            await espera(90)
+          }
+          emitirActualizacion({ fase: 'instalando' })
+          if (params.has('actualizacion-error')) {
+            await espera(2500)
+            emitirActualizacion({ fase: 'error', mensaje: 'Windows no dejó abrir el instalador de la actualización.' })
+          }
+        })()
+      }
+    },
     alProgreso: (f) => oyentes.progreso.push(f),
     alJuego: (f) => oyentes.juego.push(f),
     alPerfil: (f) => oyentes.perfil.push(f)

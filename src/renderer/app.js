@@ -127,26 +127,93 @@ function actualizarBoton () {
 
 /* ---------- Progreso y avisos ---------- */
 
-function mostrarProgreso ({ texto, actual, total }) {
-  const caja = $('.progreso')
-  const xp = $('.xp')
-  caja.hidden = false
-  $('.progreso__texto').textContent = texto || ''
+/** Pinta una barra de experiencia (y su número) dentro de `contenedor`. Sin total, la barra se mueve sola. */
+function pintarBarra (contenedor, actual, total) {
+  const xp = contenedor.querySelector('.xp')
+  const relleno = contenedor.querySelector('.xp__relleno')
+  const numero = contenedor.querySelector('.progreso__numero')
   if (total > 0) {
     const pct = Math.max(0, Math.min(100, Math.floor((actual / total) * 100)))
-    const relleno = $('.xp__relleno')
     // Al empezar una etapa nueva la barra vuelve a 0 sin animación.
     relleno.style.transition = pct < (Number(xp.getAttribute('aria-valuenow')) || 0) ? 'none' : ''
     xp.classList.remove('xp--indeterminada')
     relleno.style.width = `${pct}%`
-    $('.progreso__numero').textContent = `${pct}%`
+    numero.textContent = `${pct}%`
     xp.setAttribute('aria-valuenow', pct)
   } else {
     xp.classList.add('xp--indeterminada')
-    $('.xp__relleno').style.width = ''
-    $('.progreso__numero').textContent = ''
+    relleno.style.width = ''
+    numero.textContent = ''
     xp.removeAttribute('aria-valuenow')
   }
+}
+
+function mostrarProgreso ({ texto, actual, total }) {
+  const caja = $('.progreso')
+  caja.hidden = false
+  $('.progreso__texto').textContent = texto || ''
+  pintarBarra(caja, actual, total)
+}
+
+/* ---------- Actualizaciones del launcher ---------- */
+
+function pintarActualizacion (a) {
+  const pantalla = $('.actualizando')
+  const enArranque = a.modo === 'arranque'
+  const visible = a.fase === 'instalando' || a.fase === 'error' ||
+    (enArranque && (a.fase === 'descargando' || a.fase === 'lista'))
+  const faseAnterior = pantalla.dataset.fase
+  pantalla.dataset.fase = a.fase
+  pantalla.hidden = !visible
+
+  const error = a.fase === 'error'
+  pantalla.querySelector('.actualizando__titulo').textContent = error
+    ? 'No se pudo actualizar el launcher'
+    : 'Actualizando el launcher'
+  pantalla.querySelector('.actualizando__acciones').hidden = !error
+  const barra = pantalla.querySelector('.actualizando__progreso')
+  barra.hidden = error
+
+  const texto = pantalla.querySelector('.actualizando__texto')
+  if (a.fase === 'descargando') {
+    texto.textContent = `Descargando la versión ${a.version}.`
+    pintarBarra(barra, a.porcentaje || 0, 100)
+  } else if (a.fase === 'lista') {
+    texto.textContent = `Preparando la versión ${a.version}.`
+    pintarBarra(barra, 0, 0)
+  } else if (a.fase === 'instalando') {
+    texto.textContent = `Instalando la versión ${a.version}. El launcher se cerrará y se volverá a abrir solo en unos segundos.`
+    pintarBarra(barra, 0, 0)
+  } else if (error) {
+    texto.textContent = `${a.mensaje} Puedes descargar la versión ${a.version} e instalarla a mano, o seguir usando la ${a.versionActual || estado.launcher.version}.`
+  }
+  if (error && faseAnterior !== 'error') pantalla.querySelector('[data-accion="descargar-launcher"]').focus()
+
+  // En segundo plano solo se avisa abajo, sin interrumpir.
+  const aviso = $('.actualizacion')
+  const boton = aviso.querySelector('button')
+  const textoAviso = aviso.querySelector('.actualizacion__texto')
+  aviso.classList.remove('actualizacion--hecha')
+  if (!enArranque && a.fase === 'descargando') {
+    aviso.hidden = false
+    boton.hidden = true
+    textoAviso.textContent = `Descargando la versión ${a.version} del launcher (${a.porcentaje || 0}%)`
+  } else if (!enArranque && a.fase === 'lista') {
+    aviso.hidden = false
+    boton.hidden = false
+    textoAviso.textContent = `Versión ${a.version} del launcher lista`
+  } else if (a.fase !== 'instalando') {
+    aviso.hidden = true
+  }
+}
+
+function avisarRecienActualizado (version) {
+  const aviso = $('.actualizacion')
+  aviso.hidden = false
+  aviso.classList.add('actualizacion--hecha')
+  aviso.querySelector('button').hidden = true
+  aviso.querySelector('.actualizacion__texto').textContent = `Launcher actualizado a la versión ${version}`
+  setTimeout(() => { if (aviso.classList.contains('actualizacion--hecha')) aviso.hidden = true }, 15000)
 }
 
 function ocultarProgreso () {
@@ -299,6 +366,8 @@ document.addEventListener('click', (e) => {
   if (accion === 'ajustes') $('.ajustes').hidden ? abrirAjustes() : cerrarAjustes()
   if (accion === 'cerrar-ajustes') cerrarAjustes()
   if (accion === 'instalar-actualizacion') api.instalarActualizacion()
+  if (accion === 'descargar-launcher') api.abrirDescargaLauncher()
+  if (accion === 'seguir-sin-actualizar') api.seguirSinActualizar()
 })
 
 document.addEventListener('keydown', (e) => {
@@ -312,15 +381,7 @@ $('#cerrar-al-jugar').addEventListener('change', (e) => guardarAjustes({ cerrarA
 $('.cuenta__cabeza').addEventListener('error', (e) => { e.target.removeAttribute('src') })
 
 api.alProgreso(mostrarProgreso)
-api.alActualizacionLauncher(({ estado: fase, version }) => {
-  const caja = $('.actualizacion')
-  caja.hidden = false
-  const lista = fase === 'lista'
-  caja.querySelector('.actualizacion__texto').textContent = lista
-    ? `Versión ${version} del launcher lista`
-    : `Descargando la versión ${version} del launcher`
-  caja.querySelector('button').hidden = !lista
-})
+api.alActualizacionLauncher(pintarActualizacion)
 api.alPerfil((perfil) => {
   estado.perfil = perfil
   pintarPerfil()
@@ -353,6 +414,10 @@ api.alJuego(({ estado: fase, error }) => {
   pintarPerfil()
   pintarEnlaces()
   pintarAjustes()
+  if (estado.actualizacion) {
+    pintarActualizacion(estado.actualizacion)
+    if (estado.actualizacion.recienActualizado) avisarRecienActualizado(estado.actualizacion.recienActualizado)
+  }
   consultarServidor()
   buscarActualizaciones()
 })()

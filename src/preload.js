@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('launcher', {
   abrirEnlace: (clave) => ipcRenderer.send('abrir-enlace', clave),
   abrirRegistros: () => ipcRenderer.send('abrir-registros'),
   instalarActualizacion: () => ipcRenderer.send('instalar-actualizacion'),
+  abrirDescargaLauncher: () => ipcRenderer.send('abrir-descarga-launcher'),
+  seguirSinActualizar: () => ipcRenderer.send('seguir-sin-actualizar'),
   alActualizacionLauncher: escuchar('actualizacion-launcher'),
   alProgreso: escuchar('progreso'),
   alJuego: escuchar('juego'),
