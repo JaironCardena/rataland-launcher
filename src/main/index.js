@@ -138,9 +138,17 @@ function registrarIpc () {
     }
   })
 
-  ipcMain.handle('estado-servidor', () => perfil.servidor?.ip
-    ? consultarServidor(perfil.servidor.ip, Number(perfil.servidor.puerto) || 25565)
-    : { enLinea: false })
+  ipcMain.handle('estado-servidor', async () => {
+    const { ip, puerto } = perfil.servidor || {}
+    if (!ip) return { enLinea: false }
+    const r = await consultarServidor(ip, Number(puerto) || 25565)
+    if (!r.enLinea) {
+      // Registro para poder ver por qué el launcher creyó que el servidor estaba apagado.
+      const linea = `${new Date().toISOString()} ${ip}:${puerto} ${r.apagado ? 'apagado según el host' : r.motivo}\n`
+      fs.appendFile(path.join(dirDatos, 'servidor.log'), linea, () => {})
+    }
+    return r
+  })
 
   ipcMain.handle('login-microsoft', () => cuentas.loginMicrosoft(ventana))
   ipcMain.handle('login-sin-premium', (_e, nombre) => config.cuentas?.noPremium

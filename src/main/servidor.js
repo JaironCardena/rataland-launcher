@@ -48,18 +48,22 @@ async function resolverDestino (ip, puerto) {
   return { host: ip, puerto }
 }
 
-async function consultarServidor (ip, puerto = 25565, espera = 5000) {
+async function consultarUnaVez (ip, puerto, espera) {
   const destino = await resolverDestino(ip, puerto)
   return new Promise((resolve) => {
     const inicio = Date.now()
     let datos = Buffer.alloc(0)
+    let terminado = false
     const socket = net.createConnection({ host: destino.host, port: destino.puerto })
     const terminar = (r) => {
+      if (terminado) return
+      terminado = true
       socket.destroy()
       resolve(r)
     }
-    socket.setTimeout(espera, () => terminar({ enLinea: false }))
-    socket.on('error', () => terminar({ enLinea: false }))
+    socket.setTimeout(espera, () => terminar({ enLinea: false, motivo: 'sin respuesta' }))
+    socket.on('error', (e) => terminar({ enLinea: false, motivo: e.code || e.message }))
+    socket.on('close', () => terminar({ enLinea: false, motivo: 'conexión cerrada sin respuesta' }))
     socket.on('connect', () => {
       const p = Buffer.alloc(2)
       p.writeUInt16BE(destino.puerto)
@@ -87,10 +91,24 @@ async function consultarServidor (ip, puerto = 25565, espera = 5000) {
           latencia: Date.now() - inicio
         })
       } catch {
-        terminar({ enLinea: false })
+        terminar({ enLinea: false, motivo: 'respuesta no válida' })
       }
     })
   })
+}
+
+/**
+ * Pregunta al servidor si está encendido. Un fallo suelto (la primera conexión tras abrir
+ * el launcher, un momento de lentitud del host) no basta para darlo por apagado: se reintenta.
+ */
+async function consultarServidor (ip, puerto = 25565, { intentos = 3, espera = 6000 } = {}) {
+  let r
+  for (let i = 1; i <= intentos; i++) {
+    r = await consultarUnaVez(ip, puerto, espera).catch((e) => ({ enLinea: false, motivo: e.code || e.message }))
+    if (r.enLinea || r.apagado) return r
+    if (i < intentos) await new Promise((res) => setTimeout(res, 1500))
+  }
+  return r
 }
 
 module.exports = { consultarServidor }

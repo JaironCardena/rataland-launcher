@@ -246,15 +246,31 @@ async function guardarAjustes (cambios) {
   estado.ajustes = await api.guardarAjustes(cambios)
 }
 
+const servidor = { comprobando: false, ultima: 0, siguiente: null }
+
+/** Comprueba el servidor y programa la siguiente: cada 30 s si está abierto, cada 10 s si no. */
 async function consultarServidor () {
+  if (servidor.comprobando) return
+  servidor.comprobando = true
+  clearTimeout(servidor.siguiente)
+
   const p = $('.estado-servidor')
   const texto = p.querySelector('.estado-servidor__texto')
   const r = await api.estadoServidor().catch(() => ({ enLinea: false }))
   p.dataset.estadoServidor = r.enLinea ? 'abierto' : 'cerrado'
   texto.textContent = r.enLinea
     ? `Servidor abierto, ${r.jugadores} de ${r.maximo} ${r.maximo === 1 ? 'jugador' : 'jugadores'}`
-    : 'El servidor está apagado ahora mismo'
+    : 'El servidor está apagado o no responde'
+
+  servidor.comprobando = false
+  servidor.ultima = Date.now()
+  servidor.siguiente = setTimeout(consultarServidor, r.enLinea ? 30000 : 10000)
 }
+
+// Al volver a la ventana (por ejemplo tras encender el servidor en Aternos) se comprueba enseguida.
+window.addEventListener('focus', () => {
+  if (Date.now() - servidor.ultima > 5000) consultarServidor()
+})
 
 async function buscarActualizaciones () {
   const r = await api.buscarActualizaciones()
@@ -324,6 +340,7 @@ api.alJuego(({ estado: fase, error }) => {
     actualizarBoton()
     aviso('')
     if (error) mostrarError(error.mensaje, error.ultimasLineas)
+    consultarServidor()
   }
 })
 
@@ -336,6 +353,6 @@ api.alJuego(({ estado: fase, error }) => {
   pintarPerfil()
   pintarEnlaces()
   pintarAjustes()
+  consultarServidor()
   buscarActualizaciones()
-  setInterval(consultarServidor, 30000)
 })()
