@@ -29,6 +29,13 @@
       "texto": "Pulsa Jugar: el launcher descarga todo lo necesario. Dentro del juego, el botón Jugar del menú te lleva directo al servidor. :3"
     }
   ],
-  "temporada": "Temporada 1",
-  "escena": "noche"
+  "temporada": "Los Pibes",
+  "escena": "noche",
+  "episodio": {
+    "titulo": "",
+    "url": ""
+  },
+  "frases": [
+    "Los Pibes"
+  ]
 }
