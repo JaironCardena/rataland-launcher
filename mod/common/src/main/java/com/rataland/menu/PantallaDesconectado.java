@@ -7,8 +7,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.util.FormattedCharSequence;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /**
  * Cuando no se puede entrar o te echan del servidor: en vez del mensaje de Minecraft (en inglés y sin
@@ -19,8 +21,11 @@ public class PantallaDesconectado extends Screen {
 	private enum Motivo { APAGADO, SIN_INTERNET, EXPULSADO, BANEADO, LLENO, VERSION, OTRO }
 
 	private static final int ANCHO = 330;
+	/** Nombres de servidores de Aternos y direcciones IP: lo que no se enseña en el mensaje de Minecraft. */
+	private static final Pattern DIRECCION = Pattern.compile("(?i)[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.aternos\\.me|(?:\\d{1,3}\\.){3}\\d{1,3}");
 
 	private final Component razon;
+	private final Component detalle;
 	private final Motivo motivo;
 	private boolean detalles;
 	private int fotogramas;
@@ -38,6 +43,25 @@ public class PantallaDesconectado extends Screen {
 		super(Component.literal("No se pudo entrar a " + RataLand.nombre));
 		this.razon = razon == null ? Component.empty() : razon;
 		this.motivo = clasificar(this.razon);
+		this.detalle = sinDatosPrivados(this.razon);
+	}
+
+	/**
+	 * El mensaje de Minecraft sin lo que es privado: la dirección del servidor queda como «el servidor»
+	 * y se quitan las líneas que nombran el hosting.
+	 */
+	private static Component sinDatosPrivados(Component razon) {
+		String texto = razon.getString();
+		if (!RataLand.ip.isBlank()) texto = texto.replaceAll("(?i)" + Pattern.quote(RataLand.ip), "el servidor");
+		texto = DIRECCION.matcher(texto).replaceAll("el servidor");
+		texto = texto.replaceAll("el servidor(?:/el servidor)?(?::\\d+)?", "el servidor");
+		List<String> lineas = new ArrayList<>();
+		for (String linea : texto.split("\\R")) {
+			String l = linea.toLowerCase(Locale.ROOT);
+			if (!l.contains("aternos") && !l.contains("exaroton")) lineas.add(linea);
+		}
+		String limpio = String.join("\n", lineas).strip();
+		return Component.literal(limpio.isEmpty() ? "Sin más detalles." : limpio);
 	}
 
 	private static Motivo clasificar(Component razon) {
@@ -69,7 +93,7 @@ public class PantallaDesconectado extends Screen {
 
 	private String explicacion() {
 		return switch (motivo) {
-			case APAGADO -> "Aternos apaga " + RataLand.nombre + " cuando no hay nadie. Enciéndelo desde Aternos o espera a que lo abra alguien: tarda un par de minutos.";
+			case APAGADO -> RataLand.nombre + " se duerme cuando no hay nadie jugando. Cuando lo enciendan tardará un par de minutos en abrir: vuelve a intentarlo entonces.";
 			case SIN_INTERNET -> "Parece que se ha cortado tu conexión a internet. Revísala y vuelve a intentarlo.";
 			case EXPULSADO -> "Un moderador te ha expulsado. Si crees que es un error, pregunta en el Discord de la serie.";
 			case BANEADO -> "Tienes la entrada bloqueada en este servidor. Si crees que es un error, pregunta en el Discord de la serie.";
@@ -98,7 +122,7 @@ public class PantallaDesconectado extends Screen {
 		Conexion.entrando = false;
 		this.w = Math.min(ANCHO, this.width - 40);
 		this.lineasTexto = this.font.split(Component.literal(explicacion()), this.w - 28);
-		this.lineasDetalle = this.font.split(this.razon, this.w - 28);
+		this.lineasDetalle = this.font.split(this.detalle, this.w - 28);
 		if (this.lineasDetalle.size() > 4) this.lineasDetalle = this.lineasDetalle.subList(0, 4);
 		int alto = 14 + 24 + 8 + 12 + 6 + this.lineasTexto.size() * 10 + 10 + 26 + 10 + 11 + 12;
 		if (this.detalles) alto += 4 + this.lineasDetalle.size() * 10;

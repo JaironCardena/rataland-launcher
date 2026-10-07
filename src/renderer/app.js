@@ -534,20 +534,6 @@ function copiarCodigo () {
   setTimeout(() => { boton.textContent = 'Copiar' }, 2000)
 }
 
-/** Copia la dirección del servidor (para dársela a alguien o añadirla a mano). */
-function copiarIp () {
-  const s = estado.perfil?.servidor
-  if (!s?.ip) return
-  const boton = $('.estado-servidor__copiar')
-  api.copiar(Number(s.puerto) && Number(s.puerto) !== 25565 ? `${s.ip}:${s.puerto}` : s.ip)
-  boton.classList.add('copiado')
-  boton.title = 'Dirección copiada'
-  setTimeout(() => {
-    boton.classList.remove('copiado')
-    boton.title = 'Copiar la dirección del servidor'
-  }, 1800)
-}
-
 async function loginSinPremium (evento) {
   evento.preventDefault()
   const error = $('[data-error-login]')
@@ -909,7 +895,6 @@ document.addEventListener('click', (e) => {
   if (accion === 'abrir-skin') $('.panel-skin').hidden ? abrirSkin() : cerrarSkin()
   if (accion === 'cerrar-skin') cerrarSkin()
   if (accion === 'ir-inicio') { cerrarAjustes(); cerrarSkin() }
-  if (accion === 'copiar-ip') copiarIp()
   if (accion === 'elegir-skin') $('[data-archivo-skin]').click()
   if (accion === 'guardar-skin') guardarSkin()
   if (accion === 'quitar-skin') quitarSkin()

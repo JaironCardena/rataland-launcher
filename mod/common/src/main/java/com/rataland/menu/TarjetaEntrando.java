@@ -19,7 +19,7 @@ public final class TarjetaEntrando {
 	private static final String[] CONSEJOS = {
 			"En la pausa tienes Discord a un clic para hablar con el resto de ratas.",
 			"Tu skin se cambia desde el launcher, también sin premium.",
-			"Si el servidor está dormido, enciéndelo desde Aternos y espera un par de minutos.",
+			"Cuando el servidor está dormido, tarda un par de minutos en despertar.",
 			"Las novedades de la serie salen en el launcher y en el menú del juego.",
 			"Antes de cada episodio verás una cuenta atrás en el menú y en la pausa."
 	};
@@ -35,7 +35,7 @@ public final class TarjetaEntrando {
 	/** Rectángulo de la tarjeta {x, y, ancho, alto}. */
 	public static int[] caja(int ancho, int alto, boolean conBoton) {
 		int w = Math.min(ANCHO, ancho - 40);
-		int h = conBoton ? 136 : 108;
+		int h = conBoton ? 126 : 98;
 		return new int[] {(ancho - w) / 2, Math.max(10, alto / 2 - h / 2 - 22), w, h};
 	}
 
@@ -72,10 +72,9 @@ public final class TarjetaEntrando {
 		g.pose().scale(1.5f, 1.5f, 1f);
 		g.drawString(fuente, "Entrando en " + RataLand.nombre, 0, 0, Estilo.TEXTO);
 		g.pose().popPose();
-		g.drawString(fuente, Estilo.recortar(fuente, RataLand.ip, w - 28), x + 14, y + 28, Estilo.TENUE);
 
 		String[] nombres = {paso > 1 ? "Servidor encontrado" : "Buscando el servidor", "Conectando", "Cargando el mundo"};
-		int fy = y + 44;
+		int fy = y + 34;
 		for (int i = 1; i <= 3; i++) {
 			String texto = nombres[i - 1];
 			if (i < paso) {
@@ -94,7 +93,7 @@ public final class TarjetaEntrando {
 		// Barra de queso con la rata corriendo
 		int bx = x + 14;
 		int bw = w - 28;
-		int by = y + 44 + 36 + 14;
+		int by = y + 34 + 36 + 14;
 		float base = paso == 1 ? 0.2f : paso == 2 ? 0.5f : 0.82f;
 		float avance = Mth.clamp(base + 0.04f * Mth.sin((Util.getMillis() % 4000L) / 4000f * Mth.TWO_PI), 0f, 1f);
 		int lleno = Math.round(bw * avance);
