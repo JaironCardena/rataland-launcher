@@ -57,6 +57,46 @@ public final class Cartel {
 		context.drawString(fuente, t[2], tx, y + h - 6 - 9, Estilo.TENUE);
 	}
 
+	public static final int ALTO_CINTA = 22;
+	private static final float ESCALA_CINTA = 1.5f;
+
+	/**
+	 * La cuenta atrás en una sola línea, centrada en `centro`: reloj, título, el tiempo en grande y
+	 * el día. Si no cabe en `anchoMax`, sin el día; y si aún no cabe, sin el título.
+	 */
+	public static void cinta(GuiGraphics context, Font fuente, int centro, int y, int anchoMax) {
+		String[] t = textos();
+		String titulo = t[0];
+		String dia = t[2].isEmpty() ? "" : Character.toLowerCase(t[2].charAt(0)) + t[2].substring(1);
+		int anchoTiempo = Math.round(fuente.width(t[1]) * ESCALA_CINTA);
+		if (anchoCinta(fuente, titulo, anchoTiempo, dia) > anchoMax) dia = "";
+		if (anchoCinta(fuente, titulo, anchoTiempo, dia) > anchoMax) titulo = "";
+		int w = anchoCinta(fuente, titulo, anchoTiempo, dia);
+		int x = centro - w / 2;
+		Estilo.escalon(context, x, y, w, ALTO_CINTA, Estilo.PANEL);
+		Estilo.bordeEscalon(context, x, y, w, ALTO_CINTA, Estilo.QUESO);
+		int cx = x + 7;
+		Estilo.icono(context, IconosPixel.RELOJ, cx, y + 7, 1, Estilo.QUESO);
+		cx += 8 + 6;
+		if (!titulo.isEmpty()) {
+			context.drawString(fuente, titulo, cx, y + 7, Estilo.CLARO);
+			cx += fuente.width(titulo) + 6;
+		}
+		context.pose().pushPose();
+		context.pose().translate(cx, y + 5, 0f);
+		context.pose().scale(ESCALA_CINTA, ESCALA_CINTA, 1f);
+		context.drawString(fuente, t[1], 0, 0, Estilo.QUESO);
+		context.pose().popPose();
+		if (!dia.isEmpty()) context.drawString(fuente, dia, cx + anchoTiempo + 6, y + 7, Estilo.TENUE);
+	}
+
+	private static int anchoCinta(Font fuente, String titulo, int anchoTiempo, String dia) {
+		int w = 7 + 8 + 6 + anchoTiempo + 7;
+		if (!titulo.isEmpty()) w += fuente.width(titulo) + 6;
+		if (!dia.isEmpty()) w += 6 + fuente.width(dia);
+		return w;
+	}
+
 	private static String[] textos() {
 		long ahora = System.currentTimeMillis();
 		String titulo = RataLand.eventoTitulo.isEmpty() ? "El próximo evento" : RataLand.eventoTitulo;

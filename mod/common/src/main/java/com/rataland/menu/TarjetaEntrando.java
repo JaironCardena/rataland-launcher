@@ -20,7 +20,7 @@ public final class TarjetaEntrando {
 			"En la pausa tienes Discord a un clic para hablar con el resto de ratas.",
 			"Tu skin se cambia desde el launcher, también sin premium.",
 			"Cuando el servidor está dormido, tarda un par de minutos en despertar.",
-			"Las novedades de la serie salen en el launcher y en el menú del juego.",
+			"Las novedades de la serie salen en el launcher.",
 			"Antes de cada episodio verás una cuenta atrás en el menú y en la pausa."
 	};
 	private static String consejo = CONSEJOS[0];

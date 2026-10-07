@@ -53,7 +53,7 @@ async function prepararPrimerArranque (dirJuego, { nombre, ip, puerto }) {
 const ESCENAS = ['noche', 'cloacas', 'amanecer', 'pesca']
 
 /** Servidor, Discord, fondo, temporada y frases para los menús del mod de la serie (config/rataland.json). */
-async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, discord, escena, temporada, frases, evento, skinModelo, cuenta, noticias, episodio }) {
+async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, discord, escena, temporada, frases, evento, skinModelo, cuenta }) {
   const ruta = path.join(dirJuego, 'config', 'rataland.json')
   await fsp.mkdir(path.dirname(ruta), { recursive: true })
   const enlaceDiscord = /^https?:\/\//.test(discord || '') ? discord : ''
@@ -68,14 +68,8 @@ async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, disc
     temporada: typeof temporada === 'string' ? temporada.trim() : ''
   }
   config.skinModelo = skinModelo === 'slim' ? 'slim' : 'classic'
-  // Para el menú del juego: tu tipo de cuenta, las últimas novedades y el último episodio
+  // Para el menú del juego: tu tipo de cuenta
   config.cuenta = cuenta === 'microsoft' || cuenta === 'sinPremium' ? cuenta : ''
-  config.noticias = (Array.isArray(noticias) ? noticias : []).slice(0, 4).map((n) => ({
-    fecha: typeof n.fecha === 'string' ? n.fecha : '',
-    titulo: typeof n.titulo === 'string' ? n.titulo : '',
-    texto: typeof n.texto === 'string' ? n.texto : ''
-  })).filter((n) => n.titulo)
-  if (episodio?.url) config.episodio = { titulo: episodio.titulo || '', url: episodio.url }
   // Cuenta atrás del próximo episodio: el mod solo compara con la hora actual
   const inicio = evento?.fecha ? Date.parse(evento.fecha) : NaN
   if (!Number.isNaN(inicio)) {

@@ -8,7 +8,7 @@ Launcher propio (Electron) para la serie RataLand:
 - Muestra si el servidor está encendido, cuántos jugadores hay y las **novedades** que publiques.
 - Incluye el **mod de RataLand** (`mod/`, para Fabric y NeoForge), que dentro del juego:
   - cambia la pantalla de carga de Mojang por el paisaje y el logo de RataLand, con una barra de queso,
-  - sustituye el menú principal por uno como el launcher: estado del servidor (y quién está dentro), cuenta atrás del próximo episodio, **Novedades** con el último episodio, tu personaje y abajo tu cuenta, **Opciones**, **Discord**, **Salir** y **Jugar** (entra al servidor),
+  - sustituye el menú principal por una portada: el logo y la cuenta atrás del próximo episodio arriba, el paisaje en medio, y abajo el estado del servidor (y quién está dentro), **Jugar** (entra al servidor), **Opciones**, **Discord** y **Salir**; tu personaje está de pie en el paisaje y tu cuenta arriba a la derecha,
   - sustituye el menú de pausa (Esc): **Volver al juego**, **Progresos**, **Estadísticas**, **Opciones**, **Discord** y **Volver a RataLand**, con los jugadores conectados, tu ping y la cuenta atrás,
   - muestra «Entrando en RataLand» con los pasos al conectar y, si no se puede entrar o te echan, explica en español qué pasó (servidor dormido, sin internet, lleno, baneado…) con **Reintentar**,
   - avisa cuando falta poco para el episodio, cuando entra alguien y cuando se pone tu skin,

@@ -28,7 +28,6 @@ public final class EstadoServidor {
 	private static final ServerStatusPinger PINGER = new ServerStatusPinger();
 	private static volatile Estado estado = Estado.CONSULTANDO;
 	private static volatile int conectados;
-	private static volatile int maximo;
 	private static volatile List<String> nombres = List.of();
 	private static long ultimaConsulta;
 	private static ServerData consulta;
@@ -41,10 +40,6 @@ public final class EstadoServidor {
 
 	public static int conectados() {
 		return conectados;
-	}
-
-	public static int maximo() {
-		return maximo;
 	}
 
 	/** Nombres de quien está dentro (los que el servidor enseña, normalmente hasta 12). */
@@ -95,7 +90,6 @@ public final class EstadoServidor {
 		}
 		if (datos.players != null) {
 			conectados = datos.players.online();
-			maximo = datos.players.max();
 			List<String> lista = new ArrayList<>();
 			for (GameProfile perfil : datos.players.sample()) {
 				String nombre = perfil.getName();

@@ -21,16 +21,4 @@ public final class Fondo {
 				RataLand.FONDO_ANCHO, RataLand.FONDO_ALTO, RataLand.FONDO_ANCHO, RataLand.FONDO_ALTO);
 		if (animado) FondoAnimado.dibujar(context, x, y, w, h);
 	}
-
-	/** Oscurece la parte izquierda (donde van el logo y los botones) para que se lean bien. */
-	public static void oscurecerIzquierda(GuiGraphics context, int ancho, int alto) {
-		int hasta = (int) (ancho * 0.62f);
-		int pasos = 24;
-		for (int i = 0; i < pasos; i++) {
-			int x0 = hasta * i / pasos;
-			int x1 = hasta * (i + 1) / pasos;
-			int alfa = (int) (0xD8 * (1f - (float) i / pasos));
-			context.fill(x0, 0, x1, alto, (alfa << 24) | 0x0A1020);
-		}
-	}
 }

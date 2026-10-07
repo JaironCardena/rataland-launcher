@@ -130,29 +130,6 @@ function mensajeError (e) {
   return String(e)
 }
 
-/**
- * Miniatura del último episodio para el menú del juego. YouTube la da en JPG y el juego solo lee PNG,
- * así que se convierte aquí. Si no hay episodio o no se puede bajar, se quita la anterior.
- */
-async function guardarMiniaturaEpisodio (episodio) {
-  const png = path.join(raiz, 'config', 'rataland-episodio.png')
-  const marca = path.join(dirDatos, 'miniatura-episodio.txt')
-  try {
-    if (!episodio?.id) throw new Error('sin episodio')
-    const anterior = await fs.promises.readFile(marca, 'utf8').catch(() => '')
-    if (anterior === episodio.id && fs.existsSync(png)) return
-    const res = await fetch(`https://i.ytimg.com/vi/${episodio.id}/mqdefault.jpg`, { signal: AbortSignal.timeout(6000) })
-    if (!res.ok) throw new Error(`YouTube respondió ${res.status}`)
-    const imagen = nativeImage.createFromBuffer(Buffer.from(await res.arrayBuffer()))
-    if (imagen.isEmpty()) throw new Error('imagen vacía')
-    await fs.promises.mkdir(path.dirname(png), { recursive: true })
-    await fs.promises.writeFile(png, imagen.resize({ width: 320, height: 180 }).toPNG())
-    await fs.promises.writeFile(marca, episodio.id)
-  } catch {
-    await fs.promises.rm(png, { force: true })
-  }
-}
-
 async function jugar (reparar) {
   if (jugando) return { ok: false, error: 'Minecraft ya está abierto.' }
   jugando = true
@@ -189,11 +166,8 @@ async function jugar (reparar) {
       frases: perfil.frases,
       evento: perfil.evento,
       skinModelo: skinJuego?.modelo,
-      cuenta: sesion?.tipo,
-      noticias: perfil.noticias,
-      episodio: perfil.episodio
+      cuenta: sesion?.tipo
     })
-    await guardarMiniaturaEpisodio(perfil.episodio)
     const pngPersonaje = path.join(raiz, 'config', 'rataland-personaje.png')
     if (skinJuego?.ok && skinJuego.imagen) await fs.promises.writeFile(pngPersonaje, Buffer.from(skinJuego.imagen.split(',')[1], 'base64'))
     else await fs.promises.rm(pngPersonaje, { force: true })
