@@ -8,6 +8,6 @@ import net.fabricmc.loader.api.FabricLoader;
 public class RataLandFabric implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
-		RataLand.iniciar(FabricLoader.getInstance().getConfigDir());
+		RataLand.iniciar(FabricLoader.getInstance().getConfigDir(), "Fabric");
 	}
 }

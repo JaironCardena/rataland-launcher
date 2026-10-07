@@ -3,8 +3,13 @@
   "package": "com.rataland.menu.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "AbstractButtonMixin",
+    "AbstractSliderButtonMixin",
     "ClientPlayNetworkHandlerMixin",
+    "ConnectScreenMixin",
+    "DisconnectedScreenAccessor",
     "MinecraftClientMixin",
+    "ReceivingLevelScreenMixin",
     "ScreenMixin",
     "SplashOverlayMixin",
     "ToastManagerMixin",

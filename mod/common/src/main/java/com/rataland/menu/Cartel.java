@@ -3,21 +3,24 @@ package com.rataland.menu;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 /** Piezas pequeñas de los menús: la etiqueta de la temporada y el cartel de la cuenta atrás. */
 public final class Cartel {
-	private static final int QUESO = 0xFFF6C445;
+	private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM, HH:mm", Locale.of("es"));
+	/** Hueco para el reloj a la izquierda (icono de 16 y separación). */
+	private static final int RELOJ = 16 + 9;
 
 	private Cartel() {
 	}
 
 	/** Etiqueta con borde de queso (como la del launcher). Devuelve su alto. */
 	public static int chip(GuiGraphics context, Font fuente, int x, int y, String texto) {
-		int w = fuente.width(texto) + 12;
-		int h = 15;
-		context.fill(x, y, x + w, y + h, 0x990D1424);
-		context.renderOutline(x, y, w, h, QUESO);
-		context.drawString(fuente, texto, x + 6, y + 4, QUESO);
-		return h;
+		Estilo.etiqueta(context, fuente, x, y, texto);
+		return 15;
 	}
 
 	/** ¿Hay una cuenta atrás que enseñar? (desde que se anuncia hasta que acaba el evento) */
@@ -25,38 +28,42 @@ public final class Cartel {
 		return RataLand.eventoInicio > 0 && System.currentTimeMillis() < RataLand.eventoFin;
 	}
 
-	/** Alto del cartel con el tiempo a esa escala. */
+	/** Alto del cartel con el tiempo a esa escala (título, tiempo y fecha). */
 	public static int altoCuentaAtras(float escalaTiempo) {
-		return 7 + 9 + 3 + Math.round(8 * escalaTiempo) + 8;
+		return 7 + 9 + 3 + Math.round(8 * escalaTiempo) + 4 + 9 + 6;
 	}
 
 	/** Ancho del cartel, para colocarlo pegado a la derecha. */
 	public static int anchoCuentaAtras(Font fuente, float escalaTiempo) {
 		String[] t = textos();
-		return Math.max(fuente.width(t[0]), Math.round(fuente.width(t[1]) * escalaTiempo)) + 18;
+		int texto = Math.max(Math.max(fuente.width(t[0]), fuente.width(t[2])), Math.round(fuente.width(t[1]) * escalaTiempo));
+		return RELOJ + texto + 18;
 	}
 
-	/** El cartel de la cuenta atrás: marco de queso, título y el tiempo en grande. */
+	/** El cartel de la cuenta atrás: marco de queso, reloj, título, el tiempo en grande y el día. */
 	public static void cuentaAtras(GuiGraphics context, Font fuente, int x, int y, float escalaTiempo) {
 		String[] t = textos();
 		int w = anchoCuentaAtras(fuente, escalaTiempo);
 		int h = altoCuentaAtras(escalaTiempo);
-		context.fill(x, y, x + w, y + h, 0xE60D1424);
-		context.renderOutline(x, y, w, h, QUESO);
-		context.renderOutline(x + 2, y + 2, w - 4, h - 4, 0x40F6C445);
-		context.drawString(fuente, t[0], x + 9, y + 7, 0xFFA3B0C8);
+		Estilo.marcoQueso(context, x, y, w, h);
+		Estilo.icono(context, IconosPixel.RELOJ, x + 9, y + (h - 16) / 2, 2, Estilo.QUESO);
+		int tx = x + 9 + RELOJ;
+		context.drawString(fuente, t[0], tx, y + 7, Estilo.TENUE);
 		context.pose().pushPose();
-		context.pose().translate(x + 9, y + 7 + 9 + 3, 0f);
+		context.pose().translate(tx, y + 7 + 9 + 3, 0f);
 		context.pose().scale(escalaTiempo, escalaTiempo, 1f);
-		context.drawString(fuente, t[1], 0, 0, QUESO);
+		context.drawString(fuente, t[1], 0, 0, Estilo.QUESO);
 		context.pose().popPose();
+		context.drawString(fuente, t[2], tx, y + h - 6 - 9, Estilo.TENUE);
 	}
 
 	private static String[] textos() {
 		long ahora = System.currentTimeMillis();
 		String titulo = RataLand.eventoTitulo.isEmpty() ? "El próximo evento" : RataLand.eventoTitulo;
-		if (ahora >= RataLand.eventoInicio) return new String[] {titulo, "¡Ya empezó!"};
-		return new String[] {titulo + " empieza en", formatear(RataLand.eventoInicio - ahora)};
+		String dia = FECHA.format(Instant.ofEpochMilli(RataLand.eventoInicio).atZone(ZoneId.systemDefault()));
+		dia = dia.isEmpty() ? dia : Character.toUpperCase(dia.charAt(0)) + dia.substring(1);
+		if (ahora >= RataLand.eventoInicio) return new String[] {titulo, "¡Ya empezó!", dia};
+		return new String[] {titulo + " empieza en", formatear(RataLand.eventoInicio - ahora), dia};
 	}
 
 	private static String formatear(long ms) {

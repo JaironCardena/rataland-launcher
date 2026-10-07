@@ -65,6 +65,19 @@ public final class RataLand {
 	public static long eventoFin = 0;
 	/** Modelo de la skin que dejó el launcher en config/rataland-personaje.png: "classic" o "slim". */
 	public static String skinModelo = "classic";
+	/** Tipo de cuenta con la que se abrió el juego: "microsoft", "sinPremium" o "" (no se sabe). */
+	public static String cuenta = "";
+	/** Cargador de mods ("Fabric" o "NeoForge"): lo pone el punto de entrada. */
+	public static String cargador = "Fabric";
+
+	/** Una novedad del launcher, para el menú principal. */
+	public record Noticia(String fecha, String titulo, String texto) {}
+
+	/** Las últimas novedades (las mismas que en el launcher). */
+	public static List<Noticia> noticias = List.of();
+	/** Último episodio: título y enlace de YouTube ("" = no hay). La miniatura la deja el launcher en config/rataland-episodio.png. */
+	public static String episodioTitulo = "";
+	public static String episodioUrl = "";
 
 	/** Solo para pruebas: con -Drataland.captura=true guarda capturas del menú y la carga y cierra el juego. */
 	public static final boolean MODO_CAPTURA = Boolean.getBoolean("rataland.captura");
@@ -80,8 +93,9 @@ public final class RataLand {
 	}
 
 	/** Lo llama el punto de entrada de Fabric o de NeoForge al cargar el mod. */
-	public static void iniciar(Path config) {
+	public static void iniciar(Path config, String nombreCargador) {
 		carpetaConfig = config;
+		cargador = nombreCargador;
 		Path archivo = config("rataland.json");
 		if (!Files.exists(archivo)) return;
 		try (Reader lector = Files.newBufferedReader(archivo, StandardCharsets.UTF_8)) {
@@ -97,6 +111,26 @@ public final class RataLand {
 			if (json.has("escena") && FONDOS.containsKey(json.get("escena").getAsString())) escena = json.get("escena").getAsString();
 			if (json.has("temporada")) temporada = json.get("temporada").getAsString().trim();
 			if (json.has("skinModelo")) skinModelo = json.get("skinModelo").getAsString();
+			if (json.has("cuenta")) cuenta = json.get("cuenta").getAsString();
+			if (json.has("noticias") && json.get("noticias").isJsonArray()) {
+				List<Noticia> lista = new ArrayList<>();
+				for (JsonElement e : json.getAsJsonArray("noticias")) {
+					if (!e.isJsonObject()) continue;
+					JsonObject n = e.getAsJsonObject();
+					String titulo = n.has("titulo") ? n.get("titulo").getAsString().trim() : "";
+					if (titulo.isEmpty()) continue;
+					lista.add(new Noticia(n.has("fecha") ? n.get("fecha").getAsString() : "", titulo, n.has("texto") ? n.get("texto").getAsString().trim() : ""));
+				}
+				noticias = List.copyOf(lista);
+			}
+			if (json.has("episodio") && json.get("episodio").isJsonObject()) {
+				JsonObject ep = json.getAsJsonObject("episodio");
+				String url = ep.has("url") ? ep.get("url").getAsString() : "";
+				if (url.startsWith("https://")) {
+					episodioUrl = url;
+					episodioTitulo = ep.has("titulo") ? ep.get("titulo").getAsString().trim() : "";
+				}
+			}
 			if (json.has("evento") && json.get("evento").isJsonObject()) {
 				JsonObject evento = json.getAsJsonObject("evento");
 				eventoTitulo = evento.has("titulo") ? evento.get("titulo").getAsString().trim() : "";

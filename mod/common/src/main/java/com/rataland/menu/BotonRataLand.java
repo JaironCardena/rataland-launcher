@@ -4,23 +4,23 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * Botón con el estilo de RataLand: bloque de hierba (el principal), piedra (los demás),
- * piedra con texto rojizo (salir del servidor) o el azul de Discord (cuadrado, con su icono).
+ * Botón con el estilo de RataLand: bloque de hierba (el principal), piedra (los demás), piedra con
+ * texto rojizo (salir) o el azul de Discord. Puede llevar un icono pixel: delante del texto, solo
+ * (botón cuadrado, con el texto como ayuda al pasar el ratón) o encima del texto (ficha).
  */
 public class BotonRataLand extends Button {
 	public enum Estilo { HIERBA, PIEDRA, PELIGRO, DISCORD }
 
-	// Icono de Discord en pixel (8×8): una burbuja con dos ojos
-	private static final String[] ICONO_DISCORD = {
-			"........", ".######.", "########", "##.##.##", "########", "########", ".#....#.", "........"
-	};
-
 	private final Estilo estilo;
 	private final float escalaTexto;
+	private String[] icono;
+	private int colorIcono = 0xFFFFFFFF;
+	private boolean ficha;
 
 	public BotonRataLand(int x, int y, int ancho, int alto, Component texto, OnPress accion, Estilo estilo, float escalaTexto) {
 		super(x, y, ancho, alto, texto, accion, DEFAULT_NARRATION);
@@ -32,49 +32,73 @@ public class BotonRataLand extends Button {
 		this(x, y, ancho, alto, texto, accion, estilo, 1f);
 	}
 
+	/** Icono pixel delante del texto (o solo, si el botón es cuadrado). */
+	public BotonRataLand conIcono(String[] icono, int color) {
+		this.icono = icono;
+		this.colorIcono = color;
+		if (soloIcono()) setTooltip(Tooltip.create(getMessage()));
+		return this;
+	}
+
+	/** Icono encima del texto, como las fichas de la pausa. */
+	public BotonRataLand comoFicha() {
+		this.ficha = true;
+		return this;
+	}
+
+	private boolean soloIcono() {
+		return icono != null && !ficha && getWidth() <= getHeight() + 4;
+	}
+
 	@Override
 	protected void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
 		int x = getX();
 		int y = getY();
 		int w = getWidth();
 		int h = getHeight();
-		boolean encima = isHoveredOrFocused() && this.active;
+		boolean encima = isHovered() && this.active;
+		boolean foco = isFocused() && !isHovered();
 
-		context.fill(x, y, x + w, y + h, estilo == Estilo.HIERBA ? 0xFF1B120B : 0xFF10141D);
-		int ix = x + 1;
-		int iy = y + 1;
-		int iw = w - 2;
-		int ih = h - 2;
 		if (estilo == Estilo.HIERBA) {
-			mosaico(context, RataLand.BOTON_TIERRA, ix, iy, iw, ih, 16, 16);
-			mosaico(context, RataLand.BOTON_HIERBA, ix, iy, iw, Math.min(6, ih), 16, 6);
+			context.fill(x, y, x + w, y + h, foco ? com.rataland.menu.Estilo.QUESO : 0xFF1B120B);
+			mosaico(context, RataLand.BOTON_TIERRA, x + 1, y + 1, w - 2, h - 2, 16, 16);
+			mosaico(context, RataLand.BOTON_HIERBA, x + 1, y + 1, w - 2, Math.min(6, h - 2), 16, 6);
+			context.fill(x + 1, y + 1, x + w - 1, y + 2, 0x30FFFFFF);
+			context.fill(x + 1, y + h - 3, x + w - 1, y + h - 1, 0x4C000000);
+			if (encima) context.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0x22FFFFFF);
+			if (!this.active) context.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0x88000000);
 		} else {
-			int fondo = estilo == Estilo.PELIGRO ? 0xFF2B2230 : estilo == Estilo.DISCORD ? 0xFF4F5BD5 : 0xFF3A4152;
-			context.fill(ix, iy, ix + iw, iy + ih, fondo);
+			int fondo = estilo == Estilo.PELIGRO ? com.rataland.menu.Estilo.PELIGRO
+					: estilo == Estilo.DISCORD ? com.rataland.menu.Estilo.DISCORD : com.rataland.menu.Estilo.PIEDRA;
+			com.rataland.menu.Estilo.botonPiedra(context, x, y, w, h, fondo, encima, foco, this.active);
 		}
-		// Relieve: luz arriba, sombra abajo
-		context.fill(ix, iy, ix + iw, iy + 1, 0x30FFFFFF);
-		context.fill(ix, iy + ih - 2, ix + iw, iy + ih, 0x4C000000);
-		if (encima) context.fill(ix, iy, ix + iw, iy + ih, 0x22FFFFFF);
-		if (!this.active) context.fill(ix, iy, ix + iw, iy + ih, 0x88000000);
 
-		// Botón cuadrado de Discord: solo el icono
-		if (estilo == Estilo.DISCORD && w <= h + 4) {
-			int p = Math.max(1, Math.min(iw, ih) / 12);
-			int ox = x + (w - 8 * p) / 2;
-			int oy = y + (h - 8 * p) / 2;
-			for (int fy = 0; fy < 8; fy++) {
-				for (int fx = 0; fx < 8; fx++) {
-					if (ICONO_DISCORD[fy].charAt(fx) == '#') context.fill(ox + fx * p, oy + fy * p, ox + (fx + 1) * p, oy + (fy + 1) * p, encima ? 0xFFFFFFA0 : 0xFFFFFFFF);
-				}
-			}
+		int color = !this.active ? com.rataland.menu.Estilo.MUY_TENUE : encima ? 0xFFFFFFA0 : estilo == Estilo.PELIGRO ? 0xFFFF9A8A : 0xFFFFFFFF;
+		Font fuente = Minecraft.getInstance().font;
+
+		if (soloIcono()) {
+			int p = Math.max(1, Math.min(w, h) / 12);
+			com.rataland.menu.Estilo.icono(context, icono, x + (w - 8 * p) / 2, y + (h - 8 * p) / 2, p, encima ? 0xFFFFFFA0 : colorIcono);
+			return;
+		}
+		if (ficha && icono != null) {
+			int alto = 8 + 4 + 8;
+			int iy = y + (h - alto) / 2;
+			com.rataland.menu.Estilo.icono(context, icono, x + (w - 8) / 2, iy, 1, colorIcono);
+			context.drawCenteredString(fuente, com.rataland.menu.Estilo.recortar(fuente, getMessage().getString(), w - 4), x + w / 2, iy + 12, color);
 			return;
 		}
 
-		int color = !this.active ? 0xFFA0A0A0 : encima ? 0xFFFFFFA0 : estilo == Estilo.PELIGRO ? 0xFFFF9A8A : 0xFFFFFFFF;
-		Font fuente = Minecraft.getInstance().font;
-		float cx = x + w / 2f;
 		float cy = y + h / 2f + (estilo == Estilo.HIERBA ? 1.5f : 0f);
+		float anchoTexto = fuente.width(getMessage()) * escalaTexto;
+		float cx = x + w / 2f;
+		if (icono != null) {
+			// Icono y texto centrados juntos
+			float total = 8 + 6 + anchoTexto;
+			float inicio = x + (w - total) / 2f;
+			com.rataland.menu.Estilo.icono(context, icono, Math.round(inicio), Math.round(cy - 4), 1, color == 0xFFFFFFFF ? colorIcono : color);
+			cx = inicio + 14 + anchoTexto / 2f;
+		}
 		context.pose().pushPose();
 		context.pose().translate(cx, cy, 0);
 		context.pose().scale(escalaTexto, escalaTexto, 1f);

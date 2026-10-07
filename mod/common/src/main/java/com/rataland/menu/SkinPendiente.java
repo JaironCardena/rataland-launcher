@@ -2,9 +2,7 @@ package com.rataland.menu;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -55,8 +53,8 @@ public final class SkinPendiente {
 			// Solo se aceptan los comandos de skin: el archivo no puede hacer mandar otra cosa
 			if (!comando.startsWith("skin ")) return;
 
-			client.gui.getChat().addMessage(Component.literal("RataLand: poniendo la skin que elegiste en el launcher…").withStyle(ChatFormatting.GOLD));
 			client.getConnection().sendCommand(comando);
+			Avisos.skin();
 			json.addProperty("aplicada", id);
 			try (Writer escritor = Files.newBufferedWriter(ruta, StandardCharsets.UTF_8)) {
 				escritor.write(json.toString());

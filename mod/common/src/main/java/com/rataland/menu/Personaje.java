@@ -101,6 +101,24 @@ public final class Personaje {
 		context.drawString(fuente, nombre, nx, ny, 0xFFFFFFFF, false);
 	}
 
+	/** Tu cara (con el gorro de la capa exterior) de `tam`×`tam`, para la barra de abajo del menú. */
+	public static void cara(GuiGraphics context, Minecraft client, int x, int y, int tam) {
+		cargar(client);
+		ResourceLocation tex;
+		int alto;
+		if (textura != null) {
+			tex = textura;
+			alto = altoTextura;
+		} else {
+			tex = client.getSkinManager().getInsecureSkin(client.getGameProfile()).texture();
+			alto = 64;
+		}
+		RenderSystem.enableBlend();
+		context.blit(tex, x, y, tam, tam, 8, 8, 8, 8, 64, alto);
+		context.blit(tex, x, y, tam, tam, 40, 8, 8, 8, 64, alto);
+		RenderSystem.disableBlend();
+	}
+
 	private static void pieza(GuiGraphics context, ResourceLocation tex, int altoTextura, int u, int v, int w, int h, int dx, int dy) {
 		context.blit(tex, dx, dy, u, v, w, h, 64, altoTextura);
 	}

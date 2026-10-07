@@ -9,6 +9,6 @@ import net.neoforged.fml.loading.FMLPaths;
 @Mod(value = RataLand.MOD_ID, dist = Dist.CLIENT)
 public class RataLandNeoForge {
 	public RataLandNeoForge() {
-		RataLand.iniciar(FMLPaths.CONFIGDIR.get());
+		RataLand.iniciar(FMLPaths.CONFIGDIR.get(), "NeoForge");
 	}
 }
