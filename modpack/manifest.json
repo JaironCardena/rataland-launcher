@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-08T22:01:53.203Z",
+  "generado": "2026-10-08T22:16:43.286Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -30,13 +30,6 @@
   ],
   "packsActivos": [],
   "archivos": [
-    {
-      "ruta": "mods/fabric-api-0.116.17+1.21.1.jar",
-      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/fabric-api-0.116.17%2B1.21.1.jar",
-      "sha1": "810b2b0195371a012906241d8b85a32a1d6de53c",
-      "tamano": 2452735,
-      "git": "16198017bcb3b6ed122ad87634a20498e3e9f76d"
-    },
     {
       "ruta": "mods/journeymap-fabric-1.21.1-6.0.9.jar",
       "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/journeymap-fabric-1.21.1-6.0.9.jar",
