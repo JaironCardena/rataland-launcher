@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-08T22:20:05.123Z",
+  "generado": "2026-10-08T22:20:20.732Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -185,6 +185,19 @@
         "numero": "4.8.11+1.21.1",
         "nombre": "LambDynamicLights - Dynamic Lights",
         "icono": "https://cdn.modrinth.com/data/yBW8D80W/d4f5c3ff8df7caf024178b04eca6d69f95979cfe_96.webp"
+      }
+    },
+    {
+      "ruta": "mods/fabric-api-0.116.17+1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/Mys3P7lK/fabric-api-0.116.17%2B1.21.1.jar",
+      "sha1": "810b2b0195371a012906241d8b85a32a1d6de53c",
+      "tamano": 2452735,
+      "modrinth": {
+        "proyecto": "P7dR8mSH",
+        "version": "Mys3P7lK",
+        "numero": "0.116.17+1.21.1",
+        "nombre": "Fabric API",
+        "icono": "https://cdn.modrinth.com/data/P7dR8mSH/icon.png"
       }
     }
   ]
