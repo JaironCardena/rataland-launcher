@@ -207,9 +207,23 @@
         "nombre": "Translations for Sodium",
         "icono": "https://cdn.modrinth.com/data/yfDziwn1/907581019df45903df237952ce8d10ac37134cb5_96.webp"
       }
+    },
+    {
+      "ruta": "resourcepacks/JICKLUS.zip",
+      "url": "https://cdn.modrinth.com/data/E4PmmlqX/versions/ZFJ0cqI1/JICKLUS.zip",
+      "sha1": "2581ab45d64da00bf29f4900a3a988e9563382ec",
+      "tamano": 10150013,
+      "modrinth": {
+        "proyecto": "E4PmmlqX",
+        "version": "ZFJ0cqI1",
+        "numero": "198",
+        "nombre": "JICKLUS",
+        "icono": "https://cdn.modrinth.com/data/E4PmmlqX/5d1ed809b3c94ecba02fd5c86062845991a533d4.png"
+      }
     }
   ],
   "packsActivos": [
-    "resourcepacks/SodiumTranslations.zip"
+    "resourcepacks/SodiumTranslations.zip",
+    "resourcepacks/JICKLUS.zip"
   ]
 }
