@@ -6,7 +6,7 @@
     "version": "0.19.5"
   },
   "servidor": {
-    "ip": "Rataland-8RN6.aternos.me",
+    "ip": "rataland.progamer.me",
     "puerto": 25565,
     "entrarDirecto": false
   },

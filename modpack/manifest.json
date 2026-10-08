@@ -1,12 +1,12 @@
 {
-  "generado": "2026-10-07T03:14:55.798Z",
+  "generado": "2026-10-08T22:01:53.203Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
     "version": "0.19.5"
   },
   "servidor": {
-    "ip": "Rataland-8RN6.aternos.me",
+    "ip": "rataland.progamer.me",
     "puerto": 25565,
     "entrarDirecto": false
   },
