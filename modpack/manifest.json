@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-08T23:09:06.087Z",
+  "generado": "2026-10-08T23:13:56.651Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -30,7 +30,6 @@
   ],
   "packsActivos": [
     "resourcepacks/SodiumTranslations.zip",
-    "resourcepacks/FreshAnimations_v1.10.4.zip",
     "resourcepacks/LowOnFire v26.2§8.zip",
     "resourcepacks/Low Shield.zip"
   ],
@@ -216,19 +215,6 @@
         "numero": "v8.18.0",
         "nombre": "Translations for Sodium",
         "icono": "https://cdn.modrinth.com/data/yfDziwn1/907581019df45903df237952ce8d10ac37134cb5_96.webp"
-      }
-    },
-    {
-      "ruta": "resourcepacks/FreshAnimations_v1.10.4.zip",
-      "url": "https://cdn.modrinth.com/data/50dA9Sha/versions/xN57JJts/FreshAnimations_v1.10.4.zip",
-      "sha1": "73db740a6868e043c5e615c036fca2c912615b6e",
-      "tamano": 850941,
-      "modrinth": {
-        "proyecto": "50dA9Sha",
-        "version": "xN57JJts",
-        "numero": "1.10.4",
-        "nombre": "Fresh Animations",
-        "icono": "https://cdn.modrinth.com/data/50dA9Sha/3132c10e9e3c73fde9799720fd3da5561071708c_96.webp"
       }
     },
     {
