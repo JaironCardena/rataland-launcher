@@ -194,7 +194,22 @@
         "nombre": "Fabric API",
         "icono": "https://cdn.modrinth.com/data/P7dR8mSH/icon.png"
       }
+    },
+    {
+      "ruta": "resourcepacks/SodiumTranslations.zip",
+      "url": "https://cdn.modrinth.com/data/yfDziwn1/versions/ZJKZpEl8/SodiumTranslations.zip",
+      "sha1": "b05f2076a16143b8b17375fd1c3b258353058124",
+      "tamano": 286513,
+      "modrinth": {
+        "proyecto": "yfDziwn1",
+        "version": "ZJKZpEl8",
+        "numero": "v8.18.0",
+        "nombre": "Translations for Sodium",
+        "icono": "https://cdn.modrinth.com/data/yfDziwn1/907581019df45903df237952ce8d10ac37134cb5_96.webp"
+      }
     }
   ],
-  "packsActivos": []
+  "packsActivos": [
+    "resourcepacks/SodiumTranslations.zip"
+  ]
 }
