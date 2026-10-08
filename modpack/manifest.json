@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-08T23:03:34.983Z",
+  "generado": "2026-10-08T23:05:50.081Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -31,7 +31,9 @@
   "packsActivos": [
     "resourcepacks/SodiumTranslations.zip",
     "resourcepacks/JICKLUS.zip",
-    "resourcepacks/FreshAnimations_v1.10.4.zip"
+    "resourcepacks/FreshAnimations_v1.10.4.zip",
+    "resourcepacks/LowOnFire v26.2§8.zip",
+    "resourcepacks/Low Shield.zip"
   ],
   "archivos": [
     {
@@ -241,6 +243,32 @@
         "numero": "1.10.4",
         "nombre": "Fresh Animations",
         "icono": "https://cdn.modrinth.com/data/50dA9Sha/3132c10e9e3c73fde9799720fd3da5561071708c_96.webp"
+      }
+    },
+    {
+      "ruta": "resourcepacks/LowOnFire v26.2§8.zip",
+      "url": "https://cdn.modrinth.com/data/RRxvWKNC/versions/yQdcUfnr/LowOnFire%20v26.2%C2%A78.zip",
+      "sha1": "96932a034fff4cd0cad08ba12db730450c4772da",
+      "tamano": 42760,
+      "modrinth": {
+        "proyecto": "RRxvWKNC",
+        "version": "yQdcUfnr",
+        "numero": "26.3",
+        "nombre": "Low On Fire",
+        "icono": "https://cdn.modrinth.com/data/RRxvWKNC/06a7e7691a6da41798c255108a8563d7ffea171d.png"
+      }
+    },
+    {
+      "ruta": "resourcepacks/Low Shield.zip",
+      "url": "https://cdn.modrinth.com/data/CZrLuVQo/versions/AV6Mwfm5/Low%20Shield.zip",
+      "sha1": "33361c7a9e514b4dafade25b06051035b39b0196",
+      "tamano": 3922,
+      "modrinth": {
+        "proyecto": "CZrLuVQo",
+        "version": "AV6Mwfm5",
+        "numero": "3.0.0",
+        "nombre": "Low Shield",
+        "icono": "https://cdn.modrinth.com/data/CZrLuVQo/4ae626dba10d5bcc73f9a7b0a50c22e572075b6b.png"
       }
     }
   ]
