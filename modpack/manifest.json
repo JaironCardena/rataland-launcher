@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-08T23:13:56.651Z",
+  "generado": "2026-10-08T23:15:36.321Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -31,7 +31,8 @@
   "packsActivos": [
     "resourcepacks/SodiumTranslations.zip",
     "resourcepacks/LowOnFire v26.2§8.zip",
-    "resourcepacks/Low Shield.zip"
+    "resourcepacks/Low Shield.zip",
+    "resourcepacks/Faithful 64x - Release 6.zip"
   ],
   "archivos": [
     {
@@ -241,6 +242,19 @@
         "numero": "3.0.0",
         "nombre": "Low Shield",
         "icono": "https://cdn.modrinth.com/data/CZrLuVQo/4ae626dba10d5bcc73f9a7b0a50c22e572075b6b.png"
+      }
+    },
+    {
+      "ruta": "resourcepacks/Faithful 64x - Release 6.zip",
+      "url": "https://cdn.modrinth.com/data/r4GILswZ/versions/BauEG3pq/Faithful%2064x%20-%20Release%206.zip",
+      "sha1": "303bf334a2d0015bde217526485ec977c8f81b7b",
+      "tamano": 16767880,
+      "modrinth": {
+        "proyecto": "r4GILswZ",
+        "version": "BauEG3pq",
+        "numero": "6",
+        "nombre": "Faithful 64x",
+        "icono": "https://cdn.modrinth.com/data/r4GILswZ/9ff7d3c66d6a263c158c2ef034b0361fdfbf354b.png"
       }
     }
   ]
