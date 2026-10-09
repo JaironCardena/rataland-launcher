@@ -472,7 +472,9 @@ function vistaEstado () {
       ? 'Acaba de encenderse: el número de jugadores aparecerá en unos minutos.'
       : `${d.jugadores} de ${d.maximo} ${d.maximo === 1 ? 'jugador conectado' : 'jugadores conectados'}. Minecraft ${d.versionMinecraft || d.version}.`))
     if (d.lista.length) {
-      lineas.push(h('div', { class: 'cabezas' }, d.lista.map((p) => h('img', { src: `https://mc-heads.net/avatar/${encodeURIComponent(p.uuid || p.nombre)}/26`, alt: p.nombre, title: p.nombre }))))
+      // Por nombre, como el launcher: con el servidor en modo sin premium los UUID que manda no son los
+      // de Mojang y mc-heads.net solo daría la cara por defecto
+      lineas.push(h('div', { class: 'cabezas' }, d.lista.map((p) => h('img', { src: `https://mc-heads.net/avatar/${encodeURIComponent(p.nombre || p.uuid)}/26`, alt: p.nombre, title: p.nombre }))))
     }
     if (d.versionMinecraft && d.versionMinecraft !== ajustes.minecraft) {
       lineas.push(h('p', { class: 'aviso-caja aviso-caja--mal' }, `El servidor está en Minecraft ${d.versionMinecraft} y el modpack en ${ajustes.minecraft}. Los jugadores no podrán entrar hasta que coincidan.`))
