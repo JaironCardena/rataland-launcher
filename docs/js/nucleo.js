@@ -382,7 +382,7 @@ function avisoDelHost (nombre, protocolo) {
 
 /**
  * Pregunta a mcapi.us, que sí llega a los servidores de Aternos (mcstatus.io los da siempre por apagados).
- * Sin puerto, mcapi.us usa el registro SRV: en Aternos es el puerto de ahora aunque haya cambiado.
+ * mcapi.us no sigue el registro SRV: el puerto de verdad hay que dárselo.
  */
 async function estadoMcapi (ip, puerto) {
   const url = new URL('https://mcapi.us/server/status')
@@ -439,7 +439,12 @@ async function estadoSinAternos (ip, puerto) {
  */
 export async function estadoServidor (ip, puerto) {
   puerto = Number(puerto) || 25565
-  if (!/\.aternos\.me$/i.test(ip)) return estadoSinAternos(ip, puerto)
+  if (!/\.aternos\.me$/i.test(ip)) {
+    // Sin puerto, el de verdad está en el registro SRV: en el 25565 algunos hosts (PowerUpStack)
+    // solo contestan con un aviso suyo que dice qué puerto usar, y eso parecía "apagado".
+    const srv = puerto === 25565 ? await puertoSrv(ip).catch(() => null) : null
+    return estadoSinAternos(ip, srv || puerto)
+  }
   const srv = await puertoSrv(ip).catch(() => null)
   if (!srv) return estadoSinAternos(ip, puerto)
   const r = await estadoMcapi(ip, srv).catch(() => null)

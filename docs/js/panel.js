@@ -480,11 +480,13 @@ function vistaEstado () {
   } else if (d.encendiendo) {
     titulo = 'Encendiéndose…'
     luz = 'luz--encendiendo'
-    lineas.push(h('p', {}, 'Aternos está arrancando el servidor. En un momento los jugadores podrán entrar.'))
+    lineas.push(h('p', {}, 'El servidor está arrancando. En un momento los jugadores podrán entrar.'))
   } else {
     titulo = 'Servidor apagado'
     luz = 'luz--apagado'
-    lineas.push(h('p', {}, 'Los jugadores no pueden entrar ahora mismo. ', h('a', { href: PAGINA_ATERNOS, target: '_blank', rel: 'noopener' }, 'Enciéndelo en Aternos'), '.'))
+    lineas.push(/\.aternos\.me$/i.test(ip)
+      ? h('p', {}, 'Los jugadores no pueden entrar ahora mismo. ', h('a', { href: PAGINA_ATERNOS, target: '_blank', rel: 'noopener' }, 'Enciéndelo en Aternos'), '.')
+      : h('p', {}, 'Los jugadores no pueden entrar ahora mismo. Con el encendido automático, arrancará en cuanto alguien pulse Jugar en el launcher.'))
   }
 
   // El dato puede tener unos minutos (la web que consulta el servidor lo guarda en caché)
@@ -982,7 +984,7 @@ function vistaCompatibilidad () {
             ? 'Tienes activado "Entrar al servidor nada más abrir el juego", así que entrarán directos.'
             : h('button', { class: 'enlace-boton', onclick: () => { servidor.entrarDirecto = true; ajustes.servidor = servidor; pintar() } }, 'Activar "Entrar al servidor nada más abrir el juego"'))
         : null,
-      h('p', {}, `Cambia también el servidor de Aternos a ${destino} y haz antes una copia del mundo: un mundo abierto en una versión más nueva ya no se puede abrir en una más vieja.`),
+      h('p', {}, `Cambia también el servidor (en el panel de tu hosting) a ${destino} y haz antes una copia del mundo: un mundo abierto en una versión más nueva ya no se puede abrir en una más vieja.`),
       h('p', { class: 'campo__ayuda' }, 'Los jugadores no tienen que hacer nada: al pulsar Jugar, el launcher instala la nueva versión y deja solo los mods de la lista.'),
       h('p', { class: 'acciones-cambio' },
         h('button', { class: 'boton boton--principal boton--pequeno', disabled: plan.aplicando, onclick: aplicarCambioVersion }, plan.aplicando ? 'Aplicando…' : 'Aplicar el cambio'),
@@ -1148,7 +1150,7 @@ function vistaComparacion () {
       r.faltanEnServidor.length
         ? h('div', { class: 'aviso-caja' },
           h('h3', {}, `${r.faltanEnServidor.length} en el modpack pero no en el servidor`),
-          h('p', {}, 'Si son visuales o de rendimiento (mapas, menús, gráficos) no pasa nada. Si añaden contenido, instálalos también en Aternos.'),
+          h('p', {}, 'Si son visuales o de rendimiento (mapas, menús, gráficos) no pasa nada. Si añaden contenido, instálalos también en el servidor.'),
           h('ul', {}, r.faltanEnServidor.map((m) => h('li', {}, nombreDe(m)))))
         : null,
       r.soloCliente.length || r.coinciden.length
@@ -1160,7 +1162,7 @@ function vistaComparacion () {
 
   return h('div', { class: 'formulario' },
     h('ol', { class: 'pasos' },
-      h('li', {}, 'En Aternos, enciende el servidor y abre ', h('strong', {}, 'Registro'), ' (Log).'),
+      h('li', {}, 'En el panel de tu hosting, enciende el servidor y abre la ', h('strong', {}, 'consola'), ' o el registro (Log).'),
       h('li', {}, 'Copia todo el texto desde el principio del arranque y pégalo aquí.')),
     campo('Registro de arranque del servidor', area),
     h('p', {}, h('button', { class: 'boton', disabled: comparacion.cargando, onclick: () => compararConServidor(area.value) }, comparacion.cargando ? 'Comparando…' : 'Comparar')),
@@ -1395,7 +1397,7 @@ function pintarZip () {
     sinPublicar ? h('p', { class: 'aviso-caja' }, 'Incluye los cambios que aún no has publicado.') : null,
     h('ol', { class: 'zip-pasos' },
       h('li', {}, 'Descomprime el .zip.'),
-      h('li', {}, 'En Aternos, entra en Archivos y abre la carpeta mods.'),
+      h('li', {}, 'En el panel de tu hosting, entra en los archivos del servidor y abre la carpeta mods.'),
       h('li', {}, 'Borra los mods que ya no estén en esta lista y sube los .jar del .zip.'),
       h('li', {}, `Comprueba que el servidor usa Minecraft ${ajustes.minecraft} con ${nombreLoader()} ${ajustes.loader?.version}.`)))
   boton.disabled = !marcados
