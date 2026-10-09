@@ -134,7 +134,7 @@
       <!-- Tu personaje, de pie en el paisaje -->
       <div class="personaje" aria-hidden="true" hidden>
         <span class="personaje__nombre"></span>
-        <canvas class="personaje__lienzo" width="16" height="32"></canvas>
+        <div class="personaje__lienzo"></div>
       </div>
 
       <aside class="noticias px" aria-labelledby="titulo-noticias">
@@ -216,7 +216,7 @@
         </div>
 
         <div class="skin-vista px">
-          <canvas class="skin-vista__lienzo" width="16" height="32" role="img" aria-label="Vista previa de tu skin"></canvas>
+          <div class="skin-vista__lienzo" role="img" aria-label="Vista previa de tu skin. Arrastra para girarla."></div>
           <span class="skin-vista__vacia" hidden>Skin por defecto</span>
         </div>
         <p class="ajuste__ayuda skin-nota" data-nota-skin hidden>
@@ -313,6 +313,7 @@
 
   <script src="fondo-animado.js"></script>
   <script src="fondo-escenas.js"></script>
+  <script src="skin3d.js"></script>
   <script src="demo.js"></script>
   <script src="app.js"></script>
 </body>

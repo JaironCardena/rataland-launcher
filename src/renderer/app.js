@@ -152,7 +152,8 @@ async function pintarPersonaje () {
     return
   }
   caja.querySelector('.personaje__nombre').textContent = estado.cuenta.nombre
-  dibujarSkin(caja.querySelector('.personaje__lienzo'), await cargarImagen(skin.imagen), skin.modelo === 'slim')
+  const img = await cargarImagen(skin.imagen)
+  figuraPersonaje.poner(img, skin.modelo === 'slim', img.height === 32 && capaOpaca(img))
   caja.hidden = false
 }
 
@@ -557,43 +558,9 @@ async function cerrarSesion () {
 
 const skin = { imagen: null, modelo: 'classic', nueva: null, imagenNueva: null, ocupado: false }
 
-/**
- * Dibuja la skin de frente en un lienzo de 16×32 (cabeza, cuerpo, brazos y piernas, y encima la
- * capa exterior). Las skins antiguas de 64×32 no tienen brazo ni pierna izquierdos: se reflejan los derechos.
- */
-function dibujarSkin (lienzo, img, delgado) {
-  const c = lienzo.getContext('2d')
-  c.imageSmoothingEnabled = false
-  c.clearRect(0, 0, lienzo.width, lienzo.height)
-  if (!img) return
-  const moderna = img.height === 64
-  const brazo = delgado ? 3 : 4
-  const pieza = (sx, sy, w, h, dx, dy, espejo) => {
-    if (!espejo) return c.drawImage(img, sx, sy, w, h, dx, dy, w, h)
-    c.save()
-    c.translate(dx + w, dy)
-    c.scale(-1, 1)
-    c.drawImage(img, sx, sy, w, h, 0, 0, w, h)
-    c.restore()
-  }
-  pieza(8, 8, 8, 8, 4, 0)
-  pieza(20, 20, 8, 12, 4, 8)
-  pieza(44, 20, brazo, 12, 4 - brazo, 8)
-  if (moderna) pieza(36, 52, brazo, 12, 12, 8)
-  else pieza(44, 20, brazo, 12, 12, 8, true)
-  pieza(4, 20, 4, 12, 4, 20)
-  if (moderna) pieza(20, 52, 4, 12, 8, 20)
-  else pieza(4, 20, 4, 12, 8, 20, true)
-  // Capa exterior (gorro, chaqueta, mangas y pantalón)
-  if (moderna || !capaOpaca(img)) pieza(40, 8, 8, 8, 4, 0)
-  if (moderna) {
-    pieza(20, 36, 8, 12, 4, 8)
-    pieza(44, 36, brazo, 12, 4 - brazo, 8)
-    pieza(52, 52, brazo, 12, 12, 8)
-    pieza(4, 36, 4, 12, 4, 20)
-    pieza(4, 52, 4, 12, 8, 20)
-  }
-}
+// Tu skin en 3D: en el paisaje (junto a tu nombre) y en el panel para cambiarla
+const figuraPersonaje = window.Skin3D.montar($('.personaje__lienzo'), { escala: 6 })
+const figuraSkin = window.Skin3D.montar($('.skin-vista__lienzo'), { escala: 7 })
 
 /** En las skins antiguas, un gorro sin ningún píxel transparente es relleno: Minecraft no lo pinta. */
 function capaOpaca (img) {
@@ -638,10 +605,9 @@ function modeloElegido () {
 }
 
 async function pintarSkin () {
-  const lienzo = $('.skin-vista__lienzo')
   const fuente = skin.imagenNueva || skin.imagen
   const img = fuente ? (typeof fuente === 'string' ? await cargarImagen(fuente) : fuente) : null
-  dibujarSkin(lienzo, img, modeloElegido() === 'slim')
+  figuraSkin.poner(img, modeloElegido() === 'slim', Boolean(img) && img.height === 32 && capaOpaca(img))
   $('.skin-vista__vacia').hidden = Boolean(img)
   const hayCambios = Boolean(skin.nueva) || (Boolean(skin.imagen) && modeloElegido() !== skin.modelo)
   $('[data-accion="guardar-skin"]').disabled = skin.ocupado || !hayCambios

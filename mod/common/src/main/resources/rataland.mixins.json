@@ -5,10 +5,13 @@
   "client": [
     "AbstractButtonMixin",
     "AbstractSliderButtonMixin",
+    "AdvancementToastMixin",
     "ClientPlayNetworkHandlerMixin",
     "ConnectScreenMixin",
+    "DeathScreenMixin",
     "DisconnectedScreenAccessor",
     "MinecraftClientMixin",
+    "PlayerTabOverlayMixin",
     "ReceivingLevelScreenMixin",
     "ScreenMixin",
     "SplashOverlayMixin",

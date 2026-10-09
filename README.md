@@ -4,7 +4,7 @@ Launcher propio (Electron) para la serie RataLand:
 
 - Descarga **Minecraft**, **Fabric** o **NeoForge** y **Java** (el oficial de Mojang: el jugador no necesita instalar nada).
 - Mantiene los **mods ocultos y sincronizados** en `%APPDATA%\.rataland` (carpeta oculta). Cada vez que se pulsa *Jugar* se descargan los mods nuevos, se restauran los que el jugador haya modificado y se borran los que sobran (mods viejos o puestos a mano).
-- Inicio de sesión con **Microsoft** (premium) y **sin premium**.
+- Inicio de sesión con **Microsoft** (premium) y **sin premium**, con tu skin en 3D (se gira arrastrando con el ratón).
 - Muestra si el servidor está encendido, cuántos jugadores hay y las **novedades** que publiques.
 - Si el servidor tiene **encendido automático** (arranca cuando alguien intenta entrar), al pulsar *Jugar* el launcher ya hace ese intento, así va arrancando mientras se actualiza y se abre el juego. Lo que contesta el servidor queda en `%APPDATA%\.rataland\.launcher\servidor.log`.
 - Incluye el **mod de RataLand** (`mod/`, para Fabric y NeoForge), que dentro del juego:
@@ -12,7 +12,8 @@ Launcher propio (Electron) para la serie RataLand:
   - sustituye el menú principal por una portada: el logo y la cuenta atrás del próximo episodio arriba, el paisaje en medio, y abajo el estado del servidor (y quién está dentro), **Jugar** (entra al servidor), **Opciones**, **Discord** y **Salir**; tu personaje está de pie en el paisaje y tu cuenta arriba a la derecha,
   - sustituye el menú de pausa (Esc): **Volver al juego**, **Progresos**, **Estadísticas**, **Opciones**, **Discord** y **Volver a RataLand**, con los jugadores conectados, tu ping y la cuenta atrás,
   - muestra «Entrando en RataLand» con los pasos al conectar y, si no se puede entrar o te echan, explica en español qué pasó (servidor dormido, sin internet, lleno, baneado…) con **Reintentar**,
-  - avisa cuando falta poco para el episodio, cuando entra alguien y cuando se pone tu skin,
+  - avisa cuando falta poco para el episodio, cuando entra alguien y cuando se pone tu skin, y los logros de Minecraft salen con ese mismo estilo,
+  - cambia la pantalla de muerte (con la puntuación y dónde has muerto) y la lista de jugadores del Tab (cara, nombre y ping) por unas al estilo de la serie,
   - da a los botones y deslizadores de Opciones el estilo del launcher y usa el paisaje de RataLand como fondo (algunos se mueven),
   - pone "RataLand" como título de la ventana.
 

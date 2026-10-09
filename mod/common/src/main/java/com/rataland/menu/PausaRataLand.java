@@ -3,6 +3,7 @@ package com.rataland.menu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
+import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.achievement.StatsScreen;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
@@ -190,6 +191,6 @@ public class PausaRataLand extends Screen {
 			}
 		}
 
-		if (RataLand.MODO_CAPTURA && ++this.fotogramas == 80) Prueba.alSiguienteTick("rataland-pausa.png", () -> Prueba.despuesDeLaPausa(this));
+		if (RataLand.MODO_CAPTURA && ++this.fotogramas == 80) Prueba.alSiguienteTick("rataland-pausa.png", () -> this.minecraft.setScreen(new DeathScreen(Component.literal("Probador se cayó por el pozo de la mina"), false)));
 	}
 }

@@ -506,7 +506,7 @@ button { cursor: pointer; }
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.personaje__lienzo { width: 96px; height: 192px; image-rendering: pixelated; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35)); }
+.personaje__lienzo { width: 96px; height: 192px; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35)); }
 .personaje::after { content: ''; width: 84px; height: 10px; margin-top: -14px; border-radius: 50%; background: rgba(0, 0, 0, 0.45); }
 
 /* Avisos */
@@ -611,7 +611,15 @@ button { cursor: pointer; }
   margin: 4px 0 6px;
   background: radial-gradient(ellipse at 50% 92%, rgba(246, 196, 69, 0.18) 0 18%, transparent 40%), rgba(9, 14, 26, 0.6);
 }
-.skin-vista__lienzo { width: 112px; height: 224px; image-rendering: pixelated; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35)); }
+.skin-vista__lienzo { width: 112px; height: 224px; filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35)); }
+
+/* Tu skin en 3D (skin3d.js): cajas con perspectiva que se giran arrastrando */
+.skin3d { position: relative; perspective: 900px; cursor: grab; touch-action: none; }
+.skin3d--girando { cursor: grabbing; }
+.skin3d__modelo { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; }
+.skin3d__modelo[hidden] { display: none; }
+.skin3d__parte, .skin3d__caja { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+.skin3d__cara { position: absolute; background-repeat: no-repeat; image-rendering: pixelated; backface-visibility: hidden; }
 .skin-vista__vacia { position: absolute; bottom: 10px; color: var(--muy-tenue); font-size: 12.5px; }
 .panel-skin .ajuste:first-of-type { border-top: 0; }
 .skin-nota { margin: 0 0 4px; }

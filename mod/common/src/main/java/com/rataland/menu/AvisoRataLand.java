@@ -6,14 +6,17 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
+import net.minecraft.advancements.AdvancementType;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.UUID;
 
 /** Aviso dentro del juego con el estilo de RataLand: icono (o la cara de un jugador), título y una línea. */
 public class AvisoRataLand implements Toast {
-	private static final int ANCHO = 180;
+	public static final int ANCHO = 180;
 	private static final int ALTO = 32;
 	private static final long DURACION = 5000;
 
@@ -65,13 +68,7 @@ public class AvisoRataLand implements Toast {
 	@Override
 	public Visibility render(GuiGraphics g, ToastComponent avisos, long tiempo) {
 		Font fuente = Minecraft.getInstance().font;
-		if (destacado) {
-			Estilo.escalon(g, 0, 0, ANCHO, ALTO, 0xF00D1424);
-			Estilo.bordeEscalon(g, 0, 0, ANCHO, ALTO, Estilo.QUESO);
-		} else {
-			Estilo.escalon(g, 0, 0, ANCHO, ALTO, 0xF00D1424);
-			Estilo.bordeEscalon(g, 0, 0, ANCHO, ALTO, 0x30D6E2FF);
-		}
+		fondo(g, destacado ? Estilo.QUESO : 0x30D6E2FF);
 		if (nombreCara != null) {
 			// Se busca en cada dibujo: al entrar alguien su skin aún se está descargando, y al ponérsela
 			// el servidor lo vuelve a añadir a la lista con otra ficha
@@ -86,5 +83,25 @@ public class AvisoRataLand implements Toast {
 		g.drawString(fuente, Estilo.recortar(fuente, titulo, ANCHO - 40), 33, 7, destacado ? Estilo.QUESO : Estilo.TEXTO, false);
 		g.drawString(fuente, Estilo.recortar(fuente, texto, ANCHO - 40), 33, 18, Estilo.TENUE, false);
 		return tiempo >= DURACION ? Visibility.HIDE : Visibility.SHOW;
+	}
+
+	private static void fondo(GuiGraphics g, int borde) {
+		Estilo.escalon(g, 0, 0, ANCHO, ALTO, 0xF00D1424);
+		Estilo.bordeEscalon(g, 0, 0, ANCHO, ALTO, borde);
+	}
+
+	/**
+	 * Un logro de Minecraft con el aspecto de los avisos de RataLand: el objeto del logro, el tipo
+	 * («¡Progreso realizado!», «¡Objetivo alcanzado!», «¡Desafío completado!») y su nombre. Los
+	 * desafíos van en morado, como en Minecraft; los objetivos, con el marco de queso.
+	 */
+	public static void dibujarLogro(GuiGraphics g, AdvancementType tipo, Component titulo, ItemStack icono) {
+		Font fuente = Minecraft.getInstance().font;
+		int color = tipo == AdvancementType.CHALLENGE ? 0xFFD58BFF : Estilo.QUESO;
+		fondo(g, tipo == AdvancementType.TASK ? 0x30D6E2FF : color);
+		Estilo.escalon(g, 5, 5, 22, 22, 0xFF1B2236);
+		g.renderFakeItem(icono, 8, 8);
+		g.drawString(fuente, Estilo.recortar(fuente, tipo.getDisplayName().getString(), ANCHO - 40), 33, 7, color, false);
+		g.drawString(fuente, Estilo.recortar(fuente, titulo.getString(), ANCHO - 40), 33, 18, Estilo.TEXTO, false);
 	}
 }

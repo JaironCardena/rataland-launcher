@@ -1,9 +1,15 @@
 package com.rataland.menu;
 
 import net.minecraft.Util;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.toasts.AdvancementToast;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Items;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -85,5 +91,8 @@ public final class Avisos {
 		juego.getToasts().addToast(AvisoRataLand.queso("¡Faltan 5 minutos!", "Episodio 2 a las 20:30"));
 		juego.getToasts().addToast(AvisoRataLand.jugador("Rata_Gamer ha entrado", "Ya sois 5 en " + RataLand.nombre, null, "Rata_Gamer"));
 		juego.getToasts().addToast(AvisoRataLand.listo("Poniendo tu skin", "Los demás la verán en unos segundos"));
+		juego.getToasts().addToast(new AdvancementToast(Advancement.Builder.advancement()
+				.display(Items.GOLDEN_PICKAXE, Component.literal("Minero de queso"), Component.empty(), null, AdvancementType.GOAL, true, false, false)
+				.build(ResourceLocation.fromNamespaceAndPath(RataLand.MOD_ID, "prueba"))));
 	}
 }
