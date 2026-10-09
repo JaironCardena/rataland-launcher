@@ -594,6 +594,44 @@ function cargarImagen (src) {
   })
 }
 
+/** Encima de la vista: que se está cargando, subiendo o buscando una skin (o nada, con null). */
+function cargaSkin (texto) {
+  const capa = $('[data-carga-skin]')
+  capa.hidden = !texto
+  capa.querySelector('.skin-vista__carga-texto').textContent = texto || ''
+}
+
+let marcaTemporal = null
+/** Etiqueta en la esquina de la vista: "Sin guardar", o "Guardada" (en verde) durante un momento. */
+function marcarSkin (texto, tipo = '') {
+  clearTimeout(marcaTemporal)
+  marcaTemporal = null
+  const marca = $('[data-marca-skin]')
+  marca.hidden = !texto
+  marca.textContent = texto || ''
+  marca.className = `skin-vista__marca${tipo ? ` skin-vista__marca--${tipo}` : ''}`
+  if (tipo === 'bien') marcaTemporal = setTimeout(() => { marcaTemporal = null; marca.hidden = true }, 2500)
+}
+
+/** ¿Skin de brazos finos (como Alex)? En esas la última columna de cada brazo queda vacía. */
+function esDelgada (img) {
+  if (img.height !== 64) return false
+  const c = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+  c.canvas.width = 64
+  c.canvas.height = 64
+  c.drawImage(img, 0, 0)
+  return c.getImageData(54, 20, 2, 12).data.every((v, i) => i % 4 !== 3 || v === 0)
+}
+
+/** Enseña una skin nueva (sin guardarla todavía) con su modelo marcado. */
+async function verSkinNueva (datos, imagen, modelo, texto) {
+  skin.nueva = datos
+  skin.imagenNueva = imagen
+  document.querySelector(`input[name="modeloSkin"][value="${modelo}"]`).checked = true
+  estadoSkin(texto)
+  await pintarSkin()
+}
+
 function estadoSkin (texto, tipo = '') {
   const p = $('[data-estado-skin]')
   p.textContent = texto || ''
@@ -609,7 +647,10 @@ async function pintarSkin () {
   const img = fuente ? (typeof fuente === 'string' ? await cargarImagen(fuente) : fuente) : null
   figuraSkin.poner(img, modeloElegido() === 'slim', Boolean(img) && img.height === 32 && capaOpaca(img))
   $('.skin-vista__vacia').hidden = Boolean(img)
+  $('[data-pista-skin]').hidden = !img
   const hayCambios = Boolean(skin.nueva) || (Boolean(skin.imagen) && modeloElegido() !== skin.modelo)
+  if (hayCambios) marcarSkin('Sin guardar')
+  else if (!marcaTemporal) marcarSkin(null)
   $('[data-accion="guardar-skin"]').disabled = skin.ocupado || !hayCambios
   $('[data-accion="quitar-skin"]').disabled = skin.ocupado || !skin.imagen
 }
@@ -632,8 +673,10 @@ async function abrirSkin () {
   marcarRail()
   skin.nueva = null
   skin.imagenNueva = null
-  estadoSkin('Cargando tu skin…')
+  estadoSkin('')
+  cargaSkin('Cargando tu skin…')
   const r = await api.skinActual()
+  cargaSkin(null)
   if (!r.ok) return estadoSkin(r.error, 'error')
   skin.imagen = r.imagen
   skin.modelo = r.modelo
@@ -654,30 +697,54 @@ function cerrarSkin () {
 }
 
 async function elegirSkin (archivo) {
-  if (!archivo) return
+  if (!archivo || skin.ocupado) return
   if (archivo.type && archivo.type !== 'image/png') return estadoSkin('La skin tiene que ser una imagen PNG.', 'error')
-  let img
-  try {
-    img = await createImageBitmap(archivo)
-  } catch {
-    return estadoSkin('No se pudo abrir esa imagen.', 'error')
-  }
+  // Como data URL: la figura 3D la usa de fondo de sus caras
+  const url = await new Promise((resolve) => {
+    const lector = new FileReader()
+    lector.onload = () => resolve(lector.result)
+    lector.onerror = () => resolve(null)
+    lector.readAsDataURL(archivo)
+  })
+  const img = url && await cargarImagen(url).catch(() => null)
+  if (!img) return estadoSkin('No se pudo abrir esa imagen.', 'error')
   if (img.width !== 64 || (img.height !== 64 && img.height !== 32)) {
     return estadoSkin(`La skin tiene que medir 64×64 píxeles; esta mide ${img.width}×${img.height}.`, 'error')
   }
-  skin.nueva = new Uint8Array(await archivo.arrayBuffer())
-  skin.imagenNueva = img
-  estadoSkin('Así quedará. Pulsa "Guardar skin" para ponértela.')
-  await pintarSkin()
+  const delgada = esDelgada(img)
+  await verSkinNueva(new Uint8Array(await archivo.arrayBuffer()), url, delgada ? 'slim' : 'classic',
+    `Así quedará${delgada ? ' (tiene los brazos finos: he marcado Delgado)' : ''}. Pulsa "Guardar skin" para ponértela.`)
+}
+
+/** Copia la skin de un jugador premium por su nombre (la busca el launcher en Mojang). */
+async function skinDeJugador (e) {
+  e.preventDefault()
+  const nombre = e.target.nombre.value.trim()
+  if (!nombre || skin.ocupado) return
+  skin.ocupado = true
+  estadoSkin('')
+  cargaSkin(`Buscando la skin de ${nombre}…`)
+  const r = await api.skinDeJugador(nombre)
+  cargaSkin(null)
+  skin.ocupado = false
+  if (!r.ok) {
+    estadoSkin(r.error, 'error')
+    return pintarSkin()
+  }
+  e.target.reset()
+  await verSkinNueva(r.datos, r.imagen, r.modelo, `Así quedará la skin de ${r.nombre}. Pulsa "Guardar skin" para ponértela.`)
 }
 
 async function guardarSkin () {
   skin.ocupado = true
   await pintarSkin()
-  estadoSkin('Guardando…')
+  estadoSkin('')
+  cargaSkin('Subiendo tu skin…')
   const r = await api.cambiarSkin(skin.nueva, modeloElegido())
+  cargaSkin(null)
   skin.ocupado = false
   if (r.ok) {
+    marcarSkin('Guardada', 'bien')
     skin.imagen = r.imagen
     skin.modelo = r.modelo
     skin.nueva = null
@@ -707,8 +774,10 @@ async function quitarSkin () {
   boton.textContent = 'Quitar mi skin'
   skin.ocupado = true
   await pintarSkin()
-  estadoSkin('Quitando…')
+  estadoSkin('')
+  cargaSkin('Quitando tu skin…')
   const r = await api.quitarSkin()
+  cargaSkin(null)
   skin.ocupado = false
   if (r.ok) {
     skin.imagen = r.imagen
@@ -883,6 +952,7 @@ $('.sin-premium').addEventListener('submit', loginSinPremium)
 $('#ram').addEventListener('input', (e) => { $('.ajuste__valor').textContent = gb(Number(e.target.value)) })
 $('#ram').addEventListener('change', (e) => guardarAjustes({ ram: Number(e.target.value) }))
 $('[data-archivo-skin]').addEventListener('change', (e) => { elegirSkin(e.target.files[0]); e.target.value = '' })
+$('[data-skin-jugador]').addEventListener('submit', skinDeJugador)
 document.querySelectorAll('input[name="modeloSkin"]').forEach((r) => r.addEventListener('change', pintarSkin))
 const panelSkin = $('.panel-skin')
 panelSkin.addEventListener('dragover', (e) => { e.preventDefault(); panelSkin.classList.add('soltando') })

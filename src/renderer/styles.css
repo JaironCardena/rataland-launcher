@@ -621,7 +621,43 @@ button { cursor: pointer; }
 .skin3d__parte, .skin3d__caja { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
 .skin3d__cara { position: absolute; background-repeat: no-repeat; image-rendering: pixelated; backface-visibility: hidden; }
 .skin-vista__vacia { position: absolute; bottom: 10px; color: var(--muy-tenue); font-size: 12.5px; }
-.panel-skin .ajuste:first-of-type { border-top: 0; }
+.skin-vista__pista { position: absolute; bottom: 10px; color: var(--muy-tenue); font-size: 12px; pointer-events: none; }
+/* "Sin guardar" mientras ves una skin nueva; "Guardada" un momento al ponerla */
+.skin-vista__marca {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 8px 4px;
+  border: 1px solid var(--antorcha);
+  background: rgba(13, 20, 36, 0.82);
+  color: var(--antorcha);
+  font: 600 12px/1.2 var(--pixel);
+}
+.skin-vista__marca--bien { border-color: var(--hierba-luz); color: var(--hierba-luz); }
+/* Mientras se carga, se sube o se busca una skin: la figura se queda detrás, apagada */
+.skin-vista__carga {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  background: rgba(9, 14, 26, 0.74);
+  color: var(--texto);
+  font-size: 13.5px;
+  text-align: center;
+}
+.skin-vista__carga[hidden] { display: none; }
+.skin-vista__barra { position: relative; width: 120px; height: 8px; overflow: hidden; background: rgba(9, 14, 26, 0.9); box-shadow: inset 0 0 0 1px rgba(214, 226, 255, 0.18); }
+.skin-vista__barra span { position: absolute; top: 1px; bottom: 1px; left: 0; width: 36%; background: var(--antorcha); animation: barrido 1.1s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .skin-vista__barra span { animation: none; width: 100%; opacity: 0.5; }
+}
+.skin-jugador { margin-top: 14px; }
+.skin-jugador__fila { display: flex; gap: 8px; margin-top: 6px; }
+.skin-guardar { padding: 6px 0 16px; }
+.skin-guardar .ajuste__botones { margin-top: 0; }
 .skin-nota { margin: 0 0 4px; }
 .skin-estado { margin: 0 0 12px; max-width: none; }
 .skin-estado:empty { display: none; }

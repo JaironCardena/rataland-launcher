@@ -1,5 +1,7 @@
 // Solo se activa si se abre index.html en un navegador (sin Electron), para ver el diseño.
 // Parámetros: ?sin-cuenta  ?error  ?cerrado  ?apagado  ?escena=cloacas|amanecer|pesca|mina  ?sin-episodio  ?al-cerrar=cerrar
+//   ?panel-skin (abre el panel de la skin)  ?skin-lenta (tu skin no termina de cargar, para ver el aviso)
+//   ?copiar=Nombre (con ?panel-skin: copia la skin de ese jugador)
 if (!window.launcher) {
   const espera = (ms) => new Promise((r) => setTimeout(r, ms))
   const oyentes = { progreso: [], juego: [], perfil: [], sincronizacion: [], cierre: [], codigo: [] }
@@ -32,6 +34,17 @@ if (!window.launcher) {
       { fecha: '2026-10-02', titulo: 'Nuevos mods de decoración', texto: 'Hemos añadido muebles y más bloques de construcción. Se descargan solos al abrir el juego.' },
       { fecha: '2026-09-28', titulo: 'Normas de la serie', texto: 'Nada de granjas de lag ni robos entre bases. Las normas completas están en Discord.' }
     ]
+  }
+
+  // Skin de prueba dibujada aquí mismo (piel, ojos, camiseta del color dado y pantalón)
+  const skinDePrueba = (camiseta) => {
+    const c = document.createElement('canvas'); c.width = 64; c.height = 64
+    const x = c.getContext('2d')
+    const caja = (color, ...r) => { x.fillStyle = color; x.fillRect(...r) }
+    caja('#c8956d', 8, 8, 8, 8); caja('#3b2a1f', 8, 8, 8, 2); caja('#fff', 9, 12, 2, 1); caja('#fff', 13, 12, 2, 1); caja('#3a5cc5', 10, 12, 1, 1); caja('#3a5cc5', 14, 12, 1, 1)
+    caja(camiseta, 20, 20, 8, 12); caja('#c8956d', 44, 20, 4, 12); caja(camiseta, 44, 20, 4, 4); caja('#c8956d', 36, 52, 4, 12); caja(camiseta, 36, 52, 4, 4)
+    caja('#2c3e8c', 4, 20, 4, 12); caja('#2c3e8c', 20, 52, 4, 12); caja('#333', 4, 29, 4, 3); caja('#333', 20, 61, 4, 3)
+    return c.toDataURL()
   }
 
   window.launcher = {
@@ -79,17 +92,10 @@ if (!window.launcher) {
       ? { ok: true, cuenta: (cuenta = { tipo: 'sinPremium', nombre, uuid: '0' }) }
       : { ok: false, error: 'El nombre debe tener entre 3 y 16 letras, números o guiones bajos.' },
     cerrarSesion: async () => { cuenta = null },
-    // Skin de prueba dibujada aquí mismo (piel, ojos, camiseta y pantalón)
     skinActual: async () => {
-      await espera(500)
+      await espera(params.has('skin-lenta') ? 600000 : 500)
       if (params.has('sin-skin')) return { ok: true, imagen: null, modelo: 'classic' }
-      const c = document.createElement('canvas'); c.width = 64; c.height = 64
-      const x = c.getContext('2d')
-      const caja = (color, ...r) => { x.fillStyle = color; x.fillRect(...r) }
-      caja('#c8956d', 8, 8, 8, 8); caja('#3b2a1f', 8, 8, 8, 2); caja('#fff', 9, 12, 2, 1); caja('#fff', 13, 12, 2, 1); caja('#3a5cc5', 10, 12, 1, 1); caja('#3a5cc5', 14, 12, 1, 1)
-      caja('#f6c445', 20, 20, 8, 12); caja('#c8956d', 44, 20, 4, 12); caja('#f6c445', 44, 20, 4, 4); caja('#c8956d', 36, 52, 4, 12); caja('#f6c445', 36, 52, 4, 4)
-      caja('#2c3e8c', 4, 20, 4, 12); caja('#2c3e8c', 20, 52, 4, 12); caja('#333', 4, 29, 4, 3); caja('#333', 20, 61, 4, 3)
-      return { ok: true, imagen: c.toDataURL(), modelo: 'classic', ...(cuenta?.tipo === 'sinPremium' ? { sinPremium: true, estado: 'puesta' } : {}) }
+      return { ok: true, imagen: skinDePrueba('#f6c445'), modelo: 'classic', ...(cuenta?.tipo === 'sinPremium' ? { sinPremium: true, estado: 'puesta' } : {}) }
     },
     cambiarSkin: async (datos, modelo) => {
       await espera(700)
@@ -98,6 +104,14 @@ if (!window.launcher) {
       return { ok: true, imagen, modelo, ...(cuenta?.tipo === 'sinPremium' ? { sinPremium: true, estado: 'pendiente' } : {}) }
     },
     quitarSkin: async () => { await espera(500); return { ok: true, imagen: null, modelo: 'classic' } },
+    // Copiar la skin de un jugador: una de prueba con la camiseta verde ("nadie" no existe)
+    skinDeJugador: async (nombre) => {
+      await espera(1200)
+      if (!/^[A-Za-z0-9_]{3,16}$/.test(nombre)) return { ok: false, error: 'Ese nombre no vale: tiene que tener de 3 a 16 letras, números o _.' }
+      if (/nadie/i.test(nombre)) return { ok: false, error: `No hay ninguna cuenta premium que se llame ${nombre}.` }
+      const imagen = skinDePrueba('#5ea83a')
+      return { ok: true, nombre, imagen, datos: Uint8Array.from(atob(imagen.split(',')[1]), (c) => c.charCodeAt(0)), modelo: 'classic' }
+    },
     guardarAjustes: async (a) => (ajustes = { ...ajustes, ...a }),
     jugar: async () => {
       if (params.has('error')) {
@@ -155,5 +169,15 @@ if (!window.launcher) {
     alPerfil: (f) => oyentes.perfil.push(f),
     alSincronizacion: (f) => oyentes.sincronizacion.push(f),
     alPedirCierre: (f) => oyentes.cierre.push(f)
+  }
+  if (params.has('panel-skin')) {
+    window.addEventListener('load', () => setTimeout(() => document.querySelector('.rail [data-accion="abrir-skin"]')?.click(), 1500))
+    if (params.has('copiar')) {
+      window.addEventListener('load', () => setTimeout(() => {
+        const formulario = document.querySelector('[data-skin-jugador]')
+        formulario.nombre.value = params.get('copiar')
+        formulario.requestSubmit()
+      }, 2600))
+    }
   }
 }

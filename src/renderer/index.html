@@ -218,6 +218,19 @@
         <div class="skin-vista px">
           <div class="skin-vista__lienzo" role="img" aria-label="Vista previa de tu skin. Arrastra para girarla."></div>
           <span class="skin-vista__vacia" hidden>Skin por defecto</span>
+          <span class="skin-vista__pista" data-pista-skin hidden>Arrastra para girarla</span>
+          <span class="skin-vista__marca" data-marca-skin hidden></span>
+          <div class="skin-vista__carga" data-carga-skin hidden>
+            <span class="skin-vista__barra" aria-hidden="true"><span></span></span>
+            <span class="skin-vista__carga-texto" role="status"></span>
+          </div>
+        </div>
+        <div class="skin-guardar">
+          <p class="aviso skin-estado" data-estado-skin role="status"></p>
+          <div class="ajuste__botones">
+            <button class="boton-principal" data-accion="guardar-skin" disabled>Guardar skin</button>
+            <button class="enlace enlace--tenue" data-accion="quitar-skin">Quitar mi skin</button>
+          </div>
         </div>
         <p class="ajuste__ayuda skin-nota" data-nota-skin hidden>
           Sin premium, la skin la pone el servidor (con SkinRestorer) cuando entras. La imagen se sube a MineSkin, el servicio que usa SkinRestorer.
@@ -239,14 +252,13 @@
             <button class="boton-secundario" data-accion="elegir-skin">Elegir imagen</button>
             <input type="file" accept="image/png" data-archivo-skin hidden>
           </div>
-        </div>
-
-        <div class="ajuste">
-          <p class="aviso skin-estado" data-estado-skin role="status"></p>
-          <div class="ajuste__botones">
-            <button class="boton-principal" data-accion="guardar-skin" disabled>Guardar skin</button>
-            <button class="enlace enlace--tenue" data-accion="quitar-skin">Quitar mi skin</button>
-          </div>
+          <form class="skin-jugador" data-skin-jugador>
+            <label class="ajuste__ayuda" for="skin-jugador">O copia la skin de un jugador premium:</label>
+            <div class="skin-jugador__fila">
+              <input id="skin-jugador" class="campo" name="nombre" autocomplete="off" spellcheck="false" maxlength="16" placeholder="Su nombre">
+              <button class="boton-secundario" type="submit">Usar su skin</button>
+            </div>
+          </form>
         </div>
       </aside>
     </main>

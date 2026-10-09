@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('launcher', {
   skinActual: () => ipcRenderer.invoke('skin-actual'),
   cambiarSkin: (datos, modelo) => ipcRenderer.invoke('cambiar-skin', { datos, modelo }),
   quitarSkin: () => ipcRenderer.invoke('quitar-skin'),
+  skinDeJugador: (nombre) => ipcRenderer.invoke('skin-de-jugador', nombre),
   guardarAjustes: (ajustes) => ipcRenderer.invoke('guardar-ajustes', ajustes),
   jugar: (opciones) => ipcRenderer.invoke('jugar', opciones),
   ventana: (accion) => ipcRenderer.send('ventana', accion),

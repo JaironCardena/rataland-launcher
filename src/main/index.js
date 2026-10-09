@@ -285,6 +285,7 @@ function registrarIpc () {
     modelo: cambio?.modelo
   }))
   ipcMain.handle('quitar-skin', () => skins.quitar())
+  ipcMain.handle('skin-de-jugador', (_e, nombre) => skins.deJugador(nombre))
 
   ipcMain.handle('guardar-ajustes', async (_e, nuevos) => {
     const ram = Math.round(Number(nuevos?.ram))

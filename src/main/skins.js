@@ -158,6 +158,38 @@ function crearSkins (cuentas, opciones) {
       }
     },
 
+    /**
+     * La skin de cualquier jugador premium, por su nombre (para copiarla): la imagen como data URL,
+     * los bytes del PNG para guardarla después y su modelo.
+     */
+    async deJugador (nombre) {
+      try {
+        nombre = String(nombre || '').trim()
+        if (!/^[A-Za-z0-9_]{3,16}$/.test(nombre)) throw new Error('Ese nombre no vale: tiene que tener de 3 a 16 letras, números o _.')
+        const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${nombre}`, { signal: AbortSignal.timeout(10000) })
+        if (res.status === 404 || res.status === 204) throw new Error(`No hay ninguna cuenta premium que se llame ${nombre}.`)
+        if (!res.ok) throw new Error(`No se pudo buscar a ${nombre} (Mojang respondió ${res.status}). Prueba otra vez en un momento.`)
+        const cuenta = await res.json()
+        const perfil = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${cuenta.id}`, { signal: AbortSignal.timeout(10000) })
+        if (!perfil.ok) throw new Error(`No se pudo leer la skin de ${cuenta.name} (Mojang respondió ${perfil.status}).`)
+        const propiedad = ((await perfil.json()).properties || []).find((p) => p.name === 'textures')
+        const piel = propiedad && JSON.parse(Buffer.from(propiedad.value, 'base64').toString('utf8')).textures?.SKIN
+        if (!piel?.url) throw new Error(`${cuenta.name} lleva la skin por defecto.`)
+        const png = await fetch(piel.url.replace(/^http:/, 'https:'), { signal: AbortSignal.timeout(15000) })
+        if (!png.ok) throw new Error(`No se pudo descargar la skin de ${cuenta.name}.`)
+        const datos = Buffer.from(await png.arrayBuffer())
+        return {
+          ok: true,
+          nombre: cuenta.name,
+          imagen: `data:image/png;base64,${datos.toString('base64')}`,
+          datos: new Uint8Array(datos),
+          modelo: piel.metadata?.model === 'slim' ? 'slim' : 'classic'
+        }
+      } catch (e) {
+        return { ok: false, error: e.name === 'TimeoutError' ? 'Mojang tarda en contestar. Prueba otra vez en un momento.' : e.message }
+      }
+    },
+
     /** Quita la skin: vuelve la de Steve o Alex que Minecraft da por defecto. */
     async quitar () {
       try {
