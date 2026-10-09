@@ -440,9 +440,9 @@ async function estadoSinAternos (ip, puerto) {
 export async function estadoServidor (ip, puerto) {
   puerto = Number(puerto) || 25565
   if (!/\.aternos\.me$/i.test(ip)) {
-    // Sin puerto, el de verdad está en el registro SRV: en el 25565 algunos hosts (PowerUpStack)
-    // solo contestan con un aviso suyo que dice qué puerto usar, y eso parecía "apagado".
-    const srv = puerto === 25565 ? await puertoSrv(ip).catch(() => null) : null
+    // Primero el puerto del registro SRV, como el launcher y el juego; el puesto en el panel queda de
+    // respaldo. En el 25565 algunos hosts (PowerUpStack) solo contestan con un aviso suyo que parecía "apagado".
+    const srv = await puertoSrv(ip).catch(() => null)
     return estadoSinAternos(ip, srv || puerto)
   }
   const srv = await puertoSrv(ip).catch(() => null)
