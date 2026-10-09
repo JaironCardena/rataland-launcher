@@ -6,6 +6,7 @@ Launcher propio (Electron) para la serie RataLand:
 - Mantiene los **mods ocultos y sincronizados** en `%APPDATA%\.rataland` (carpeta oculta). Cada vez que se pulsa *Jugar* se descargan los mods nuevos, se restauran los que el jugador haya modificado y se borran los que sobran (mods viejos o puestos a mano).
 - Inicio de sesión con **Microsoft** (premium) y **sin premium**.
 - Muestra si el servidor está encendido, cuántos jugadores hay y las **novedades** que publiques.
+- Si el servidor tiene **encendido automático** (arranca cuando alguien intenta entrar), al pulsar *Jugar* el launcher ya hace ese intento, así va arrancando mientras se actualiza y se abre el juego. Lo que contesta el servidor queda en `%APPDATA%\.rataland\.launcher\servidor.log`.
 - Incluye el **mod de RataLand** (`mod/`, para Fabric y NeoForge), que dentro del juego:
   - cambia la pantalla de carga de Mojang por el paisaje y el logo de RataLand, con una barra de queso,
   - sustituye el menú principal por una portada: el logo y la cuenta atrás del próximo episodio arriba, el paisaje en medio, y abajo el estado del servidor (y quién está dentro), **Jugar** (entra al servidor), **Opciones**, **Discord** y **Salir**; tu personaje está de pie en el paisaje y tu cuenta arriba a la derecha,

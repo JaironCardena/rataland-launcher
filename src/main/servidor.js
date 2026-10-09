@@ -177,4 +177,62 @@ async function consultarServidor (ip, puerto = 25565, { intentos = 3, espera = 6
   return r
 }
 
-module.exports = { consultarServidor, direccionDeJuego, buscarSrv }
+/**
+ * Intenta entrar como lo hace el juego (saludo para entrar y "Login Start" con tu nombre) y corta en
+ * cuanto el servidor contesta: no llega a meterte en el mundo. Devuelve qué contestó, para el registro.
+ */
+function intentarEntrar (ip, destino, { nombre, uuid }) {
+  return new Promise((resolve) => {
+    let datos = Buffer.alloc(0)
+    let terminado = false
+    const socket = net.createConnection({ host: destino.host, port: destino.puerto })
+    const terminar = (r) => {
+      if (terminado) return
+      terminado = true
+      socket.destroy()
+      resolve(r)
+    }
+    socket.setTimeout(8000, () => terminar('sin respuesta'))
+    socket.on('error', (e) => terminar(e.code || e.message))
+    socket.on('close', () => terminar('conexión cerrada'))
+    socket.on('connect', () => {
+      const p = Buffer.alloc(2)
+      p.writeUInt16BE(destino.puerto)
+      const id = Buffer.from(String(uuid || '').replace(/-/g, '').padStart(32, '0').slice(0, 32), 'hex')
+      socket.write(Buffer.concat([paquete(0x00, varint(PROTOCOLO), cadena(ip), p, varint(2)), paquete(0x00, cadena(nombre), id)]))
+    })
+    socket.on('data', (trozo) => {
+      datos = Buffer.concat([datos, trozo])
+      try {
+        const cabecera = leerVarint(datos, 0)
+        if (!cabecera) return
+        const [largo, o1] = cabecera
+        if (datos.length < o1 + largo) return
+        const [idPaquete, o2] = leerVarint(datos, o1)
+        // 0x00 al entrar: el host te echa con un mensaje (lo normal mientras arranca: "espera")
+        if (idPaquete === 0x00) {
+          const [largoTexto, o3] = leerVarint(datos, o2)
+          return terminar(`contestó: ${datos.subarray(o3, o3 + largoTexto).toString('utf8').slice(0, 300)}`)
+        }
+        terminar(`el servidor ya estaba listo (paquete ${idPaquete})`)
+      } catch {
+        terminar('respuesta no válida')
+      }
+    })
+  })
+}
+
+/**
+ * Hosts con encendido automático: el servidor arranca cuando alguien intenta entrar. El launcher
+ * hace ese intento al pulsar Jugar, así el servidor va arrancando mientras se actualiza y se abre
+ * el juego. Si hay alguien jugando ya está encendido y no se toca. Devuelve qué pasó (o null).
+ */
+async function despertarServidor (ip, puerto = 25565, jugador = {}) {
+  if (!ip || !jugador.nombre) return null
+  const estado = await consultarServidor(ip, puerto, { intentos: 1, espera: 5000 })
+  if (estado?.enLinea && estado.jugadores > 0) return null
+  const [destino] = await destinosDe(ip, puerto)
+  return intentarEntrar(ip, destino, jugador)
+}
+
+module.exports = { consultarServidor, direccionDeJuego, buscarSrv, despertarServidor }

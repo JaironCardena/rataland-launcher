@@ -20,7 +20,7 @@ const { prepararJuego } = require('./minecraft')
 const { sincronizar } = require('./sincronizar')
 const { prepararPrimerArranque, escribirConfigMenu, activarPacks, prepararNeoForge } = require('./extras')
 const { lanzarJuego } = require('./juego')
-const { consultarServidor, direccionDeJuego } = require('./servidor')
+const { consultarServidor, direccionDeJuego, despertarServidor } = require('./servidor')
 const { crearCuentas } = require('./cuentas')
 const { crearSkins } = require('./skins')
 const { crearActualizador } = require('./actualizador')
@@ -144,6 +144,13 @@ async function jugar (reparar) {
     perfil = combinarPerfil(config, manifiesto)
     perfilGenerado = manifiesto.generado || perfilGenerado
     enviar('perfil', perfil)
+    // Con encendido automático el servidor arranca al intentar entrar: se intenta ya, para que vaya
+    // arrancando mientras se actualiza y se abre el juego (sin esperar a que termine).
+    if (perfil.servidor?.ip) {
+      despertarServidor(perfil.servidor.ip, Number(perfil.servidor.puerto) || 25565, { nombre: sesion?.nombre, uuid: sesion?.uuid })
+        .then((r) => r && fs.promises.appendFile(path.join(dirDatos, 'servidor.log'), `${new Date().toISOString()} Al pulsar Jugar: ${r}\n`))
+        .catch(() => {})
+    }
 
     let instalacion = await prepararJuego(perfil, raiz, { reportar, reparar })
     const resumen = await sincronizar(manifiesto, raiz, { reportar, reparar })
