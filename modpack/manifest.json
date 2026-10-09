@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-09T03:14:04.821Z",
+  "generado": "2026-10-09T03:16:10.053Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -23,7 +23,7 @@
   "enlaces": {},
   "evento": null,
   "temporada": "",
-  "escena": "pesca",
+  "escena": "mina",
   "episodio": null,
   "frases": [
     "Los Pibes"
