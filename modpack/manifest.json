@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-09T02:56:01.065Z",
+  "generado": "2026-10-09T02:56:59.268Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -7,7 +7,7 @@
   },
   "servidor": {
     "ip": "rataland.progamer.me",
-    "puerto": 25565,
+    "puerto": 33838,
     "entrarDirecto": false
   },
   "carpetasSincronizadas": [

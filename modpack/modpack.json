@@ -7,7 +7,7 @@
   },
   "servidor": {
     "ip": "rataland.progamer.me",
-    "puerto": 25565,
+    "puerto": 33838,
     "entrarDirecto": false
   },
   "enlaces": {},
