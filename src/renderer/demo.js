@@ -1,5 +1,5 @@
 // Solo se activa si se abre index.html en un navegador (sin Electron), para ver el diseño.
-// Parámetros: ?sin-cuenta  ?error  ?cerrado  ?apagado  ?escena=cloacas|amanecer|pesca  ?sin-episodio  ?al-cerrar=cerrar
+// Parámetros: ?sin-cuenta  ?error  ?cerrado  ?apagado  ?escena=cloacas|amanecer|pesca|mina  ?sin-episodio  ?al-cerrar=cerrar
 if (!window.launcher) {
   const espera = (ms) => new Promise((r) => setTimeout(r, ms))
   const oyentes = { progreso: [], juego: [], perfil: [], sincronizacion: [], cierre: [], codigo: [] }

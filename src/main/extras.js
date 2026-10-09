@@ -50,7 +50,7 @@ async function prepararPrimerArranque (dirJuego, { nombre, ip, puerto }) {
   }
 }
 
-const ESCENAS = ['noche', 'cloacas', 'amanecer', 'pesca']
+const ESCENAS = ['noche', 'cloacas', 'amanecer', 'pesca', 'mina']
 
 /** Servidor, Discord, fondo, temporada y frases para los menús del mod de la serie (config/rataland.json). */
 async function escribirConfigMenu (dirJuego, { nombre, ip, puerto, destino, discord, escena, temporada, frases, evento, skinModelo, cuenta }) {

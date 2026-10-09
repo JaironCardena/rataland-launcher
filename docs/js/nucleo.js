@@ -139,7 +139,8 @@ export const ESCENAS = {
   noche: 'Noche de queso',
   cloacas: 'Las Cloacas',
   amanecer: 'Amanecer de queso',
-  pesca: 'Noche de pesca'
+  pesca: 'Noche de pesca',
+  mina: 'Mina de queso'
 }
 
 /** Id del vídeo de un enlace de YouTube (watch, youtu.be, shorts o live), o null si no lo es. */

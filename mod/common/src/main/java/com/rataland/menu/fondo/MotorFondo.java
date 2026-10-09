@@ -208,6 +208,10 @@ public final class MotorFondo {
 				case "corcho" -> corcho(p, t);
 				case "farol" -> farol(p, t);
 				case "luciernagas" -> luciernagas(p, t);
+				case "brillos" -> brillos(p, t);
+				case "pasa" -> pasa(p, t);
+				case "golpes" -> golpes(p, t);
+				case "gotas" -> gotas(p, t);
 				default -> { }
 			}
 		}
@@ -366,6 +370,105 @@ public final class MotorFondo {
 				double b = s * s;
 				p.rect(x - 1, y - 1, 3, 3, rgb, 0.22 * b);
 				p.rect(x, y, 1, 1, brillo, 0.12 + 0.88 * b);
+			}
+		}
+
+		/** Puntos que relucen de vez en cuando (el queso de las menas y los cristales). */
+		private void brillos(Pincel p, double t) {
+			int rgb = color(d, "color");
+			double semilla = d.has("semilla") ? num(d, "semilla") : 0;
+			JsonArray puntos = d.getAsJsonArray("puntos");
+			for (int i = 0; i < puntos.size(); i++) {
+				JsonArray punto = puntos.get(i).getAsJsonArray();
+				int x = punto.get(0).getAsInt();
+				int y = punto.get(1).getAsInt();
+				double n = semilla + i;
+				double k = 0.5 + 0.5 * StrictMath.sin(t * (0.7 + azar(n + 0.3) * 1.1) + azar(n + 0.7) * VUELTA);
+				if (k <= 0.55) continue;
+				double a = (k - 0.55) / 0.45;
+				p.rect(x, y, 1, 1, rgb, a * a);
+				if (a > 0.8) {
+					double c = (a - 0.8) / 0.2 * 0.6;
+					p.rect(x - 1, y, 1, 1, rgb, c);
+					p.rect(x + 1, y, 1, 1, rgb, c);
+					p.rect(x, y - 1, 1, 1, rgb, c);
+					p.rect(x, y + 1, 1, 1, rgb, c);
+				}
+			}
+		}
+
+		/** Una capa que cruza la escena cada `cada` segundos (la vagoneta), con un saltito en cada junta de la vía. */
+		private void pasa(Pincel p, double t) {
+			double u = ((t + num(d, "desfase")) % num(d, "cada")) / num(d, "dura");
+			if (u >= 1) return;
+			String nombre = d.get("nombre").getAsString();
+			int[] tam = capas.get(nombre);
+			double desde = num(d, "desde");
+			int x = redondear(desde + (num(d, "hasta") - desde) * u);
+			int junta = entero(d, "junta");
+			int resto = ((x % junta) + junta) % junta;
+			p.capa(nombre, x, entero(d, "y") - (resto < 2 ? 1 : 0), tam[0], tam[1]);
+		}
+
+		/** Alguien que golpea (el minero con el pico): dos posturas, y chispas en cada golpe. */
+		private void golpes(Pincel p, double t) {
+			double desfase = num(d, "desfase");
+			double cada = num(d, "cada");
+			double vez = StrictMath.floor((t + desfase) / cada);
+			double fase = (t + desfase) - vez * cada;
+			String nombre = d.getAsJsonArray("capas").get(fase < num(d, "golpe") ? 1 : 0).getAsString();
+			int[] tam = capas.get(nombre);
+			p.capa(nombre, entero(d, "x"), entero(d, "y"), tam[0], tam[1]);
+			JsonObject c = d.getAsJsonObject("chispas");
+			double vida = num(c, "vida");
+			if (fase >= vida) return;
+			double edad = fase / vida;
+			int cx = entero(c, "x");
+			int cy = entero(c, "y");
+			int brillo = color(c, "brillo");
+			int rgb = color(c, "color");
+			if (fase < 0.08) p.rect(cx - 1, cy - 1, 3, 3, brillo, 0.7 * (1 - fase / 0.08));
+			double lado = num(c, "lado");
+			double velocidad = num(c, "velocidad");
+			double gravedad = num(c, "gravedad");
+			for (int i = 0; i < entero(c, "n"); i++) {
+				double vx = lado * velocidad * (0.35 + 0.65 * azar(vez * 13 + i));
+				double vy = -velocidad * (0.3 + 0.9 * azar(vez * 17 + i + 0.5));
+				int x = redondear(cx + vx * fase);
+				int y = redondear(cy + vy * fase + 0.5 * gravedad * fase * fase);
+				p.rect(x, y, 1, 1, edad < 0.3 ? brillo : rgb, 1 - edad);
+			}
+		}
+
+		/** Gotas que se forman en la punta de una estalactita, caen y salpican. */
+		private void gotas(Pincel p, double t) {
+			double cada = num(d, "cada");
+			double forma = num(d, "forma");
+			double gravedad = num(d, "gravedad");
+			double salpica = num(d, "salpica");
+			int rgb = color(d, "color");
+			int onda = color(d, "onda");
+			JsonArray puntos = d.getAsJsonArray("puntos");
+			for (int i = 0; i < puntos.size(); i++) {
+				JsonArray punto = puntos.get(i).getAsJsonArray();
+				int x = punto.get(0).getAsInt();
+				int desde = punto.get(1).getAsInt();
+				int hasta = punto.get(2).getAsInt();
+				double fase = (t + azar(i + 0.1) * cada) % cada;
+				double caida = StrictMath.sqrt(2 * (hasta - desde) / gravedad);
+				if (fase < forma) {
+					p.rect(x, desde, 1, 1, rgb, 0.8 * fase / forma);
+				} else if (fase < forma + caida) {
+					double s = fase - forma;
+					p.rect(x, Math.min(hasta - 2, redondear(desde + 0.5 * gravedad * s * s)), 1, 2, rgb, 0.85);
+				} else {
+					double s = (fase - forma - caida) / salpica;
+					if (s >= 1) continue;
+					int r = 1 + redondear(3 * s);
+					p.rect(x - r, hasta, 1, 1, onda, 0.6 * (1 - s));
+					p.rect(x + r, hasta, 1, 1, onda, 0.6 * (1 - s));
+					if (s < 0.4) p.rect(x, hasta - 1 - redondear(3 * s), 1, 1, rgb, 0.7 * (1 - s / 0.4));
+				}
 			}
 		}
 	}

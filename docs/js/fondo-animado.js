@@ -195,6 +195,75 @@
         p.rect(x - 1, y - 1, 3, 3, e.color, 0.22 * b)
         p.rect(x, y, 1, 1, e.brillo, 0.12 + 0.88 * b)
       }
+    },
+
+    // Puntos que relucen de vez en cuando (el queso de las menas y los cristales)
+    brillos (p, t, e) {
+      e.puntos.forEach(([x, y], i) => {
+        const n = (e.semilla || 0) + i
+        const k = 0.5 + 0.5 * Math.sin(t * (0.7 + azar(n + 0.3) * 1.1) + azar(n + 0.7) * VUELTA)
+        if (k <= 0.55) return
+        const a = (k - 0.55) / 0.45
+        p.rect(x, y, 1, 1, e.color, a * a)
+        if (a > 0.8) {
+          const c = (a - 0.8) / 0.2 * 0.6
+          p.rect(x - 1, y, 1, 1, e.color, c)
+          p.rect(x + 1, y, 1, 1, e.color, c)
+          p.rect(x, y - 1, 1, 1, e.color, c)
+          p.rect(x, y + 1, 1, 1, e.color, c)
+        }
+      })
+    },
+
+    // Una capa que cruza la escena cada `cada` segundos (la vagoneta), con un saltito en cada junta de la vía
+    pasa (p, t, e, datos, motor) {
+      const u = ((t + e.desfase) % e.cada) / e.dura
+      if (u >= 1) return
+      const { ancho, alto } = motor.escena.capas[e.nombre]
+      const x = Math.round(e.desde + (e.hasta - e.desde) * u)
+      const junta = ((x % e.junta) + e.junta) % e.junta
+      p.capa(e.nombre, x, e.y - (junta < 2 ? 1 : 0), ancho, alto)
+    },
+
+    // Alguien que golpea (el minero con el pico): dos posturas, y chispas en cada golpe
+    golpes (p, t, e, datos, motor) {
+      const vez = Math.floor((t + e.desfase) / e.cada)
+      const fase = (t + e.desfase) - vez * e.cada
+      const nombre = fase < e.golpe ? e.capas[1] : e.capas[0]
+      const { ancho, alto } = motor.escena.capas[nombre]
+      p.capa(nombre, e.x, e.y, ancho, alto)
+      const c = e.chispas
+      if (fase >= c.vida) return
+      const vida = fase / c.vida
+      if (fase < 0.08) p.rect(c.x - 1, c.y - 1, 3, 3, c.brillo, 0.7 * (1 - fase / 0.08))
+      for (let i = 0; i < c.n; i++) {
+        const vx = c.lado * c.velocidad * (0.35 + 0.65 * azar(vez * 13 + i))
+        const vy = -c.velocidad * (0.3 + 0.9 * azar(vez * 17 + i + 0.5))
+        const x = Math.round(c.x + vx * fase)
+        const y = Math.round(c.y + vy * fase + 0.5 * c.gravedad * fase * fase)
+        p.rect(x, y, 1, 1, vida < 0.3 ? c.brillo : c.color, 1 - vida)
+      }
+    },
+
+    // Gotas que se forman en la punta de una estalactita, caen y salpican
+    gotas (p, t, e) {
+      e.puntos.forEach(([x, desde, hasta], i) => {
+        const fase = (t + azar(i + 0.1) * e.cada) % e.cada
+        const caida = Math.sqrt(2 * (hasta - desde) / e.gravedad)
+        if (fase < e.forma) {
+          p.rect(x, desde, 1, 1, e.color, 0.8 * fase / e.forma)
+        } else if (fase < e.forma + caida) {
+          const s = fase - e.forma
+          p.rect(x, Math.min(hasta - 2, Math.round(desde + 0.5 * e.gravedad * s * s)), 1, 2, e.color, 0.85)
+        } else {
+          const s = (fase - e.forma - caida) / e.salpica
+          if (s >= 1) return
+          const r = 1 + Math.round(3 * s)
+          p.rect(x - r, hasta, 1, 1, e.onda, 0.6 * (1 - s))
+          p.rect(x + r, hasta, 1, 1, e.onda, 0.6 * (1 - s))
+          if (s < 0.4) p.rect(x, hasta - 1 - Math.round(3 * s), 1, 1, e.color, 0.7 * (1 - s / 0.4))
+        }
+      })
     }
   }
 

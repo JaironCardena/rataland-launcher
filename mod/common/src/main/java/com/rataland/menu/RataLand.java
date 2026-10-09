@@ -40,7 +40,8 @@ public final class RataLand {
 			"noche", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo.png"),
 			"cloacas", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_cloacas.png"),
 			"amanecer", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_amanecer.png"),
-			"pesca", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_pesca.png"));
+			"pesca", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_pesca.png"),
+			"mina", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_mina.png"));
 
 	/** Color de fondo de la pantalla de carga (ARGB). */
 	public static final int COLOR_CARGA = 0xFF0F1626;

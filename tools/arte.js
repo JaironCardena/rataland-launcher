@@ -663,6 +663,286 @@ function nubesPesca () {
   return lz
 }
 
+/* ---------- Mina de queso: escena animada ---------- */
+// Lo que se mueve (el queso que reluce, las antorchas, las gotas, la vagoneta, el minero con su pico y
+// el polvo) lo dibujan fondo-animado.js y MotorFondo.java con los datos de escenaMina. El minero y la
+// vagoneta van en la franja del medio: en el launcher queda entre la columna de la izquierda y las
+// novedades, y en el menú del juego entre el logo y los botones.
+const MINA = {
+  repisa: 104, // arriba de la repisa por la que va la vía
+  rail: 107, // el raíl: las ruedas de la vagoneta pisan aquí
+  frente: 116, // borde delantero de la repisa, donde pisa el minero
+  agua: 154, // el agua del fondo de la sima
+  charcos: 112, // donde caen las gotas, en la repisa
+  minero: [150, 86], // capa del minero (34×30)
+  golpe: [151, 104], // donde el pico da en los cristales
+  cristales: [120, 88], // capa de los cristales (36×30)
+  antorchas: [[39, 70], [191, 70], [287, 70]], // la llama (2×4) de cada antorcha
+  goteras: [98, 228, 262],
+  estalactitas: [[14, 10], [40, 6], [64, 18], [98, 9], [126, 7], [152, 12], [208, 8], [228, 20], [262, 16], [304, 11]]
+}
+const techoMina = (x) => 9 + Math.round(3 * Math.sin(x / 23) + 2 * Math.sin(x / 9 + 1))
+// Manchas de mineral de queso en la roca, como las menas de Minecraft
+const MENA = ['.qq..', 'qQqd.', '.dqqQ', '..dd.']
+const MENAS_MINA = [[22, 44], [80, 28], [106, 58], [172, 26], [236, 48], [266, 24], [304, 56], [58, 84], [222, 80], [12, 92]]
+// Cristales de queso que crecen en la repisa: [x, ancho, alto]
+const CRISTALES = [[124, 6, 13], [129, 7, 21], [136, 6, 16], [141, 7, 11], [147, 6, 15]]
+
+function mina () {
+  const W = 320
+  const H = 180
+  const { repisa, rail, frente, agua, charcos, antorchas, goteras, estalactitas } = MINA
+  const lz = new Lienzo(W, H)
+  const rnd = aleatorio(47)
+
+  // Pared de roca, más oscura arriba, con grano y vetas
+  const pared = ['#16110e', '#1a1411', '#1f1813', '#241b15', '#291f18', '#2d221a', '#31261d']
+  pared.forEach((c, i) => lz.rect(0, i * 15, W, 16, c))
+  for (let i = 0; i < 1400; i++) {
+    const x = Math.floor(rnd() * W)
+    const y = Math.floor(rnd() * repisa)
+    const oscuro = rnd() < 0.55
+    lz.rect(x, y, rnd() > 0.7 ? 2 : 1, 1, oscuro ? '#0b0907' : '#3a2e24', 0.3 + rnd() * 0.4)
+  }
+  for (const [base, fase] of [[30, 0], [54, 2], [80, 4]]) {
+    for (let x = 0; x < W; x++) {
+      const y = base + Math.round(4 * Math.sin(x / 37 + fase) + 2 * Math.sin(x / 13 + fase * 2))
+      lz.pintar(x, y, '#0b0807', 0.75)
+      lz.pintar(x, y + 1, '#3a2e24', 0.35)
+    }
+  }
+
+  // Galería que se mete en la roca, dentro del marco de la derecha (oscura hacia el fondo)
+  lz.rect(200, 38, 92, repisa - 38, '#120d0a')
+  for (let i = 1; i <= 6; i++) lz.rect(200 + i * 5, 38 + i * 4, 92 - i * 10, repisa - 38 - i * 4, '#080605', 0.25)
+  lz.rect(232, 66, 4, repisa - 66, '#3b2716')
+  lz.rect(256, 66, 4, repisa - 66, '#3b2716')
+  lz.rect(228, 62, 36, 4, '#4a3020')
+  lz.rect(236, repisa - 2, 20, 1, '#5b6270', 0.6)
+
+  // Luz cálida de las antorchas y de los cristales, en muchos pasos para que no se noten los anillos
+  for (const [fx, fy] of antorchas) {
+    for (let r = 64; r >= 12; r -= 6) lz.circulo(fx + 1, fy + 2, r, '#f2a541', 0.022)
+  }
+  for (let r = 40; r >= 10; r -= 6) lz.circulo(138, 104, r, '#f6c445', 0.03)
+
+  for (const [x, y] of MENAS_MINA) lz.sprite(x, y, MENA, { q: '#efad34', Q: '#fff0a8', d: '#b8701a' })
+
+  // Techo con estalactitas
+  for (let x = 0; x < W; x++) lz.rect(x, 0, 1, techoMina(x), '#0b0807')
+  for (const [ex, largo] of estalactitas) {
+    const arriba = techoMina(ex)
+    for (let j = 0; j < largo; j++) {
+      const ancho = Math.max(1, Math.round((largo - j) / largo * 6))
+      lz.rect(ex - Math.floor(ancho / 2), arriba + j, ancho, 1, '#0d0a08')
+      if (ancho >= 3) lz.pintar(ex - Math.floor(ancho / 2) + ancho - 1, arriba + j, '#3a2e24')
+    }
+  }
+
+  // Entibado de madera: vigas arriba y postes hasta la repisa
+  const viga = (x, w) => {
+    lz.rect(x, 34, w, 4, '#6b4a2b')
+    lz.rect(x, 34, w, 1, '#8a6238')
+    lz.rect(x, 37, w, 1, '#3b2716')
+    for (let j = x + 21; j < x + w; j += 22) lz.rect(j, 35, 1, 2, '#3b2716')
+  }
+  viga(18, 112)
+  viga(184, 124)
+  for (const [fx] of antorchas) {
+    const px = fx + 5
+    lz.rect(px, 38, 4, repisa - 38, '#5a3d24')
+    lz.rect(px, 38, 1, repisa - 38, '#7a5534')
+    lz.rect(px + 3, 38, 1, repisa - 38, '#3b2716')
+  }
+  // Antorchas colgadas del poste (la llama la pone el motor)
+  for (const [fx, fy] of antorchas) {
+    lz.rect(fx, fy + 4, 2, 6, '#6b4a2b')
+    lz.rect(fx, fy + 4, 1, 6, '#8a6238')
+    lz.rect(fx + 2, fy + 7, 3, 1, '#2e1f12')
+  }
+
+  // Sima con agua al fondo y estalagmitas
+  lz.rect(0, frente, W, H - frente, '#120e0b')
+  for (let i = 0; i < 260; i++) lz.pintar(Math.floor(rnd() * W), frente + Math.floor(rnd() * (agua - frente)), rnd() > 0.5 ? '#0a0806' : '#2a2019', 0.6)
+  const pozo = ['#13262e', '#102028', '#0d1a21', '#0b161c']
+  for (let y = agua; y < H; y++) lz.rect(0, y, W, 1, pozo[Math.min(pozo.length - 1, Math.floor((y - agua) / 7))])
+  lz.rect(0, agua, W, 1, '#24434e')
+  for (const [sx, alto] of [[18, 22], [52, 14], [96, 18], [210, 16], [250, 24], [300, 15]]) {
+    for (let j = 0; j < alto; j++) {
+      const ancho = Math.max(1, Math.round(j / alto * 7))
+      lz.rect(sx - Math.floor(ancho / 2), agua - alto + j, ancho, 1, '#0e0b09')
+    }
+    lz.rect(sx - 3, agua + 1, 7, 2, '#0e0b09', 0.4)
+  }
+
+  // Cajas de queso al fondo de la repisa
+  const caja = (x, y) => {
+    lz.rect(x, y, 12, 12, '#6b4a2b')
+    lz.rect(x, y, 12, 1, '#8a6238')
+    lz.rect(x + 5, y, 2, 12, '#553a21')
+    lz.rect(x, y + 11, 12, 1, '#3b2716')
+  }
+  for (const [x, y] of [[62, 94], [75, 94], [68, 82]]) caja(x, y)
+  lz.rect(70, 76, 8, 6, C.queso)
+  lz.rect(70, 76, 8, 1, C.quesoLuz)
+  lz.pintar(72, 79, C.agujero)
+  lz.pintar(75, 78, C.agujero)
+
+  // Repisa con la vía: traviesas, raíl y charcos donde caen las gotas
+  lz.rect(0, repisa, W, frente - repisa, '#2c231c')
+  lz.rect(0, repisa, W, 1, '#46382c')
+  for (let i = 0; i < 160; i++) lz.pintar(Math.floor(rnd() * W), repisa + 1 + Math.floor(rnd() * (frente - repisa - 1)), rnd() > 0.5 ? '#3d3027' : '#1e1814')
+  for (let x = 2; x < W; x += 9) {
+    lz.rect(x, rail + 2, 6, 2, '#4a3020')
+    lz.rect(x, rail + 2, 6, 1, '#5a3d24')
+  }
+  lz.rect(0, rail, W, 1, '#aab3c2')
+  lz.rect(0, rail + 1, W, 1, '#5b6270')
+  for (const gx of goteras) {
+    lz.rect(gx - 4, charcos, 9, 1, '#20363f')
+    lz.rect(gx - 2, charcos, 4, 1, '#2f5260')
+  }
+  // Frente de la repisa, mellado, y una escalera que baja al agua
+  lz.rect(0, frente, W, 1, '#3a2e24')
+  for (let x = 0; x < W; x += 3) lz.rect(x, frente + 1, 3, 6 + Math.floor(rnd() * 6), '#0d0a08')
+  lz.rect(100, frente, 1, agua - frente + 2, '#5a3d24')
+  lz.rect(106, frente, 1, agua - frente + 2, '#5a3d24')
+  for (let y = frente + 3; y < agua; y += 4) lz.rect(101, y, 5, 1, '#6b4a2b')
+
+  // Rocas oscuras delante, en las esquinas de abajo
+  for (let x = 0; x < 44; x++) lz.rect(x, 166 + Math.round(x * x / 140), 1, H, '#070504')
+  for (let x = 282; x < W; x++) lz.rect(x, 160 + Math.round((W - x) * (W - x) / 90), 1, H, '#070504')
+  return lz
+}
+
+/**
+ * Cristales de queso en el borde de la repisa (capa de 36×30 en MINA.cristales): van en una capa
+ * aparte porque están delante de la vía y la vagoneta pasa por detrás.
+ */
+function cristalesMina () {
+  const [ox, oy] = MINA.cristales
+  const lz = new Lienzo(36, 30)
+  for (const [x, w, alto] of CRISTALES) {
+    for (let j = 0; j < alto; j++) {
+      const y = MINA.frente - 1 - j - oy
+      const punta = alto - j
+      const recorte = punta <= 3 ? 4 - punta : 0
+      const x0 = x - ox + Math.min(recorte, Math.floor(w / 2))
+      const x1 = x - ox + w - Math.min(recorte, Math.ceil(w / 2) - 1)
+      lz.rect(x0, y, x1 - x0, 1, '#efad34')
+      lz.pintar(x0, y, '#fff0a8')
+      lz.pintar(x1 - 1, y, '#d98a22')
+    }
+  }
+  contornear(lz, '#1d1108')
+  for (const [hx, hy] of [[131, 104], [138, 109], [149, 107], [126, 110]]) lz.pintar(hx - ox, hy - oy, '#b8701a')
+  return lz
+}
+
+/** El minero (34×30): rata con casco y pico, mirando a los cristales, en dos posturas. `golpe`: el pico dando en ellos. */
+function mineroMina (golpe) {
+  const lz = new Lienzo(34, 30)
+  const ovalo = (cx, cy, rx, ry, color) => {
+    for (let y = Math.floor(cy - ry); y <= cy + ry; y++) {
+      for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+        if (((x - cx + 0.5) / rx) ** 2 + ((y - cy + 0.5) / ry) ** 2 <= 1) lz.pintar(x, y, color)
+      }
+    }
+  }
+  // Cola, pies, cuerpo (con la espalda en sombra) y barriga
+  for (const [x, y] of [[24, 27], [25, 27], [26, 27], [27, 26], [28, 25], [29, 24], [29, 23], [28, 22]]) lz.pintar(x, y, C.rosa)
+  ovalo(15, 28.5, 2.5, 1.2, C.rataSombra)
+  ovalo(21, 28.5, 2.5, 1.2, C.rataSombra)
+  ovalo(19, 21, 6, 7, C.rata)
+  ovalo(22, 22, 3, 6, C.rataSombra)
+  ovalo(16, 22, 2.6, 4.6, '#c4c8d2')
+  // Oreja (asoma por detrás del casco), cabeza y hocico
+  lz.circulo(19, 7, 2.6, C.rata)
+  lz.circulo(19, 7.2, 1.4, C.rosa)
+  lz.circulo(14, 12, 5, C.rata)
+  for (const [y, x0] of [[11, 9], [12, 7], [13, 6], [14, 7], [15, 9]]) lz.rect(x0, y, 14 - x0, 1, C.rata)
+  // Casco
+  lz.rect(11, 5, 7, 1, C.queso)
+  lz.rect(10, 6, 9, 1, C.queso)
+  lz.rect(9, 7, 11, 1, C.quesoSombra)
+  lz.rect(12, 5, 3, 1, C.quesoLuz)
+  // Brazo y pico: mango de madera y cabeza de hierro
+  const mango = '#8a6238'
+  const hierro = '#c4cbd6'
+  if (golpe) {
+    linea(lz, 17, 17, 9, 18, C.rata)
+    linea(lz, 9, 18, 3, 14, mango)
+    linea(lz, 1, 17, 5, 10, hierro)
+  } else {
+    linea(lz, 17, 16, 20, 10, C.rata)
+    linea(lz, 20, 10, 26, 2, mango)
+    linea(lz, 21, 0, 30, 4, hierro)
+  }
+  contornear(lz, C.contorno)
+  // Ojo, nariz y la lámpara del casco
+  lz.rect(10, 11, 1, 2, C.negro)
+  lz.pintar(6, 13, C.rosa)
+  lz.rect(8, 6, 2, 2, C.quesoLuz)
+  return lz
+}
+
+/** La vagoneta (34×20) cargada de queso, con una rata montada que levanta el brazo. */
+function vagonetaMina () {
+  const lz = new Lienzo(34, 20)
+  for (const [x, y, w, h] of [[4, 3, 6, 4], [9, 1, 7, 6], [15, 3, 5, 4]]) {
+    lz.rect(x, y, w, h, '#efad34')
+    lz.rect(x, y, w, 1, '#fff0a8')
+    lz.rect(x + w - 1, y + 1, 1, h - 1, '#d98a22')
+  }
+  for (const [x, y] of [[11, 3], [6, 5], [17, 5]]) lz.pintar(x, y, '#b8701a')
+  // La rata, mirando hacia donde va (a la derecha)
+  linea(lz, 22, 5, 19, 1, C.rata)
+  lz.circulo(23, 2, 1.6, C.rata)
+  lz.circulo(25, 4.5, 3, C.rata)
+  lz.rect(27, 4, 3, 2, C.rata)
+  for (let j = 0; j < 10; j++) {
+    const x0 = 2 + Math.floor(j * 0.35)
+    const x1 = 32 - Math.floor(j * 0.35)
+    lz.rect(x0, 6 + j, x1 - x0, 1, j === 0 ? '#aab3c2' : j === 9 ? '#2b2f38' : '#4b5160')
+  }
+  for (const x of [9, 17, 25]) lz.rect(x, 8, 1, 6, '#3a3f4b')
+  for (const cx of [9, 25]) {
+    lz.circulo(cx, 17, 2.6, '#16181d')
+    lz.pintar(cx - 1, 16, '#9aa3b2')
+  }
+  contornear(lz, C.contorno)
+  lz.pintar(23, 2, C.rosa)
+  lz.pintar(26, 3, C.negro)
+  lz.pintar(29, 4, C.rosa)
+  return lz
+}
+
+/** La animación de «Mina de queso» como datos (la leen fondo-animado.js y MotorFondo.java). */
+function escenaMina (capas) {
+  const { rail, charcos, agua, minero, golpe, cristales, antorchas, goteras, estalactitas } = MINA
+  const largo = Object.fromEntries(estalactitas)
+  const brillosCristales = [...CRISTALES.map(([x, w, alto]) => [x + 1, MINA.frente - alto + 3]), [133, 108], [144, 110]]
+  return {
+    clave: 'mina',
+    ancho: 320,
+    alto: 180,
+    escala: 2,
+    capas: Object.fromEntries(Object.entries(capas).map(([nombre, lz]) => [nombre, { ancho: lz.ancho, alto: lz.alto }])),
+    elementos: [
+      { tipo: 'brillos', puntos: MENAS_MINA.map(([x, y]) => [x + 1, y + 1]), semilla: 0, color: '#fff0a8' },
+      { tipo: 'destellos', n: 22, semilla: 71, zona: [0, agua + 2, 320, 180 - agua - 3], evitar: [], color: '#2a4d59' },
+      { tipo: 'reflejo', x: 138, desde: agua + 2, hasta: 176, ancho: 6, color: '#f6c445', brillo: '#fff0a8' },
+      { tipo: 'gotas', puntos: goteras.map((x) => [x, techoMina(x) + largo[x], charcos - 1]), cada: 4.3, forma: 1.6, gravedad: 260, salpica: 0.45, color: '#7fb0c2', onda: '#5f8fa0' },
+      ...antorchas.map(([x, y]) => ({ tipo: 'farol', x, y, color: '#f2a541', llama: ['#ff9a3c', '#ffd36b'], radios: [18, 9], reflejo: [agua + 4, agua + 20] })),
+      { tipo: 'pasa', nombre: 'vagoneta', y: rail - 20, desde: -40, hasta: 330, cada: 17, dura: 7.5, desfase: 3, junta: 9 },
+      { tipo: 'capa', nombre: 'cristales', x: cristales[0], y: cristales[1] },
+      { tipo: 'brillos', puntos: brillosCristales, semilla: 50, color: '#fff0a8' },
+      { tipo: 'golpes', capas: ['minero1', 'minero2'], x: minero[0], y: minero[1], cada: 1.4, golpe: 0.3, desfase: 0, chispas: { x: golpe[0], y: golpe[1], n: 7, vida: 0.45, velocidad: 34, gravedad: 150, lado: -1, color: '#f6c445', brillo: '#fff0a8' } },
+      { tipo: 'luciernagas', n: 14, semilla: 61, zona: [140, 52, 170, 44], color: '#c98b4a', brillo: '#ffe0a6' }
+    ]
+  }
+}
+
 /** La rata que corre por la barra de carga. */
 function rataCarga () {
   const lz = new Lienzo(16, 10)
@@ -729,15 +1009,22 @@ for (const [nombre, lz] of Object.entries(escenas)) {
 }
 fondo({ lunaX: 182, lunaY: 58, rataX: 168 }).guardar(path.join(RAIZ, 'docs', 'img', 'fondo-noche.png'), 2)
 
-// Noche de pesca: fondo fijo y capa de nubes; lo demás se anima en vivo
-const capasPesca = { 'fondo-pesca': pesca(), 'fondo-pesca-nubes': nubesPesca(), 'fondo-pesca-barca': barcaPesca() }
-for (const [nombre, lz] of Object.entries(capasPesca)) {
+// Escenas animadas: fondo fijo y capas (nubes, barca, vagoneta…); lo demás se anima en vivo
+const capasPesca = { nubes: nubesPesca(), barca: barcaPesca() }
+const capasMina = { vagoneta: vagonetaMina(), cristales: cristalesMina(), minero1: mineroMina(false), minero2: mineroMina(true) }
+const imagenesAnimadas = {
+  'fondo-pesca': pesca(),
+  ...Object.fromEntries(Object.entries(capasPesca).map(([n, lz]) => [`fondo-pesca-${n}`, lz])),
+  'fondo-mina': mina(),
+  ...Object.fromEntries(Object.entries(capasMina).map(([n, lz]) => [`fondo-mina-${n}`, lz]))
+}
+for (const [nombre, lz] of Object.entries(imagenesAnimadas)) {
   lz.guardar(path.join(renderer, `${nombre}.png`), 2)
   lz.guardar(path.join(texturas, `${nombre.replace(/-/g, '_')}.png`), 2)
   lz.guardar(path.join(RAIZ, 'docs', 'img', `${nombre}.png`), 2)
 }
 // Datos de las escenas animadas: para el launcher y el panel (fondo-escenas.js) y para el juego (escenas/*.json)
-const escenasAnimadas = { pesca: escenaPesca({ nubes: capasPesca['fondo-pesca-nubes'], barca: capasPesca['fondo-pesca-barca'] }) }
+const escenasAnimadas = { pesca: escenaPesca(capasPesca), mina: escenaMina(capasMina) }
 const datosEscenas = `// Lo genera tools/arte.js a partir de las mismas posiciones que el dibujo: no lo cambies a mano.
 window.ESCENAS_FONDO = ${JSON.stringify(escenasAnimadas, null, 2)}
 `

@@ -232,5 +232,268 @@ window.ESCENAS_FONDO = {
         "brillo": "#fff0a8"
       }
     ]
+  },
+  "mina": {
+    "clave": "mina",
+    "ancho": 320,
+    "alto": 180,
+    "escala": 2,
+    "capas": {
+      "vagoneta": {
+        "ancho": 34,
+        "alto": 20
+      },
+      "cristales": {
+        "ancho": 36,
+        "alto": 30
+      },
+      "minero1": {
+        "ancho": 34,
+        "alto": 30
+      },
+      "minero2": {
+        "ancho": 34,
+        "alto": 30
+      }
+    },
+    "elementos": [
+      {
+        "tipo": "brillos",
+        "puntos": [
+          [
+            23,
+            45
+          ],
+          [
+            81,
+            29
+          ],
+          [
+            107,
+            59
+          ],
+          [
+            173,
+            27
+          ],
+          [
+            237,
+            49
+          ],
+          [
+            267,
+            25
+          ],
+          [
+            305,
+            57
+          ],
+          [
+            59,
+            85
+          ],
+          [
+            223,
+            81
+          ],
+          [
+            13,
+            93
+          ]
+        ],
+        "semilla": 0,
+        "color": "#fff0a8"
+      },
+      {
+        "tipo": "destellos",
+        "n": 22,
+        "semilla": 71,
+        "zona": [
+          0,
+          156,
+          320,
+          23
+        ],
+        "evitar": [],
+        "color": "#2a4d59"
+      },
+      {
+        "tipo": "reflejo",
+        "x": 138,
+        "desde": 156,
+        "hasta": 176,
+        "ancho": 6,
+        "color": "#f6c445",
+        "brillo": "#fff0a8"
+      },
+      {
+        "tipo": "gotas",
+        "puntos": [
+          [
+            98,
+            14,
+            111
+          ],
+          [
+            228,
+            29,
+            111
+          ],
+          [
+            262,
+            20,
+            111
+          ]
+        ],
+        "cada": 4.3,
+        "forma": 1.6,
+        "gravedad": 260,
+        "salpica": 0.45,
+        "color": "#7fb0c2",
+        "onda": "#5f8fa0"
+      },
+      {
+        "tipo": "farol",
+        "x": 39,
+        "y": 70,
+        "color": "#f2a541",
+        "llama": [
+          "#ff9a3c",
+          "#ffd36b"
+        ],
+        "radios": [
+          18,
+          9
+        ],
+        "reflejo": [
+          158,
+          174
+        ]
+      },
+      {
+        "tipo": "farol",
+        "x": 191,
+        "y": 70,
+        "color": "#f2a541",
+        "llama": [
+          "#ff9a3c",
+          "#ffd36b"
+        ],
+        "radios": [
+          18,
+          9
+        ],
+        "reflejo": [
+          158,
+          174
+        ]
+      },
+      {
+        "tipo": "farol",
+        "x": 287,
+        "y": 70,
+        "color": "#f2a541",
+        "llama": [
+          "#ff9a3c",
+          "#ffd36b"
+        ],
+        "radios": [
+          18,
+          9
+        ],
+        "reflejo": [
+          158,
+          174
+        ]
+      },
+      {
+        "tipo": "pasa",
+        "nombre": "vagoneta",
+        "y": 87,
+        "desde": -40,
+        "hasta": 330,
+        "cada": 17,
+        "dura": 7.5,
+        "desfase": 3,
+        "junta": 9
+      },
+      {
+        "tipo": "capa",
+        "nombre": "cristales",
+        "x": 120,
+        "y": 88
+      },
+      {
+        "tipo": "brillos",
+        "puntos": [
+          [
+            125,
+            106
+          ],
+          [
+            130,
+            98
+          ],
+          [
+            137,
+            103
+          ],
+          [
+            142,
+            108
+          ],
+          [
+            148,
+            104
+          ],
+          [
+            133,
+            108
+          ],
+          [
+            144,
+            110
+          ]
+        ],
+        "semilla": 50,
+        "color": "#fff0a8"
+      },
+      {
+        "tipo": "golpes",
+        "capas": [
+          "minero1",
+          "minero2"
+        ],
+        "x": 150,
+        "y": 86,
+        "cada": 1.4,
+        "golpe": 0.3,
+        "desfase": 0,
+        "chispas": {
+          "x": 151,
+          "y": 104,
+          "n": 7,
+          "vida": 0.45,
+          "velocidad": 34,
+          "gravedad": 150,
+          "lado": -1,
+          "color": "#f6c445",
+          "brillo": "#fff0a8"
+        }
+      },
+      {
+        "tipo": "luciernagas",
+        "n": 14,
+        "semilla": 61,
+        "zona": [
+          140,
+          52,
+          170,
+          44
+        ],
+        "color": "#c98b4a",
+        "brillo": "#ffe0a6"
+      }
+    ]
   }
 }
