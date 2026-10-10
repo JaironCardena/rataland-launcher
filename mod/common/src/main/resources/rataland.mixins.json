@@ -4,8 +4,13 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "AbstractButtonMixin",
+    "AbstractSelectionListAccessor",
+    "AbstractSelectionListMixin",
     "AbstractSliderButtonMixin",
+    "AdvancementTabTypeMixin",
     "AdvancementToastMixin",
+    "AdvancementWidgetMixin",
+    "AdvancementsScreenMixin",
     "ClientPlayNetworkHandlerMixin",
     "ConnectScreenMixin",
     "DeathScreenMixin",
@@ -15,6 +20,9 @@
     "ReceivingLevelScreenMixin",
     "ScreenMixin",
     "SplashOverlayMixin",
+    "StatsGeneralEntryMixin",
+    "StatsScreenAccessor",
+    "StatsScreenMixin",
     "ToastManagerMixin",
     "WindowMixin"
   ],

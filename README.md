@@ -15,6 +15,7 @@ Launcher propio (Electron) para la serie RataLand:
   - avisa cuando falta poco para el episodio, cuando entra alguien y cuando se pone tu skin, y los logros de Minecraft salen con ese mismo estilo,
   - cambia la pantalla de muerte (con la puntuación y dónde has muerto) y la lista de jugadores del Tab (cara, nombre y ping) por unas al estilo de la serie,
   - da a los botones y deslizadores de Opciones el estilo del launcher y usa el paisaje de RataLand como fondo (algunos se mueven),
+  - pone Progresos (ventana, pestañas y el recuadro de cada logro) y Estadísticas (lista, filas y pestañas) con el estilo de la serie,
   - pone "RataLand" como título de la ventana.
 
 ## Instalarlo (jugadores)

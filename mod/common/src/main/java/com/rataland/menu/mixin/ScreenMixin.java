@@ -1,14 +1,19 @@
 package com.rataland.menu.mixin;
 
+import com.rataland.menu.Estadisticas;
 import com.rataland.menu.Estilo;
 import com.rataland.menu.Fondo;
+import com.rataland.menu.Prueba;
 import com.rataland.menu.RataLand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.achievement.StatsScreen;
+import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
@@ -21,8 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Opciones, conexión, desconexión…: en lugar del panorama de Minecraft se ve el paisaje de RataLand.
- * En Opciones y sus pantallas (Gráficos, Controles…), una franja oscura arriba y abajo, como la
- * cabecera y la barra del launcher.
+ * En Opciones y sus pantallas (Gráficos, Controles…), Progresos y Estadísticas, una franja oscura
+ * arriba y abajo, como la cabecera y la barra del launcher.
  */
 @Mixin(Screen.class)
 public abstract class ScreenMixin {
@@ -52,6 +57,13 @@ public abstract class ScreenMixin {
 			// La cabecera de Opciones también lleva el campo de visión: la franja, solo tras el título
 			arriba = 26;
 			abajo = 33;
+		} else if (pantalla instanceof StatsScreen) {
+			// Las alturas de su cabecera y su pie (con las pestañas General, Objetos y Criaturas)
+			arriba = 33;
+			abajo = 58;
+		} else if (pantalla instanceof AdvancementsScreen) {
+			arriba = 33;
+			abajo = 33;
 		}
 		if (arriba > 0) {
 			g.fill(0, 0, this.width, arriba, 0xD9070C18);
@@ -65,6 +77,13 @@ public abstract class ScreenMixin {
 
 	@Inject(method = "render", at = @At("TAIL"))
 	private void rataland$captura(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+		if ((Object) this instanceof StatsScreen estadisticas) {
+			ObjectSelectionList<?> lista = ((StatsScreenAccessor) estadisticas).rataland$listaActiva();
+			Estadisticas.marcarPestana(context, estadisticas, lista, lista == null ? 0 : ((AbstractSelectionListAccessor) lista).rataland$altoFila());
+			if (RataLand.MODO_CAPTURA && lista != null && ++this.rataland$fotogramas == 40) {
+				Prueba.alSiguienteTick("rataland-estadisticas.png", Prueba::despuesDeLaPausa);
+			}
+		}
 		if (RataLand.MODO_CAPTURA && (Object) this instanceof OptionsScreen && ++this.rataland$fotogramas == 80) {
 			Minecraft client = Minecraft.getInstance();
 			Screenshot.grab(client.gameDirectory, "rataland-opciones.png", client.getMainRenderTarget(), t -> {});

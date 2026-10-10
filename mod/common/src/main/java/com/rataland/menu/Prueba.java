@@ -1,5 +1,15 @@
 package com.rataland.menu;
 
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.AdvancementNode;
+import net.minecraft.advancements.AdvancementProgress;
+import net.minecraft.advancements.AdvancementTree;
+import net.minecraft.advancements.AdvancementType;
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.Criterion;
+import net.minecraft.advancements.TreeNodePosition;
+import net.minecraft.advancements.critereon.ImpossibleTrigger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
@@ -7,16 +17,30 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.achievement.StatsScreen;
+import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
+import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.client.telemetry.TelemetryEventSender;
+import net.minecraft.client.telemetry.WorldSessionTelemetryManager;
+import net.minecraft.network.protocol.game.ClientboundUpdateAdvancementsPacket;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.stats.StatsCounter;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Solo para pruebas (-Drataland.captura=true): después de la pausa, la pantalla de muerte y la lista
- * de jugadores (Tab) con jugadores de ejemplo; luego prueba «Entrando en RataLand» con una dirección
- * que no contesta y, tras cancelar, «No se pudo entrar» con una que rechaza.
+ * de jugadores (Tab) con jugadores de ejemplo, Progresos con logros de ejemplo y Estadísticas; luego
+ * prueba «Entrando en RataLand» con una dirección que no contesta y, tras cancelar, «No se pudo
+ * entrar» con una que rechaza.
  */
 public final class Prueba {
 	private Prueba() {}
@@ -77,12 +101,57 @@ public final class Prueba {
 					fila("Supansinho", 420, false, false, null),
 					fila("QuesoMaster", 64, true, false, null));
 			TablaJugadores.dibujar(g, this.font, this.width, Component.literal("¡Bienvenidos a RataLand!"), Component.literal("Episodio 2 este domingo"), filas);
-			if (++this.fotogramas == 40) alSiguienteTick("rataland-tab.png", () -> despuesDeLaPausa());
+			if (++this.fotogramas == 40) alSiguienteTick("rataland-tab.png", Prueba::progresos);
 		}
 
 		private static TablaJugadores.Fila fila(String nombre, int ping, boolean espectador, boolean yo, Component puntos) {
 			return new TablaJugadores.Fila(Component.literal(nombre), DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(nombre)), ping, espectador, yo, puntos);
 		}
+	}
+
+	/** Progresos con logros de ejemplo: dos pestañas, unos conseguidos y otros no. */
+	public static void progresos() {
+		Minecraft juego = Minecraft.getInstance();
+		Criterion<ImpossibleTrigger.TriggerInstance> nunca = CriteriaTriggers.IMPOSSIBLE.createCriterion(new ImpossibleTrigger.TriggerInstance());
+		AdvancementHolder raiz = logro(null, "raiz", Items.GOLDEN_PICKAXE, "RataLand", "La temporada 1", "stone", AdvancementType.TASK, nunca);
+		AdvancementHolder queso = logro(raiz, "queso", Items.GOLD_NUGGET, "Primer queso", "Encuentra una veta de queso", null, AdvancementType.TASK, nunca);
+		AdvancementHolder mina = logro(queso, "mina", Items.MINECART, "Minero de queso", "Saca una vagoneta llena", null, AdvancementType.GOAL, nunca);
+		AdvancementHolder rey = logro(mina, "rey", Items.GOLD_BLOCK, "Rey del queso", "Guarda mil quesos", null, AdvancementType.CHALLENGE, nunca);
+		AdvancementHolder casa = logro(raiz, "casa", Items.OAK_DOOR, "Una madriguera", "Construye tu casa", null, AdvancementType.TASK, nunca);
+		AdvancementHolder cloacas = logro(null, "cloacas", Items.MOSSY_COBBLESTONE, "Las cloacas", "Lo que hay bajo la ciudad", "nether", AdvancementType.TASK, nunca);
+		AdvancementHolder rata = logro(cloacas, "rata", Items.RABBIT_HIDE, "Rata de cloaca", "Baja a las cloacas", null, AdvancementType.TASK, nunca);
+		List<AdvancementHolder> todos = List.of(raiz, queso, mina, rey, casa, cloacas, rata);
+		// Las posiciones en el árbol las calcula Minecraft como en el servidor
+		AdvancementTree arbol = new AdvancementTree();
+		arbol.addAll(todos);
+		for (AdvancementNode nodo : arbol.roots()) TreeNodePosition.run(nodo);
+		Map<ResourceLocation, AdvancementProgress> progreso = new HashMap<>();
+		for (AdvancementHolder hecho : List.of(raiz, queso, mina, casa, cloacas)) {
+			AdvancementProgress p = new AdvancementProgress();
+			p.update(hecho.value().requirements());
+			p.grantProgress("hecho");
+			progreso.put(hecho.id(), p);
+		}
+		ClientAdvancements avances = new ClientAdvancements(juego, new WorldSessionTelemetryManager(TelemetryEventSender.DISABLED, false, null, null));
+		avances.update(new ClientboundUpdateAdvancementsPacket(true, todos, Set.of(), progreso));
+		juego.setScreen(new AdvancementsScreen(avances));
+	}
+
+	private static AdvancementHolder logro(AdvancementHolder padre, String id, ItemLike icono, String titulo, String texto, String fondo,
+			AdvancementType tipo, Criterion<?> criterio) {
+		Advancement.Builder b = Advancement.Builder.advancement();
+		if (padre != null) b.parent(padre);
+		b.display(icono, Component.literal(titulo), Component.literal(texto),
+				fondo == null ? null : ResourceLocation.withDefaultNamespace("textures/gui/advancements/backgrounds/" + fondo + ".png"), tipo, true, false, false);
+		b.addCriterion("hecho", criterio);
+		return b.build(ResourceLocation.fromNamespaceAndPath(RataLand.MOD_ID, "prueba/" + id));
+	}
+
+	/** Estadísticas (sin servidor, con todo a cero); tras capturarla sigue con la conexión. */
+	public static void estadisticas() {
+		StatsScreen pantalla = new StatsScreen(null, new StatsCounter());
+		Minecraft.getInstance().setScreen(pantalla);
+		pantalla.onStatsUpdated();
 	}
 
 	public static void despuesDeLaPausa() {
