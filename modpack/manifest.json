@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-10T07:11:22.873Z",
+  "generado": "2026-10-10T17:17:32.481Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -48,19 +48,6 @@
       "sha1": "1a26a0ce9b959e9475321978f6ffb13296446cb1",
       "tamano": 220749,
       "git": "b1cb7c90b63b49c04a417d00a3fc23dc0df61f81"
-    },
-    {
-      "ruta": "mods/sodium-fabric-0.8.13+mc1.21.1.jar",
-      "url": "https://cdn.modrinth.com/data/AANobbMI/versions/SMxNOGZ6/sodium-fabric-0.8.13%2Bmc1.21.1.jar",
-      "sha1": "003c114c85ca88ef3362e018deb6aca0c682d6a1",
-      "tamano": 1574609,
-      "modrinth": {
-        "proyecto": "AANobbMI",
-        "version": "SMxNOGZ6",
-        "numero": "mc1.21.1-0.8.13-fabric",
-        "nombre": "Sodium",
-        "icono": "https://cdn.modrinth.com/data/AANobbMI/295862f4724dc3f78df3447ad6072b2dcd3ef0c9_96.webp"
-      }
     },
     {
       "ruta": "mods/lithium-fabric-0.15.4+mc1.21.1.jar",
