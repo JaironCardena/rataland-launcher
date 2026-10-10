@@ -5,9 +5,11 @@ import com.rataland.menu.Conexion;
 import com.rataland.menu.EstadoServidor;
 import com.rataland.menu.MenuRataLand;
 import com.rataland.menu.PantallaDesconectado;
+import com.rataland.menu.PantallaEspera;
 import com.rataland.menu.PausaRataLand;
 import com.rataland.menu.Prueba;
 import com.rataland.menu.RataLand;
+import com.rataland.menu.SalaEspera;
 import com.rataland.menu.SkinPendiente;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
@@ -15,6 +17,7 @@ import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -35,7 +38,11 @@ public abstract class MinecraftClientMixin {
 		// El menú de pausa (Esc). Con F3+Esc el juego se pausa sin menú: ese se deja como está.
 		if (pantalla instanceof PauseScreen pausa && pausa.showsPauseMenu()) return new PausaRataLand();
 		if (pantalla instanceof DisconnectedScreen desconectado) {
-			return new PantallaDesconectado(((DisconnectedScreenAccessor) desconectado).rataland$detalles().reason());
+			Component razon = ((DisconnectedScreenAccessor) desconectado).rataland$detalles().reason();
+			// Con el servidor despertándose no es un error: se espera y se vuelve a intentar solo
+			if (SalaEspera.seEspera(razon)) return new PantallaEspera(razon);
+			SalaEspera.terminar();
+			return new PantallaDesconectado(razon);
 		}
 		return pantalla;
 	}

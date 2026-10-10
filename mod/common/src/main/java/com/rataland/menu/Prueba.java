@@ -40,8 +40,9 @@ import java.util.Set;
 /**
  * Solo para pruebas (-Drataland.captura=true): después de la pausa, la pantalla de muerte y la lista
  * de jugadores (Tab) con jugadores de ejemplo, Progresos con logros de ejemplo y Estadísticas; luego
- * prueba «Entrando en RataLand» con una dirección que no contesta y, tras cancelar, «No se pudo
- * entrar» con una que rechaza.
+ * prueba «Entrando en RataLand» con una dirección que no contesta; tras cancelar, una que rechaza (como
+ * el servidor dormido: lleva a la sala de espera), el reintento solo desde la sala, «Volver al menú» y
+ * «No se pudo entrar» tras esperar sin que abra.
  */
 public final class Prueba {
 	private Prueba() {}
@@ -168,15 +169,43 @@ public final class Prueba {
 
 	/** Desde la pantalla de conexión, tras unos fotogramas. */
 	public static void conectando(ConnectScreen pantalla) {
-		if (fase != 1) return;
-		fase = 2;
 		Minecraft juego = Minecraft.getInstance();
-		Screenshot.grab(juego.gameDirectory, "rataland-conectando.png", juego.getMainRenderTarget(), t -> {});
-		RataLand.LOG.info("Prueba: al conectar se muestra la tarjeta «Entrando en {}»", RataLand.nombre);
-		// Cancelar (como el jugador) y probar una dirección que rechaza la conexión
+		if (fase == 1) {
+			fase = 2;
+			Screenshot.grab(juego.gameDirectory, "rataland-conectando.png", juego.getMainRenderTarget(), t -> {});
+			RataLand.LOG.info("Prueba: al conectar se muestra la tarjeta «Entrando en {}»", RataLand.nombre);
+			// Cancelar (como el jugador) y probar una dirección que rechaza la conexión
+			cancelar(pantalla);
+			if (juego.screen instanceof MenuRataLand menu) Conexion.conectar(menu, RECHAZA);
+		} else if (fase == 3) {
+			fase = 4;
+			Screenshot.grab(juego.gameDirectory, "rataland-espera-intento.png", juego.getMainRenderTarget(), t -> {});
+			RataLand.LOG.info("Prueba: el reintento desde la sala de espera se ve como la sala (esperando: {})", SalaEspera.activa());
+			cancelar(pantalla);
+			RataLand.LOG.info("Prueba: «Volver al menú» durante el reintento lleva a {} (esperando: {})",
+					juego.screen == null ? "nada" : juego.screen.getClass().getSimpleName(), SalaEspera.activa());
+			// Y si tras esperar el máximo no abre, se explica
+			juego.setScreen(new PantallaDesconectado(Component.translatable("multiplayer.disconnect.server_full"), true));
+		}
+	}
+
+	private static void cancelar(Screen pantalla) {
 		for (GuiEventListener hijo : pantalla.children()) {
 			if (hijo instanceof Button boton) boton.onPress();
 		}
-		if (juego.screen instanceof MenuRataLand menu) Conexion.conectar(menu, RECHAZA);
+	}
+
+	/** Desde la sala de espera, tras unos fotogramas (solo la primera vez). */
+	public static void esperando(PantallaEspera pantalla) {
+		if (fase != 2) return;
+		RataLand.LOG.info("Prueba: con la conexión rechazada al entrar se muestra la sala de espera");
+		alSiguienteTick("rataland-espera.png", null);
+	}
+
+	/** El reintento de la sala de espera: a una dirección que no contesta, para ver cómo se ve. */
+	public static void reintento(PantallaEspera pantalla) {
+		RataLand.LOG.info("Prueba: la sala de espera vuelve a intentar entrar sola");
+		fase = 3;
+		Conexion.conectar(pantalla, SIN_RESPUESTA);
 	}
 }

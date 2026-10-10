@@ -3,6 +3,7 @@ package com.rataland.menu.mixin;
 import com.rataland.menu.Conexion;
 import com.rataland.menu.Prueba;
 import com.rataland.menu.RataLand;
+import com.rataland.menu.SalaEspera;
 import com.rataland.menu.TarjetaEntrando;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -22,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Al entrar al servidor de la serie, en vez del texto gris de Minecraft («Conectando al servidor…»)
  * se ve la tarjeta «Entrando en RataLand» con los pasos, y el botón Cancelar va dentro de ella.
+ * Desde la sala de espera se sigue viendo la sala, con «Intentando entrar…» y «Volver al menú».
  */
 @Mixin(ConnectScreen.class)
 public abstract class ConnectScreenMixin extends Screen {
@@ -38,12 +40,14 @@ public abstract class ConnectScreenMixin extends Screen {
 	@Inject(method = "init", at = @At("TAIL"))
 	private void rataland$colocarBoton(CallbackInfo ci) {
 		if (!Conexion.entrando) return;
-		int[] zona = TarjetaEntrando.boton(this.width, this.height);
+		boolean esperando = SalaEspera.activa();
+		int[] zona = esperando ? SalaEspera.boton(this.font, this.width, this.height) : TarjetaEntrando.boton(this.width, this.height);
 		for (GuiEventListener hijo : this.children()) {
 			if (hijo instanceof AbstractWidget boton) {
 				boton.setX(zona[0]);
 				boton.setY(zona[1]);
 				boton.setWidth(zona[2]);
+				if (esperando) boton.setMessage(Component.literal("Volver al menú"));
 			}
 		}
 	}
@@ -57,7 +61,9 @@ public abstract class ConnectScreenMixin extends Screen {
 	@Override
 	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
 		super.renderBackground(g, mouseX, mouseY, delta);
-		if (Conexion.entrando) TarjetaEntrando.dibujar(g, this.font, this.width, this.height, TarjetaEntrando.paso(this.status), true);
+		if (!Conexion.entrando) return;
+		if (SalaEspera.activa()) SalaEspera.dibujar(g, this.font, this.width, this.height, -1);
+		else TarjetaEntrando.dibujar(g, this.font, this.width, this.height, TarjetaEntrando.paso(this.status), true);
 	}
 
 	@Inject(method = "render", at = @At("TAIL"))

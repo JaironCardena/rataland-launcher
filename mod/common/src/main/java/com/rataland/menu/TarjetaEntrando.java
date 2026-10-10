@@ -90,11 +90,12 @@ public final class TarjetaEntrando {
 			fy += 12;
 		}
 
-		// Barra de queso con la rata corriendo
-		int bx = x + 14;
-		int bw = w - 28;
-		int by = y + 34 + 36 + 14;
-		float base = paso == 1 ? 0.2f : paso == 2 ? 0.5f : 0.82f;
+		barra(g, x + 14, y + 34 + 36 + 14, w - 28, paso == 1 ? 0.2f : paso == 2 ? 0.5f : 0.82f);
+		dibujarConsejo(g, fuente, ancho, alto, y + c[3] + 14);
+	}
+
+	/** Barra de queso con la rata corriendo, llena hasta base (y un poco arriba y abajo, para que se mueva). */
+	static void barra(GuiGraphics g, int bx, int by, int bw, float base) {
 		float avance = Mth.clamp(base + 0.04f * Mth.sin((Util.getMillis() % 4000L) / 4000f * Mth.TWO_PI), 0f, 1f);
 		int lleno = Math.round(bw * avance);
 		g.fill(bx, by, bx + bw, by + 6, 0xFF0A0F1C);
@@ -106,10 +107,11 @@ public final class TarjetaEntrando {
 		RenderSystem.enableBlend();
 		g.blit(RataLand.RATA, bx + lleno - 12, by - 10 + salto, 0, 0, 16, 10, 16, 10);
 		RenderSystem.disableBlend();
+	}
 
-		// Consejo, debajo de la tarjeta
+	/** El consejo, debajo de la tarjeta (en `cy`), si cabe. */
+	static void dibujarConsejo(GuiGraphics g, Font fuente, int ancho, int alto, int cy) {
 		int cw = Math.min(380, ancho - 40);
-		int cy = y + c[3] + 14;
 		int chipAncho = fuente.width("Consejo") + 12;
 		java.util.List<net.minecraft.util.FormattedCharSequence> lineas = fuente.split(Component.literal(consejo), cw - chipAncho - 20);
 		if (lineas.size() > 2) lineas = lineas.subList(0, 2);
@@ -126,7 +128,7 @@ public final class TarjetaEntrando {
 		}
 	}
 
-	private static String puntos() {
+	static String puntos() {
 		return ".".repeat((int) (Util.getMillis() / 400 % 4));
 	}
 }

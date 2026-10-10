@@ -37,13 +37,18 @@ public final class Conexion {
 	public static void conectar(Screen desde, String direccion) {
 		RataLand.LOG.info("Conectando a {}", direccion);
 		entrando = true;
-		TarjetaEntrando.nuevoConsejo();
+		if (!SalaEspera.activa()) TarjetaEntrando.nuevoConsejo();
 		ServerData info = new ServerData(RataLand.nombre, direccion, ServerData.Type.OTHER);
-		ConnectScreen.startConnecting(desde, Minecraft.getInstance(), ServerAddress.parseString(direccion), info, false, null);
+		// Desde la sala de espera, «Volver al menú» (el Cancelar de Minecraft) lleva al menú y deja de esperar
+		Screen volver = SalaEspera.activa() ? new MenuRataLand() : desde;
+		ConnectScreen.startConnecting(volver, Minecraft.getInstance(), ServerAddress.parseString(direccion), info, false, null);
 	}
 
-	/** Cada tick: ya dentro del mundo (sin pantallas de carga), deja de estar «entrando». */
+	/** Cada tick: ya dentro del mundo (sin pantallas de carga), deja de estar «entrando» y de esperar. */
 	public static void tick(Minecraft juego) {
-		if (entrando && juego.level != null && juego.screen == null) entrando = false;
+		if (juego.level != null && juego.screen == null) {
+			entrando = false;
+			SalaEspera.terminar();
+		}
 	}
 }

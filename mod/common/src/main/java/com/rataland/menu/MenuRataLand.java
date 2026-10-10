@@ -72,8 +72,9 @@ public class MenuRataLand extends Screen {
 
 	@Override
 	protected void init() {
-		// Al volver aquí (cancelar la conexión, salir del servidor…) ya no se está entrando
+		// Al volver aquí (cancelar la conexión, salir del servidor…) ya no se está entrando ni esperando
 		Conexion.entrando = false;
+		SalaEspera.terminar();
 
 		// Abajo, en el centro: estado del servidor, Jugar y la fila de Opciones, Discord y Salir
 		List<String> fila = new ArrayList<>(List.of("Opciones"));

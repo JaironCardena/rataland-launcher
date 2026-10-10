@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * original sigue a mano en «Ver el mensaje de Minecraft».
  */
 public class PantallaDesconectado extends Screen {
-	private enum Motivo { APAGADO, SIN_INTERNET, EXPULSADO, BANEADO, LLENO, VERSION, OTRO }
+	enum Motivo { APAGADO, SIN_INTERNET, EXPULSADO, BANEADO, LLENO, VERSION, OTRO }
 
 	private static final int ANCHO = 330;
 	/** Nombres de servidores de Aternos y direcciones IP: lo que no se enseña en el mensaje de Minecraft. */
@@ -27,6 +27,8 @@ public class PantallaDesconectado extends Screen {
 	private final Component razon;
 	private final Component detalle;
 	private final Motivo motivo;
+	/** ¿Se llega aquí tras esperar en la sala de espera sin que el servidor llegue a abrir? */
+	private final boolean trasEsperar;
 	private boolean detalles;
 	private int fotogramas;
 
@@ -40,10 +42,20 @@ public class PantallaDesconectado extends Screen {
 	private int yDetalle;
 
 	public PantallaDesconectado(Component razon) {
+		this(razon, false);
+	}
+
+	public PantallaDesconectado(Component razon, boolean trasEsperar) {
 		super(Component.literal("No se pudo entrar a " + RataLand.nombre));
 		this.razon = razon == null ? Component.empty() : razon;
 		this.motivo = clasificar(this.razon);
 		this.detalle = sinDatosPrivados(this.razon);
+		this.trasEsperar = trasEsperar;
+	}
+
+	/** ¿Esperó en la sala y el servidor no llegó a abrir? (se diga lo que se diga al final) */
+	private boolean noDesperto() {
+		return this.trasEsperar && (this.motivo == Motivo.APAGADO || this.motivo == Motivo.LLENO);
 	}
 
 	/**
@@ -64,7 +76,7 @@ public class PantallaDesconectado extends Screen {
 		return Component.literal(limpio.isEmpty() ? "Sin más detalles." : limpio);
 	}
 
-	private static Motivo clasificar(Component razon) {
+	static Motivo clasificar(Component razon) {
 		String clave = razon.getContents() instanceof TranslatableContents t ? t.getKey() : "";
 		String texto = razon.getString().toLowerCase(Locale.ROOT);
 		if (clave.equals("multiplayer.disconnect.server_full") || texto.contains("server is full")) return Motivo.LLENO;
@@ -80,38 +92,35 @@ public class PantallaDesconectado extends Screen {
 	}
 
 	private String titulo() {
+		if (noDesperto()) return "El servidor no ha despertado";
 		return switch (motivo) {
 			case APAGADO -> "El servidor está dormido";
 			case SIN_INTERNET -> "No llegamos al servidor";
 			case EXPULSADO -> "Te han sacado del servidor";
 			case BANEADO -> "No puedes entrar";
-			case LLENO -> dormido() ? "El hosting está lleno" : "El servidor está lleno";
+			case LLENO -> "El servidor está lleno";
 			case VERSION -> "Versiones distintas";
 			case OTRO -> "Se ha cortado la conexión";
 		};
 	}
 
 	private String explicacion() {
+		if (noDesperto()) {
+			return "Llevamos " + SalaEspera.MAXIMO / 60_000 + " minutos esperando y sigue sin abrir: a veces el hosting no tiene sitio para encenderlo. Vuelve a intentarlo en un rato.";
+		}
 		return switch (motivo) {
 			case APAGADO -> RataLand.nombre + " se duerme cuando no hay nadie jugando. Al intentar entrar se despierta solo, pero tarda un par de minutos en abrir: vuelve a intentarlo en un momento.";
 			case SIN_INTERNET -> "Parece que se ha cortado tu conexión a internet. Revísala y vuelve a intentarlo.";
 			case EXPULSADO -> "Un moderador te ha expulsado. Si crees que es un error, pregunta en el Discord de la serie.";
 			case BANEADO -> "Tienes la entrada bloqueada en este servidor. Si crees que es un error, pregunta en el Discord de la serie.";
-			case LLENO -> dormido()
-					? "El servidor estaba dormido y ahora mismo el hosting no tiene sitio para encenderlo (pasa en las horas con más gente). Vuelve a intentarlo en unos minutos."
-					: "Ahora mismo no cabe nadie más. Vuelve a intentarlo en un rato.";
+			case LLENO -> "Ahora mismo no cabe nadie más. Vuelve a intentarlo en un rato.";
 			case VERSION -> "Tu juego y el servidor no tienen la misma versión. Cierra el juego y vuelve a abrirlo desde el launcher para que se actualice.";
 			case OTRO -> "El servidor cerró la conexión. Vuelve a intentarlo en un momento.";
 		};
 	}
 
-	/** ¿El servidor estaba dormido (o arrancando) la última vez que se miró? Entonces "lleno" es el hosting. */
-	private static boolean dormido() {
-		EstadoServidor.Estado estado = EstadoServidor.estado();
-		return estado == EstadoServidor.Estado.APAGADO || estado == EstadoServidor.Estado.ENCENDIENDO;
-	}
-
 	private String[] icono() {
+		if (noDesperto()) return IconosPixel.LUNA;
 		return switch (motivo) {
 			case APAGADO -> IconosPixel.LUNA;
 			case SIN_INTERNET, OTRO -> IconosPixel.SENAL;
