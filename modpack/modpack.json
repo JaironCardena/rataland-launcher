@@ -246,6 +246,45 @@
         "nombre": "Iris Shaders",
         "icono": "https://cdn.modrinth.com/data/YL57xq9U/18d0e7f076d3d6ed5bedd472b853909aac5da202_96.webp"
       }
+    },
+    {
+      "ruta": "shaderpacks/ComplementaryReimagined_r5.9.3.zip",
+      "url": "https://cdn.modrinth.com/data/HVnmMxH1/versions/Bqen1mJX/ComplementaryReimagined_r5.9.3.zip",
+      "sha1": "838139b54cddb56b2e83cd260d8efd960ac536d6",
+      "tamano": 553397,
+      "modrinth": {
+        "proyecto": "HVnmMxH1",
+        "version": "Bqen1mJX",
+        "numero": "r5.9.3",
+        "nombre": "Complementary Shaders - Reimagined",
+        "icono": "https://cdn.modrinth.com/data/HVnmMxH1/79cb7c8123bbc54945305b2ebad6b8881efdf5f8_96.webp"
+      }
+    },
+    {
+      "ruta": "shaderpacks/ComplementaryUnbound_r5.9.3.zip",
+      "url": "https://cdn.modrinth.com/data/R6NEzAwj/versions/B1kyfoUZ/ComplementaryUnbound_r5.9.3.zip",
+      "sha1": "2ee08300e1d6f039e63eae8484dddf57b3aaaf67",
+      "tamano": 553400,
+      "modrinth": {
+        "proyecto": "R6NEzAwj",
+        "version": "B1kyfoUZ",
+        "numero": "r5.9.3",
+        "nombre": "Complementary Shaders - Unbound",
+        "icono": "https://cdn.modrinth.com/data/R6NEzAwj/c85ce4049aac76360d2cd24fd9a7003de01ef312_96.webp"
+      }
+    },
+    {
+      "ruta": "shaderpacks/BSL_v10.1.8.zip",
+      "url": "https://cdn.modrinth.com/data/Q1vvjJYV/versions/Y68yiql9/BSL_v10.1.8.zip",
+      "sha1": "e89818c8827d0131c102fb480c3c3446624db0df",
+      "tamano": 1134153,
+      "modrinth": {
+        "proyecto": "Q1vvjJYV",
+        "version": "Y68yiql9",
+        "numero": "10.1.8",
+        "nombre": "BSL Shaders",
+        "icono": "https://cdn.modrinth.com/data/Q1vvjJYV/2a611a3cb434fb52fb81fa5dace13c5d8b67e55d_96.webp"
+      }
     }
   ],
   "packsActivos": [
