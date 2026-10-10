@@ -15,6 +15,7 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.components.toasts.TutorialToast;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.achievement.StatsScreen;
@@ -87,8 +88,11 @@ public final class Prueba {
 
 		@Override
 		protected void init() {
-			// Sin los avisos de ejemplo de la pausa, que taparían la lista
+			// Sin los avisos de ejemplo de la pausa, que taparían la lista; solo un consejo de jugador nuevo
 			this.minecraft.getToasts().clear();
+			TutorialToast consejo = new TutorialToast(TutorialToast.Icons.MOVEMENT_KEYS, Component.literal("Muévete"), Component.literal("Usa W, A, S y D"), true);
+			consejo.updateProgress(0.4f);
+			this.minecraft.getToasts().addToast(consejo);
 		}
 
 		@Override

@@ -5,6 +5,8 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.AdvancementToast;
+import net.minecraft.client.gui.components.toasts.RecipeToast;
+import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
@@ -94,5 +96,9 @@ public final class Avisos {
 		juego.getToasts().addToast(new AdvancementToast(Advancement.Builder.advancement()
 				.display(Items.GOLDEN_PICKAXE, Component.literal("Minero de queso"), Component.empty(), null, AdvancementType.GOAL, true, false, false)
 				.build(ResourceLocation.fromNamespaceAndPath(RataLand.MOD_ID, "prueba"))));
+		juego.getToasts().addToast(new SystemToast(SystemToast.SystemToastId.PERIODIC_NOTIFICATION, Component.literal("Paquete de recursos"),
+				Component.literal("El servidor recomienda uno")));
+		// El de recetas necesita un mundo para dibujarse: al menos se carga, para ver que el mixin encaja
+		RataLand.LOG.info("Prueba: aviso de recetas cargado ({})", RecipeToast.class.getSimpleName());
 	}
 }

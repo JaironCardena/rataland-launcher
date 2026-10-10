@@ -12,9 +12,9 @@ Launcher propio (Electron) para la serie RataLand:
   - sustituye el menú principal por una portada: el logo y la cuenta atrás del próximo episodio arriba, el paisaje en medio, y abajo el estado del servidor (y quién está dentro), **Jugar** (entra al servidor), **Opciones**, **Discord** y **Salir**; tu personaje está de pie en el paisaje y tu cuenta arriba a la derecha,
   - sustituye el menú de pausa (Esc): **Volver al juego**, **Progresos**, **Estadísticas**, **Opciones**, **Discord** y **Volver a RataLand**, con los jugadores conectados, tu ping y la cuenta atrás,
   - muestra «Entrando en RataLand» con los pasos al conectar y, si no se puede entrar o te echan, explica en español qué pasó (servidor dormido, sin internet, lleno, baneado…) con **Reintentar**,
-  - avisa cuando falta poco para el episodio, cuando entra alguien y cuando se pone tu skin, y los logros de Minecraft salen con ese mismo estilo,
+  - avisa cuando falta poco para el episodio, cuando entra alguien y cuando se pone tu skin, y los avisos de Minecraft (logros, recetas nuevas, avisos del sistema y consejos) salen con ese mismo estilo,
   - cambia la pantalla de muerte (con la puntuación y dónde has muerto) y la lista de jugadores del Tab (cara, nombre y ping) por unas al estilo de la serie,
-  - da a los botones y deslizadores de Opciones el estilo del launcher y usa el paisaje de RataLand como fondo (algunos se mueven),
+  - da a los botones, deslizadores y listas de Opciones (y de Paquetes de recursos) el estilo del launcher y usa el paisaje de RataLand como fondo (algunos se mueven),
   - pone Progresos (ventana, pestañas y el recuadro de cada logro) y Estadísticas (lista, filas y pestañas) con el estilo de la serie,
   - pone "RataLand" como título de la ventana.
 

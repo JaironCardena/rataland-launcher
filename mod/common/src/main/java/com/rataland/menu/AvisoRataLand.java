@@ -86,8 +86,18 @@ public class AvisoRataLand implements Toast {
 	}
 
 	private static void fondo(GuiGraphics g, int borde) {
-		Estilo.escalon(g, 0, 0, ANCHO, ALTO, 0xF00D1424);
-		Estilo.bordeEscalon(g, 0, 0, ANCHO, ALTO, borde);
+		fondo(g, ANCHO, ALTO, borde);
+	}
+
+	/** El fondo de los avisos de RataLand, de cualquier tamaño (también para los de Minecraft). */
+	public static void fondo(GuiGraphics g, int ancho, int alto, int borde) {
+		Estilo.escalon(g, 0, 0, ancho, alto, 0xF00D1424);
+		Estilo.bordeEscalon(g, 0, 0, ancho, alto, borde);
+	}
+
+	/** El hueco oscuro del icono, a la izquierda del aviso. */
+	public static void cajaIcono(GuiGraphics g) {
+		Estilo.escalon(g, 5, 5, 22, 22, 0xFF1B2236);
 	}
 
 	/**

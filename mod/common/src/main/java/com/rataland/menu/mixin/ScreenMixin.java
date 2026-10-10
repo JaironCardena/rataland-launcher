@@ -6,7 +6,6 @@ import com.rataland.menu.Fondo;
 import com.rataland.menu.Prueba;
 import com.rataland.menu.RataLand;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -17,6 +16,10 @@ import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
+import net.minecraft.client.gui.screens.options.VideoSettingsScreen;
+import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -64,6 +67,12 @@ public abstract class ScreenMixin {
 		} else if (pantalla instanceof AdvancementsScreen) {
 			arriba = 33;
 			abajo = 33;
+		} else if (pantalla instanceof PackSelectionScreen paquetes) {
+			HeaderAndFooterLayout disposicion = ((PackSelectionScreenAccessor) paquetes).rataland$disposicion();
+			arriba = disposicion.getHeaderHeight();
+			abajo = disposicion.getFooterHeight();
+			// Entre las dos listas queda un hueco: más oscuro, para que no destaque el paisaje
+			g.fill(0, arriba, this.width, this.height - abajo, 0x8C080D1A);
 		}
 		if (arriba > 0) {
 			g.fill(0, 0, this.width, arriba, 0xD9070C18);
@@ -84,14 +93,22 @@ public abstract class ScreenMixin {
 				Prueba.alSiguienteTick("rataland-estadisticas.png", Prueba::despuesDeLaPausa);
 			}
 		}
-		if (RataLand.MODO_CAPTURA && (Object) this instanceof OptionsScreen && ++this.rataland$fotogramas == 80) {
-			Minecraft client = Minecraft.getInstance();
-			Screenshot.grab(client.gameDirectory, "rataland-opciones.png", client.getMainRenderTarget(), t -> {});
-			client.setScreen(new JoinMultiplayerScreen(new TitleScreen()));
-			RataLand.LOG.info("Prueba: al abrir Multijugador se muestra {}", client.screen.getClass().getSimpleName());
-			// Sigue con el menú de pausa; PausaRataLand hace su captura y sigue con la conexión.
-			client.setScreen(new PauseScreen(true));
-			RataLand.LOG.info("Prueba: al pausar se muestra {}", client.screen.getClass().getSimpleName());
+		if (!RataLand.MODO_CAPTURA) return;
+		Minecraft client = Minecraft.getInstance();
+		if ((Object) this instanceof OptionsScreen opciones && ++this.rataland$fotogramas == 80) {
+			// Opciones, luego una de sus listas (Gráficos) y Paquetes de recursos
+			Prueba.alSiguienteTick("rataland-opciones.png", () -> client.setScreen(new VideoSettingsScreen(opciones, client, client.options)));
+		} else if ((Object) this instanceof VideoSettingsScreen && ++this.rataland$fotogramas == 40) {
+			Prueba.alSiguienteTick("rataland-graficos.png", () -> client.setScreen(new PackSelectionScreen(client.getResourcePackRepository(), (r) -> {},
+					client.getResourcePackDirectory(), Component.translatable("resourcePack.title"))));
+		} else if ((Object) this instanceof PackSelectionScreen && ++this.rataland$fotogramas == 40) {
+			Prueba.alSiguienteTick("rataland-paquetes.png", () -> {
+				client.setScreen(new JoinMultiplayerScreen(new TitleScreen()));
+				RataLand.LOG.info("Prueba: al abrir Multijugador se muestra {}", client.screen.getClass().getSimpleName());
+				// Sigue con el menú de pausa; PausaRataLand hace su captura y sigue con la conexión.
+				client.setScreen(new PauseScreen(true));
+				RataLand.LOG.info("Prueba: al pausar se muestra {}", client.screen.getClass().getSimpleName());
+			});
 		}
 	}
 }

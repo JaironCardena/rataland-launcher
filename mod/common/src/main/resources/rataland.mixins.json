@@ -16,14 +16,18 @@
     "DeathScreenMixin",
     "DisconnectedScreenAccessor",
     "MinecraftClientMixin",
+    "PackSelectionScreenAccessor",
     "PlayerTabOverlayMixin",
     "ReceivingLevelScreenMixin",
+    "RecipeToastMixin",
     "ScreenMixin",
     "SplashOverlayMixin",
     "StatsGeneralEntryMixin",
     "StatsScreenAccessor",
     "StatsScreenMixin",
+    "SystemToastMixin",
     "ToastManagerMixin",
+    "TutorialToastMixin",
     "WindowMixin"
   ],
   "injectors": {
