@@ -233,6 +233,19 @@
         "nombre": "Faithful 64x",
         "icono": "https://cdn.modrinth.com/data/r4GILswZ/9ff7d3c66d6a263c158c2ef034b0361fdfbf354b.png"
       }
+    },
+    {
+      "ruta": "mods/iris-fabric-1.8.8+mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/YL57xq9U/versions/zsoi0dso/iris-fabric-1.8.8%2Bmc1.21.1.jar",
+      "sha1": "4e0df4011503b4b36ba69877ea7247c1a47fea00",
+      "tamano": 2690177,
+      "modrinth": {
+        "proyecto": "YL57xq9U",
+        "version": "zsoi0dso",
+        "numero": "1.8.8+1.21.1-fabric",
+        "nombre": "Iris Shaders",
+        "icono": "https://cdn.modrinth.com/data/YL57xq9U/18d0e7f076d3d6ed5bedd472b853909aac5da202_96.webp"
+      }
     }
   ],
   "packsActivos": [
