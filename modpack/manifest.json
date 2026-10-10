@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-10T17:17:32.481Z",
+  "generado": "2026-10-10T17:17:46.843Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -48,6 +48,13 @@
       "sha1": "1a26a0ce9b959e9475321978f6ffb13296446cb1",
       "tamano": 220749,
       "git": "b1cb7c90b63b49c04a417d00a3fc23dc0df61f81"
+    },
+    {
+      "ruta": "mods/sodium-fabric-0.6.13+mc1.21.1.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/sodium-fabric-0.6.13%2Bmc1.21.1.jar",
+      "sha1": "928a2598178c3a58b0638bab842f467d2e49251a",
+      "tamano": 1297761,
+      "git": "1155b6e95440e591b69a51f877de3079a444a70d"
     },
     {
       "ruta": "mods/lithium-fabric-0.15.4+mc1.21.1.jar",
