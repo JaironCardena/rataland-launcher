@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-10T17:32:37.611Z",
+  "generado": "2026-10-10T17:39:28.535Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -197,6 +197,19 @@
         "numero": "0.116.17+1.21.1",
         "nombre": "Fabric API",
         "icono": "https://cdn.modrinth.com/data/P7dR8mSH/icon.png"
+      }
+    },
+    {
+      "ruta": "mods/cwb-fabric-3.0.0+mc1.21.jar",
+      "url": "https://cdn.modrinth.com/data/ETlrkaYF/versions/m350hyy8/cwb-fabric-3.0.0%2Bmc1.21.jar",
+      "sha1": "0979201d1d131a3bf0594060c58da7dcb55aded6",
+      "tamano": 81288,
+      "modrinth": {
+        "proyecto": "ETlrkaYF",
+        "version": "m350hyy8",
+        "numero": "3.0.0+1.21",
+        "nombre": "Cubes Without Borders",
+        "icono": "https://cdn.modrinth.com/data/ETlrkaYF/6c1711b4b788b5f25cc1e99ed8805aea94d9e167_96.webp"
       }
     },
     {

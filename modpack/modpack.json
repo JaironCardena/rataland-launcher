@@ -183,6 +183,19 @@
       }
     },
     {
+      "ruta": "mods/cwb-fabric-3.0.0+mc1.21.jar",
+      "url": "https://cdn.modrinth.com/data/ETlrkaYF/versions/m350hyy8/cwb-fabric-3.0.0%2Bmc1.21.jar",
+      "sha1": "0979201d1d131a3bf0594060c58da7dcb55aded6",
+      "tamano": 81288,
+      "modrinth": {
+        "proyecto": "ETlrkaYF",
+        "version": "m350hyy8",
+        "numero": "3.0.0+1.21",
+        "nombre": "Cubes Without Borders",
+        "icono": "https://cdn.modrinth.com/data/ETlrkaYF/6c1711b4b788b5f25cc1e99ed8805aea94d9e167_96.webp"
+      }
+    },
+    {
       "ruta": "resourcepacks/SodiumTranslations.zip",
       "url": "https://cdn.modrinth.com/data/yfDziwn1/versions/ZJKZpEl8/SodiumTranslations.zip",
       "sha1": "b05f2076a16143b8b17375fd1c3b258353058124",
