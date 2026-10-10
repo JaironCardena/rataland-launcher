@@ -147,8 +147,8 @@ async function jugar (reparar) {
     // Con encendido automático el servidor arranca al intentar entrar: se intenta ya, para que vaya
     // arrancando mientras se actualiza y se abre el juego (sin esperar a que termine).
     if (perfil.servidor?.ip) {
-      despertarServidor(perfil.servidor.ip, Number(perfil.servidor.puerto) || 25565, { nombre: sesion?.nombre, uuid: sesion?.uuid })
-        .then((r) => r && fs.promises.appendFile(path.join(dirDatos, 'servidor.log'), `${new Date().toISOString()} Al pulsar Jugar: ${r}\n`))
+      despertarServidor(perfil.servidor.ip, Number(perfil.servidor.puerto) || 25565, { nombre: sesion?.nombre, uuid: sesion?.uuid }, perfil.minecraft)
+        .then((r) => r && fs.promises.appendFile(path.join(dirDatos, 'servidor.log'), `${new Date().toISOString()} Al pulsar Jugar: ${r.resultado} (${r.texto})\n`))
         .catch(() => {})
     }
 

@@ -849,7 +849,7 @@ async function consultarServidor () {
   p.querySelector('.estado-servidor__texto').textContent = r.enLinea
     ? 'Servidor abierto'
     : r.encendiendo ? 'El servidor se está encendiendo'
-      : r.apagado ? 'El servidor está apagado' : 'No se pudo conectar con el servidor'
+      : r.apagado ? 'Servidor dormido: se despierta al pulsar Jugar' : 'No se pudo conectar con el servidor'
 
   // Cabezas de algunos de los que están dentro, y cuántos son
   const cabezas = p.querySelector('.estado-servidor__cabezas')
@@ -873,7 +873,7 @@ async function consultarServidor () {
   servidor.siguiente = setTimeout(consultarServidor, r.enLinea ? 30000 : 10000)
 }
 
-// Al volver a la ventana (por ejemplo tras encender el servidor en Aternos) se comprueba enseguida.
+// Al volver a la ventana (por ejemplo tras encender el servidor) se comprueba enseguida.
 window.addEventListener('focus', () => {
   if (Date.now() - servidor.ultima > 5000) consultarServidor()
   // Y las novedades, con el último commit de GitHub (como mucho cada 5 minutos)

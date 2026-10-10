@@ -85,7 +85,7 @@ public class PantallaDesconectado extends Screen {
 			case SIN_INTERNET -> "No llegamos al servidor";
 			case EXPULSADO -> "Te han sacado del servidor";
 			case BANEADO -> "No puedes entrar";
-			case LLENO -> "El servidor está lleno";
+			case LLENO -> dormido() ? "El hosting está lleno" : "El servidor está lleno";
 			case VERSION -> "Versiones distintas";
 			case OTRO -> "Se ha cortado la conexión";
 		};
@@ -93,14 +93,22 @@ public class PantallaDesconectado extends Screen {
 
 	private String explicacion() {
 		return switch (motivo) {
-			case APAGADO -> RataLand.nombre + " se duerme cuando no hay nadie jugando. Cuando lo enciendan tardará un par de minutos en abrir: vuelve a intentarlo entonces.";
+			case APAGADO -> RataLand.nombre + " se duerme cuando no hay nadie jugando. Al intentar entrar se despierta solo, pero tarda un par de minutos en abrir: vuelve a intentarlo en un momento.";
 			case SIN_INTERNET -> "Parece que se ha cortado tu conexión a internet. Revísala y vuelve a intentarlo.";
 			case EXPULSADO -> "Un moderador te ha expulsado. Si crees que es un error, pregunta en el Discord de la serie.";
 			case BANEADO -> "Tienes la entrada bloqueada en este servidor. Si crees que es un error, pregunta en el Discord de la serie.";
-			case LLENO -> "Ahora mismo no cabe nadie más. Vuelve a intentarlo en un rato.";
+			case LLENO -> dormido()
+					? "El servidor estaba dormido y ahora mismo el hosting no tiene sitio para encenderlo (pasa en las horas con más gente). Vuelve a intentarlo en unos minutos."
+					: "Ahora mismo no cabe nadie más. Vuelve a intentarlo en un rato.";
 			case VERSION -> "Tu juego y el servidor no tienen la misma versión. Cierra el juego y vuelve a abrirlo desde el launcher para que se actualice.";
 			case OTRO -> "El servidor cerró la conexión. Vuelve a intentarlo en un momento.";
 		};
+	}
+
+	/** ¿El servidor estaba dormido (o arrancando) la última vez que se miró? Entonces "lleno" es el hosting. */
+	private static boolean dormido() {
+		EstadoServidor.Estado estado = EstadoServidor.estado();
+		return estado == EstadoServidor.Estado.APAGADO || estado == EstadoServidor.Estado.ENCENDIENDO;
 	}
 
 	private String[] icono() {

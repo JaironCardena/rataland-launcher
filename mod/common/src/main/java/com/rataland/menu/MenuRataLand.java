@@ -155,7 +155,7 @@ public class MenuRataLand extends Screen {
 			case APAGADO -> {
 				color = Estilo.ERROR;
 				titulo = "Servidor dormido";
-				detalle = "aún no lo han encendido";
+				detalle = "se despierta al pulsar Jugar";
 			}
 			case SIN_RESPUESTA -> {
 				color = Estilo.ERROR;

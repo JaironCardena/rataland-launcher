@@ -50,7 +50,7 @@ public final class RataLand {
 			"¡Ahora con más queso!", "¡Squeak!", "¡Cuidado con las cloacas!", "¡Queso para todos!");
 
 	public static String nombre = "RataLand";
-	public static String ip = "Rataland-8RN6.aternos.me";
+	public static String ip = "rataland.progamer.me";
 	public static int puerto = 25565;
 	/** Dirección real ("host:puerto") que encontró el launcher al abrir el juego ("" = no la hay). */
 	public static String destino = "";
