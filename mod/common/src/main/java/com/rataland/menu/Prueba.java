@@ -79,18 +79,39 @@ public final class Prueba {
 		return fase == 0;
 	}
 
-	/** La lista de jugadores (Tab) con jugadores de ejemplo, sobre el fondo; tras capturarla sigue con la conexión. */
+	/**
+	 * La lista de jugadores (Tab) con jugadores de ejemplo, sobre el fondo: primero unos pocos (con sus
+	 * corazones) y luego muchos (en dos columnas, con la vida en corto); tras capturarlas sigue con Progresos.
+	 */
 	public static final class Tabla extends Screen {
+		private final List<TablaJugadores.Fila> filas;
+		private final String captura;
+		private final Runnable despues;
 		private int fotogramas;
 
 		public Tabla() {
+			this(List.of(
+					fila("Probador", 32, false, true, 20),
+					fila("Rata_Gamer", 85, false, false, 13),
+					fila("Ratoncita", 210, false, false, 5),
+					fila("Supansinho", 420, false, false, 24),
+					fila("QuesoMaster", 64, true, false, 20),
+					fila("Ratatouille", 140, false, false, -1)),
+					"rataland-tab.png", () -> Minecraft.getInstance().setScreen(new Tabla(muchos(), "rataland-tab-lleno.png", Prueba::progresos)));
+		}
+
+		private Tabla(List<TablaJugadores.Fila> filas, String captura, Runnable despues) {
 			super(Component.literal("Prueba de la lista de jugadores"));
+			this.filas = filas;
+			this.captura = captura;
+			this.despues = despues;
 		}
 
 		@Override
 		protected void init() {
-			// Sin los avisos de ejemplo de la pausa, que taparían la lista; solo un consejo de jugador nuevo
+			// Sin los avisos de ejemplo de la pausa, que taparían la lista; con pocos, un consejo de jugador nuevo
 			this.minecraft.getToasts().clear();
+			if (this.filas.size() > 10) return;
 			TutorialToast consejo = new TutorialToast(TutorialToast.Icons.MOVEMENT_KEYS, Component.literal("Muévete"), Component.literal("Usa W, A, S y D"), true);
 			consejo.updateProgress(0.4f);
 			this.minecraft.getToasts().addToast(consejo);
@@ -99,18 +120,21 @@ public final class Prueba {
 		@Override
 		public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
 			super.render(g, mouseX, mouseY, delta);
-			List<TablaJugadores.Fila> filas = List.of(
-					fila("Probador", 32, false, true, null),
-					fila("Rata_Gamer", 85, false, false, null),
-					fila("Ratoncita", 210, false, false, null),
-					fila("Supansinho", 420, false, false, null),
-					fila("QuesoMaster", 64, true, false, null));
-			TablaJugadores.dibujar(g, this.font, this.width, Component.literal("¡Bienvenidos a RataLand!"), Component.literal("Episodio 2 este domingo"), filas);
-			if (++this.fotogramas == 40) alSiguienteTick("rataland-tab.png", Prueba::progresos);
+			TablaJugadores.dibujar(g, this.font, this.width, Component.literal("¡Bienvenidos a RataLand!"), Component.literal("Episodio 2 este domingo"), this.filas);
+			if (++this.fotogramas == 40) alSiguienteTick(this.captura, this.despues);
 		}
 
-		private static TablaJugadores.Fila fila(String nombre, int ping, boolean espectador, boolean yo, Component puntos) {
-			return new TablaJugadores.Fila(Component.literal(nombre), DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(nombre)), ping, espectador, yo, puntos);
+		private static List<TablaJugadores.Fila> muchos() {
+			String[] nombres = {"Probador", "Rata_Gamer", "Ratoncita", "Supansinho", "QuesoMaster", "Ratatouille", "MilTon", "SrChrisGamer",
+					"Ra1n", "QuesoAzul", "La_Madriguera", "Bigotes", "Roedor99", "Colita", "Gruyere", "Pinky_Rat"};
+			int[] vidas = {20, 13, 5, 24, 20, -1, 18, 9, 20, 16, 1, 0, 11, 20, 7, 14};
+			List<TablaJugadores.Fila> lista = new java.util.ArrayList<>();
+			for (int i = 0; i < nombres.length; i++) lista.add(fila(nombres[i], 30 + i * 23, i == 4, i == 0, vidas[i]));
+			return lista;
+		}
+
+		private static TablaJugadores.Fila fila(String nombre, int ping, boolean espectador, boolean yo, int vida) {
+			return new TablaJugadores.Fila(Component.literal(nombre), DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(nombre)), ping, espectador, yo, null, vida);
 		}
 	}
 
