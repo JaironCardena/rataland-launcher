@@ -298,6 +298,19 @@
         "nombre": "BSL Shaders",
         "icono": "https://cdn.modrinth.com/data/Q1vvjJYV/2a611a3cb434fb52fb81fa5dace13c5d8b67e55d_96.webp"
       }
+    },
+    {
+      "ruta": "mods/UndeadNights-2.1.1-Fabric-mc1.21.jar",
+      "url": "https://cdn.modrinth.com/data/g0mmcQV2/versions/I0RTmgRq/UndeadNights-2.1.1-Fabric-mc1.21.jar",
+      "sha1": "09c91e0f6958ce93b24e2ba10798eed1e0e1ba2e",
+      "tamano": 1390524,
+      "modrinth": {
+        "proyecto": "g0mmcQV2",
+        "version": "I0RTmgRq",
+        "numero": "2.1.1-Fabric-mc1.21",
+        "nombre": "Undead Nights - Zombie Horde Nights / Hordes",
+        "icono": "https://cdn.modrinth.com/data/g0mmcQV2/ffe0efa6bb67afec6f6e1e0d2d3e883ee18d8757_96.webp"
+      }
     }
   ],
   "packsActivos": [
