@@ -102,6 +102,23 @@ Los mods se sirven desde la carpeta `modpack/` de este repositorio de GitHub (y 
 
 La próxima vez que cada jugador pulse *Jugar*, el launcher deja sus mods igual que tu carpeta. No hace falta repartir un launcher nuevo. GitHub puede tardar unos minutos en servir los cambios y no acepta archivos de más de 100 MB.
 
+### Undead Nights en español
+
+`modpack/resourcepacks/UndeadNights-Espanol-RataLand.zip` traduce los avisos de noches y hordas, criaturas, objetos, efectos y opciones de Undead Nights **2.1.1** para Minecraft **1.21–1.21.1**. Incluye las variantes de español de España, Ecuador, México, Argentina, Chile, Uruguay y Venezuela. Está incluido en `packsActivos` para que el launcher lo active cuando se publique el modpack.
+
+Para instalarlo manualmente, copia el ZIP a la carpeta `resourcepacks` de tu instalación y actívalo en **Opciones → Paquetes de recursos**, por encima de los demás. El juego debe estar en español. Si Minecraft ya estaba abierto, vuelve a entrar a esa pantalla para que detecte el archivo nuevo.
+
+La traducción editable está en `resourcepacks/undeadnights-es/assets/undeadnights/lang/es_es.json`. Para reconstruir el ZIP:
+
+```bash
+node tools/crear-pack-undeadnights.js
+npm run publicar
+```
+
+El primer comando acepta opcionalmente la ruta del JAR original para comprobar sus 124 claves y los parámetros de los mensajes antes de empaquetar. El pack añade también las ocho etiquetas y ayudas que faltan en el idioma original para cuatro opciones actuales del mod.
+
+El aviso al intentar dormir durante una noche de los no muertos y algunas respuestas de los comandos de estado y dificultad están escritos directamente en el código de Undead Nights. Un paquete de recursos no puede traducir esos textos. Los nombres de los niveles de dificultad dependen de `difficultyName` en `config/undeadnights_difficulty_config.json` del servidor.
+
 ### Noticias, Discord y cuenta atrás (`modpack/modpack.json`)
 
 Se publican igual que los mods (`npm.cmd run publicar` y subir):

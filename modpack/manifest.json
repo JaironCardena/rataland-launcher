@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-12T05:18:01.089Z",
+  "generado": "2026-10-12T05:51:18.003Z",
   "minecraft": "1.21.1",
   "loader": {
     "tipo": "fabric",
@@ -32,7 +32,8 @@
     "resourcepacks/SodiumTranslations.zip",
     "resourcepacks/LowOnFire v26.2§8.zip",
     "resourcepacks/Low Shield.zip",
-    "resourcepacks/Faithful 64x - Release 6.zip"
+    "resourcepacks/Faithful 64x - Release 6.zip",
+    "resourcepacks/UndeadNights-Espanol-RataLand.zip"
   ],
   "archivos": [
     {
@@ -55,6 +56,13 @@
       "sha1": "928a2598178c3a58b0638bab842f467d2e49251a",
       "tamano": 1297761,
       "git": "1155b6e95440e591b69a51f877de3079a444a70d"
+    },
+    {
+      "ruta": "resourcepacks/UndeadNights-Espanol-RataLand.zip",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/resourcepacks/UndeadNights-Espanol-RataLand.zip",
+      "sha1": "d5144cbc0a597b290f52aa2ea0666e84a44da99f",
+      "tamano": 25643,
+      "git": "924b31845b2e270bc92fb5d84d0f6841210daf25"
     },
     {
       "ruta": "mods/lithium-fabric-0.15.4+mc1.21.1.jar",
