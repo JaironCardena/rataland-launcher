@@ -282,7 +282,7 @@ public class MenuRataLand extends Screen {
 		super.render(g, mouseX, mouseY, delta);
 		if (RataLand.MODO_CAPTURA && Prueba.alPrincipio() && ++this.fotogramas == 80) {
 			Screenshot.grab(this.minecraft.gameDirectory, "rataland-menu.png", this.minecraft.getMainRenderTarget(), t -> {});
-			this.minecraft.setScreen(new OptionsScreen(this, this.minecraft.options));
+			this.minecraft.setScreen(Prueba.SOLO_TAB ? new Prueba.Tabla() : new OptionsScreen(this, this.minecraft.options));
 		}
 	}
 

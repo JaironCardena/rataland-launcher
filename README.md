@@ -13,7 +13,7 @@ Launcher propio (Electron) para la serie RataLand:
   - sustituye el menú de pausa (Esc): **Volver al juego**, **Progresos**, **Estadísticas**, **Opciones**, **Discord** y **Volver a RataLand**, con los jugadores conectados, tu ping y la cuenta atrás,
   - muestra «Entrando en RataLand» con los pasos al conectar; si el servidor está dormido y el hosting aún no deja pasar, espera en «Despertando RataLand» y vuelve a intentarlo solo cada 10 s (hasta 10 minutos); y si no se puede entrar o te echan, explica en español qué pasó (sin internet, lleno, baneado…) con **Reintentar**,
   - avisa cuando falta poco para el episodio, cuando entra alguien y cuando se pone tu skin, y los avisos de Minecraft (logros, recetas nuevas, avisos del sistema y consejos) salen con ese mismo estilo,
-  - cambia la pantalla de muerte (con la puntuación y dónde has muerto) y la lista de jugadores del Tab (cara, nombre, corazones y ping) por unas al estilo de la serie; para ver los corazones de todos, también de quien está lejos, el servidor necesita una vez `scoreboard objectives add vida health "Vida"` y `scoreboard objectives setdisplay list vida`,
+  - cambia la pantalla de muerte (con la puntuación y dónde has muerto) y la lista de jugadores del Tab (cara, nombre, corazones, muertes y ping) por unas al estilo de la serie; las muertes se muestran solo al abrir Tab, sin contador en el HUD ni avisos, y la vida y las muertes se configuran una vez en el servidor como se explica más abajo,
   - da a los botones, deslizadores y listas de Opciones (y de Paquetes de recursos) el estilo del launcher y usa el paisaje de RataLand como fondo (algunos se mueven),
   - pone Progresos (ventana, pestañas y el recuadro de cada logro) y Estadísticas (lista, filas y pestañas) con el estilo de la serie,
   - pone "RataLand" como título de la ventana.
@@ -180,6 +180,28 @@ npm run publicar
 - El mod de RataLand solo va en el cliente; el servidor no lo necesita.
 - Si activas `noPremium`, el servidor tiene que estar en `online-mode=false` (en Aternos: modo "cracked"), y entonces cualquiera puede entrar con cualquier nombre: usa un plugin o mod de registro con contraseña. Si solo usas cuentas de Microsoft, deja `online-mode=true`.
 - Aternos apaga el servidor cuando no hay nadie; el launcher lo muestra como apagado.
+
+### Vida y muertes en Tab
+
+En la consola del servidor (vanilla, Paper u otro compatible con los marcadores de Minecraft), configura una vez la vida para verla también cuando un jugador está lejos:
+
+```text
+scoreboard objectives add vida health "Vida"
+scoreboard objectives setdisplay list vida
+```
+
+Para activar las muertes, crea y muestra este objetivo con el nombre exacto `rataland_muertes`:
+
+```text
+scoreboard objectives add rataland_muertes deathCount "Muertes"
+scoreboard objectives setdisplay sidebar rataland_muertes
+```
+
+El mod de RataLand lee ese marcador y muestra las muertes junto a la vida y el ping, solo en Tab. Oculta únicamente el sidebar de `rataland_muertes`; los demás marcadores laterales siguen visibles. La vida conserva su espacio `list`. Los jugadores sin el mod verán el sidebar normal de Minecraft.
+
+El servidor solo puede mostrar un objetivo en ese espacio `sidebar`: el segundo comando reemplaza el que estuviera activo. Si ya lo usas para otro marcador, conserva esa configuración y evalúa primero cómo adaptar el marcador o su plugin; no lo sobrescribas sin revisar lo que perderías. Puedes dejar las muertes sin configurar mientras tanto: Tab mostrará `-` cuando no reciba datos.
+
+El contador empieza al crear el objetivo. Un jugador sin muertes registradas tendrá `0`; las muertes anteriores no se recuperan automáticamente. Para conservar ese historial hay que importar las estadísticas guardadas por el servidor al marcador.
 
 ## Qué hay en cada archivo
 

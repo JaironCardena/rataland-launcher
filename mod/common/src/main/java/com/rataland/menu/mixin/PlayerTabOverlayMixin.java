@@ -1,5 +1,6 @@
 package com.rataland.menu.mixin;
 
+import com.rataland.menu.MuertesTab;
 import com.rataland.menu.TablaJugadores;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -61,7 +62,7 @@ public abstract class PlayerTabOverlayMixin {
 		for (PlayerInfo info : this.getPlayerInfos()) {
 			Component puntos = null;
 			int vida = -1;
-			if (objetivo != null) {
+			if (objetivo != null && !MuertesTab.esObjetivo(objetivo)) {
 				ReadOnlyScoreInfo valor = marcador.getPlayerScoreInfo(ScoreHolder.fromGameProfile(info.getProfile()), objetivo);
 				if (conCorazones) {
 					if (valor != null) vida = valor.value();
@@ -74,7 +75,8 @@ public abstract class PlayerTabOverlayMixin {
 				if (jugador != null) vida = Mth.ceil(jugador.getHealth() + jugador.getAbsorptionAmount());
 			}
 			filas.add(new TablaJugadores.Fila(this.getNameForDisplay(info), info.getSkin(), info.getLatency(),
-					info.getGameMode() == GameType.SPECTATOR, info.getProfile().getId().equals(yo), puntos, vida));
+					info.getGameMode() == GameType.SPECTATOR, info.getProfile().getId().equals(yo), puntos, vida,
+					MuertesTab.deJugador(marcador, ScoreHolder.fromGameProfile(info.getProfile()))));
 		}
 		TablaJugadores.dibujar(g, this.minecraft.font, ancho, this.header, this.footer, filas);
 	}

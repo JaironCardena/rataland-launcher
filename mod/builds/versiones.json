@@ -2,17 +2,17 @@
   {
     "cargador": "fabric",
     "minecraft": "1.21.1",
-    "version": "1.9.3",
-    "archivo": "rataland-menu-fabric-1.21.1-1.9.3.jar",
-    "sha1": "009cb146edfffee0dcd8a3e177c248defab045d1",
-    "tamano": 223452
+    "version": "1.9.4",
+    "archivo": "rataland-menu-fabric-1.21.1-1.9.4.jar",
+    "sha1": "ebc7af4945b8ff467b08d444682a32cce887381e",
+    "tamano": 228548
   },
   {
     "cargador": "neoforge",
     "minecraft": "1.21.1",
-    "version": "1.9.3",
-    "archivo": "rataland-menu-neoforge-1.21.1-1.9.3.jar",
-    "sha1": "0214d0a6d1862289a15cb88593b0d49f7f3d9f35",
-    "tamano": 227701
+    "version": "1.9.4",
+    "archivo": "rataland-menu-neoforge-1.21.1-1.9.4.jar",
+    "sha1": "0c24a3833a24fad665c802e02e24e60fb16269d3",
+    "tamano": 232898
   }
 ]

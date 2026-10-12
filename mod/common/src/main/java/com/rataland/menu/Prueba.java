@@ -47,6 +47,9 @@ import java.util.Set;
 public final class Prueba {
 	private Prueba() {}
 
+	/** Captura solo Tab, sin seguir hacia las pruebas de conexión. */
+	public static final boolean SOLO_TAB = Boolean.getBoolean("rataland.captura.tab");
+
 	/** Una dirección que no contesta (la conexión se queda esperando) y otra que la rechaza. */
 	private static final String SIN_RESPUESTA = "10.255.255.1:25565";
 	private static final String RECHAZA = "127.0.0.1:1";
@@ -97,7 +100,8 @@ public final class Prueba {
 					fila("Supansinho", 420, false, false, 24),
 					fila("QuesoMaster", 64, true, false, 20),
 					fila("Ratatouille", 140, false, false, -1)),
-					"rataland-tab.png", () -> Minecraft.getInstance().setScreen(new Tabla(muchos(), "rataland-tab-lleno.png", Prueba::progresos)));
+					"rataland-tab.png", () -> Minecraft.getInstance().setScreen(new Tabla(muchos(), "rataland-tab-lleno.png",
+							SOLO_TAB ? () -> Minecraft.getInstance().stop() : Prueba::progresos)));
 		}
 
 		private Tabla(List<TablaJugadores.Fila> filas, String captura, Runnable despues) {
@@ -134,7 +138,8 @@ public final class Prueba {
 		}
 
 		private static TablaJugadores.Fila fila(String nombre, int ping, boolean espectador, boolean yo, int vida) {
-			return new TablaJugadores.Fila(Component.literal(nombre), DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(nombre)), ping, espectador, yo, null, vida);
+			Integer muertes = vida < 0 ? null : yo ? 7 : espectador ? 0 : ping / 20;
+			return new TablaJugadores.Fila(Component.literal(nombre), DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(nombre)), ping, espectador, yo, null, vida, muertes);
 		}
 	}
 

@@ -14,8 +14,8 @@ import java.util.List;
 
 /**
  * La lista de jugadores (Tab) con el estilo de RataLand: un panel arriba con la cara, el nombre, los
- * corazones, la puntuación (si el servidor usa una) y el ping de cada uno, y encima y debajo lo que
- * mande el servidor. Si no caben los diez corazones, la vida va en corto: un corazón y el número.
+ * corazones, las muertes, la puntuación (si el servidor usa una) y el ping de cada uno, y encima y
+ * debajo lo que mande el servidor. Si no caben los diez corazones, la vida va en corto.
  */
 public final class TablaJugadores {
 	private TablaJugadores() {}
@@ -23,8 +23,10 @@ public final class TablaJugadores {
 	/**
 	 * Un jugador de la lista. `puntos` es null si el servidor no muestra puntuación; `vida`, en medios
 	 * corazones como la cuenta Minecraft (20 = diez corazones; más, con absorción), o -1 si no se sabe.
+	 * `muertes` es null cuando el servidor no ha compartido el contador.
 	 */
-	public record Fila(Component nombre, PlayerSkin skin, int ping, boolean espectador, boolean yo, @Nullable Component puntos, int vida) {}
+	public record Fila(Component nombre, PlayerSkin skin, int ping, boolean espectador, boolean yo, @Nullable Component puntos, int vida,
+			@Nullable Integer muertes) {}
 
 	private static final ResourceLocation CORAZON_VACIO = ResourceLocation.withDefaultNamespace("hud/heart/container");
 	private static final ResourceLocation CORAZON = ResourceLocation.withDefaultNamespace("hud/heart/full");
@@ -34,122 +36,192 @@ public final class TablaJugadores {
 	private static final int ANCHO_CORAZONES = 10 * 8 + 1;
 	/** Con menos sitio que esto para los nombres, la vida va en corto. */
 	private static final int NOMBRE_MINIMO = 60;
+	private static final int NOMBRE_MAXIMO = 120;
 
 	private static final int ALTO_FILA = 12;
+	private static final int ALTO_CABECERA = 16;
 	private static final int POR_COLUMNA = 10;
 	private static final int ENTRE_COLUMNAS = 6;
+	private static final int ENTRE_CAMPOS = 8;
+
+	private record Medidas(int nombre, int vidaLarga, int vidaCorta, int puntos, int muertes, int ping, int tu) {
+		int anchoColumna(int anchoNombre, int anchoVida) {
+			return 19 + anchoNombre + ENTRE_CAMPOS + anchoVida + (puntos > 0 ? ENTRE_CAMPOS + puntos : 0)
+					+ ENTRE_CAMPOS + muertes + ENTRE_CAMPOS + ping + 6;
+		}
+	}
 
 	public static void dibujar(GuiGraphics g, Font fuente, int anchoPantalla, @Nullable Component cabecera, @Nullable Component pie, List<Fila> filas) {
-		int columnas = Math.max(1, Math.min(4, (filas.size() + POR_COLUMNA - 1) / POR_COLUMNA));
-		int porColumna = Math.max(1, (filas.size() + columnas - 1) / columnas);
-		int anchoNombre = 0;
-		int anchoPuntos = 0;
-		int anchoTu = fuente.width(" tú");
-		for (Fila f : filas) {
-			anchoNombre = Math.max(anchoNombre, fuente.width(f.nombre()) + (f.yo() ? anchoTu : 0));
-			if (f.puntos() != null) anchoPuntos = Math.max(anchoPuntos, fuente.width(f.puntos()));
-		}
-		// La vida: los diez corazones (y el dorado de la absorción) o, en corto, un corazón y el número
-		boolean hayVida = false;
-		int anchoAbsorcion = 0;
-		int anchoNumero = fuente.width("-");
-		for (Fila f : filas) {
-			if (f.vida() < 0 || f.espectador()) continue;
-			hayVida = true;
-			if (f.vida() > 20) anchoAbsorcion = Math.max(anchoAbsorcion, 3 + 9 + 2 + fuente.width("+" + corazones(f.vida() - 20)));
-			anchoNumero = Math.max(anchoNumero, fuente.width(corazones(f.vida())));
-		}
-		int anchoVidaLarga = hayVida ? Math.max(ANCHO_CORAZONES + anchoAbsorcion, Math.max(fuente.width("mirando"), fuente.width("lejos"))) : 0;
-		int anchoVidaCorta = hayVida ? 9 + 2 + anchoNumero : 0;
-
-		int anchoPing = 8 + 3 + fuente.width("999 ms");
-		int extra = 19 + (anchoPuntos > 0 ? 8 + anchoPuntos : 0) + 8 + anchoPing + 6;
-		int maximo = anchoPantalla - 20;
-		int cabe = (maximo - 12 - (columnas - 1) * ENTRE_COLUMNAS) / columnas;
-		boolean corto = hayVida && cabe - extra - 8 - anchoVidaLarga < Math.min(anchoNombre, NOMBRE_MINIMO);
-		int anchoVida = corto ? anchoVidaCorta : anchoVidaLarga;
-		if (anchoVida > 0) extra += 8 + anchoVida;
-		int anchoColumna = Math.max(170, extra + anchoNombre);
-		// Si no cabe, se recortan los nombres
-		anchoColumna = Math.min(anchoColumna, cabe);
-		int anchoLista = columnas * anchoColumna + (columnas - 1) * ENTRE_COLUMNAS;
-
-		List<FormattedCharSequence> arriba = cabecera == null || cabecera.getString().isBlank() ? List.of() : fuente.split(cabecera, maximo - 16);
-		List<FormattedCharSequence> abajo = pie == null || pie.getString().isBlank() ? List.of() : fuente.split(pie, maximo - 16);
-		int anchoTextos = 0;
-		for (FormattedCharSequence linea : arriba) anchoTextos = Math.max(anchoTextos, fuente.width(linea));
-		for (FormattedCharSequence linea : abajo) anchoTextos = Math.max(anchoTextos, fuente.width(linea));
+		Medidas m = medir(fuente, filas);
+		int maximo = Math.max(1, anchoPantalla - 20);
+		int altoMaximo = Math.max(1, g.guiHeight() - 16);
 		String cuantos = filas.size() == 1 ? "1 conectado" : filas.size() + " conectados";
 		int anchoTitulo = fuente.width("En el servidor") + 16 + fuente.width(cuantos) + 16;
-		int ancho = Math.min(maximo, Math.max(Math.max(anchoLista + 12, anchoTextos + 16), anchoTitulo));
+		int anchoMinimoColumna = m.anchoColumna(Math.min(m.nombre(), NOMBRE_MINIMO), m.vidaCorta());
+		int preferidas = Math.max(1, Math.min(4, (filas.size() + POR_COLUMNA - 1) / POR_COLUMNA));
+		int columnas = 1;
+		double escala = 0;
+		// Se elige la distribución que conserve el texto más grande, teniendo en cuenta también la altura.
+		for (int n = 1; n <= Math.min(4, Math.max(1, filas.size())); n++) {
+			int anchoMinimo = Math.max(anchoTitulo, n * anchoMinimoColumna + (n - 1) * ENTRE_COLUMNAS + 12);
+			int porColumna = Math.max(1, (filas.size() + n - 1) / n);
+			int alto = alto(porColumna, lineas(fuente, cabecera, anchoMinimo).size(), lineas(fuente, pie, anchoMinimo).size());
+			double candidata = Math.min(1, Math.min(maximo / (double) anchoMinimo, altoMaximo / (double) alto));
+			if (candidata > escala + 1e-6 || (Math.abs(candidata - escala) < 1e-6 && Math.abs(n - preferidas) < Math.abs(columnas - preferidas))) {
+				columnas = n;
+				escala = candidata;
+			}
+		}
+		int porColumna = Math.max(1, (filas.size() + columnas - 1) / columnas);
+		int cabe = Math.max(anchoMinimoColumna, ((int) Math.floor(maximo / escala + 1e-7) - 12 - (columnas - 1) * ENTRE_COLUMNAS) / columnas);
+		boolean corto = m.vidaLarga() == 0 || m.anchoColumna(Math.min(m.nombre(), NOMBRE_MINIMO), m.vidaLarga()) > cabe;
+		int anchoVida = corto ? m.vidaCorta() : m.vidaLarga();
+		int anchoColumna = Math.min(cabe, m.anchoColumna(m.nombre(), anchoVida));
+		int anchoLista = columnas * anchoColumna + (columnas - 1) * ENTRE_COLUMNAS;
+		int ancho = Math.max(anchoTitulo, anchoLista + 12);
+		List<FormattedCharSequence> arriba = lineas(fuente, cabecera, ancho);
+		List<FormattedCharSequence> abajo = lineas(fuente, pie, ancho);
+		int alto = alto(porColumna, arriba.size(), abajo.size());
 
-		int alto = 7 + 9 + 7 + (arriba.isEmpty() ? 0 : arriba.size() * 10 + 6) + porColumna * ALTO_FILA + (abajo.isEmpty() ? 0 : 6 + abajo.size() * 10) + 7;
-		int x = (anchoPantalla - ancho) / 2;
-		int y = 8;
-		Estilo.panel(g, x, y, ancho, alto);
-
-		int ty = y + 7;
-		g.drawString(fuente, "En el servidor", x + 8, ty, Estilo.TEXTO);
-		g.drawString(fuente, cuantos, x + ancho - 8 - fuente.width(cuantos), ty, Estilo.TENUE);
+		g.pose().pushPose();
+		g.pose().translate((anchoPantalla - ancho * escala) / 2, 8, 0);
+		g.pose().scale((float) escala, (float) escala, 1);
+		Estilo.panel(g, 0, 0, ancho, alto);
+		int ty = 7;
+		g.drawString(fuente, "En el servidor", 8, ty, Estilo.TEXTO);
+		g.drawString(fuente, cuantos, ancho - 8 - fuente.width(cuantos), ty, Estilo.TENUE);
 		ty += 9 + 7;
 
 		for (FormattedCharSequence linea : arriba) {
-			g.drawString(fuente, linea, x + (ancho - fuente.width(linea)) / 2, ty, Estilo.CLARO);
+			g.drawString(fuente, linea, (ancho - fuente.width(linea)) / 2, ty, Estilo.CLARO);
 			ty += 10;
 		}
 		if (!arriba.isEmpty()) {
-			g.fill(x + 8, ty + 1, x + ancho - 8, ty + 2, Estilo.LINEA);
+			g.fill(8, ty + 1, ancho - 8, ty + 2, Estilo.LINEA);
 			ty += 6;
 		}
 
-		int xLista = x + (ancho - anchoLista) / 2;
+		int xLista = (ancho - anchoLista) / 2;
+		for (int n = 0; n < columnas; n++) {
+			dibujarCabecera(g, fuente, xLista + n * (anchoColumna + ENTRE_COLUMNAS), ty, anchoColumna, anchoVida, m);
+		}
+		ty += ALTO_CABECERA;
 		for (int i = 0; i < filas.size(); i++) {
 			int columna = i / porColumna;
 			int fila = i % porColumna;
 			dibujarFila(g, fuente, filas.get(i), xLista + columna * (anchoColumna + ENTRE_COLUMNAS), ty + fila * ALTO_FILA, anchoColumna, anchoVida, corto,
-					anchoPuntos, anchoPing, anchoTu);
+					m);
 		}
 		ty += porColumna * ALTO_FILA;
 
 		if (!abajo.isEmpty()) {
-			g.fill(x + 8, ty + 2, x + ancho - 8, ty + 3, Estilo.LINEA);
+			g.fill(8, ty + 2, ancho - 8, ty + 3, Estilo.LINEA);
 			ty += 6;
 			for (FormattedCharSequence linea : abajo) {
-				g.drawString(fuente, linea, x + (ancho - fuente.width(linea)) / 2, ty, Estilo.CLARO);
+				g.drawString(fuente, linea, (ancho - fuente.width(linea)) / 2, ty, Estilo.CLARO);
 				ty += 10;
 			}
 		}
+		g.pose().popPose();
 	}
 
-	private static void dibujarFila(GuiGraphics g, Font fuente, Fila f, int x, int y, int ancho, int anchoVida, boolean corto, int anchoPuntos, int anchoPing,
-			int anchoTu) {
+	private static Medidas medir(Font fuente, List<Fila> filas) {
+		int nombre = fuente.width("Jugador");
+		int puntos = 0;
+		int tu = fuente.width(" tú");
+		int muertes = fuente.width("Muertes");
+		int ping = fuente.width("Ping");
+		int absorcion = 0;
+		int vidaNumero = fuente.width("-");
+		boolean hayVida = false;
+		for (Fila f : filas) {
+			nombre = Math.max(nombre, Math.min(NOMBRE_MAXIMO, fuente.width(f.nombre()) + (f.yo() ? tu : 0)));
+			if (f.puntos() != null) puntos = Math.max(puntos, Math.max(fuente.width("Puntos"), Math.min(80, fuente.width(f.puntos()))));
+			muertes = Math.max(muertes, 11 + fuente.width(textoMuertes(f)));
+			ping = Math.max(ping, 11 + fuente.width(textoPing(f)));
+			if (f.vida() < 0 || f.espectador()) continue;
+			hayVida = true;
+			if (f.vida() > 20) absorcion = Math.max(absorcion, 14 + fuente.width("+" + corazones(f.vida() - 20)));
+			vidaNumero = Math.max(vidaNumero, fuente.width(corazones(f.vida())));
+		}
+		int vidaLarga = hayVida ? Math.max(ANCHO_CORAZONES + absorcion, fuente.width("mirando")) : 0;
+		int vidaCorta = Math.max(fuente.width("Vida"), hayVida ? 11 + vidaNumero : fuente.width("-"));
+		return new Medidas(nombre, vidaLarga, vidaCorta, puntos, muertes, ping, tu);
+	}
+
+	private static List<FormattedCharSequence> lineas(Font fuente, @Nullable Component texto, int ancho) {
+		return texto == null || texto.getString().isBlank() ? List.of() : fuente.split(texto, Math.max(1, ancho - 16));
+	}
+
+	private static int alto(int filas, int arriba, int abajo) {
+		return 7 + 9 + 7 + (arriba > 0 ? arriba * 10 + 6 : 0) + ALTO_CABECERA + filas * ALTO_FILA + (abajo > 0 ? 6 + abajo * 10 : 0) + 7;
+	}
+
+	private static void dibujarCabecera(GuiGraphics g, Font fuente, int x, int y, int ancho, int anchoVida, Medidas m) {
+		int xPing = x + ancho - 6 - m.ping();
+		int xMuertes = xPing - ENTRE_CAMPOS - m.muertes();
+		int xPuntos = xMuertes - ENTRE_CAMPOS - m.puntos();
+		int xVida = (m.puntos() > 0 ? xPuntos : xMuertes) - ENTRE_CAMPOS - anchoVida;
+		g.drawString(fuente, "Jugador", x + 6, y + 1, Estilo.TENUE);
+		g.drawString(fuente, "Vida", xVida, y + 1, Estilo.TENUE);
+		if (m.puntos() > 0) g.drawString(fuente, "Puntos", xPuntos, y + 1, Estilo.TENUE);
+		g.drawString(fuente, "Muertes", xMuertes, y + 1, Estilo.QUESO);
+		g.drawString(fuente, "Ping", xPing, y + 1, Estilo.TENUE);
+		g.fill(x + 6, y + 12, x + ancho - 6, y + 13, Estilo.LINEA);
+	}
+
+	private static void dibujarFila(GuiGraphics g, Font fuente, Fila f, int x, int y, int ancho, int anchoVida, boolean corto, Medidas m) {
 		if (f.yo()) Estilo.escalon(g, x, y, ancho, ALTO_FILA, 0x22F6C445);
 		PlayerFaceRenderer.draw(g, f.skin(), x + 6, y + 2, 8);
 		if (f.espectador()) g.fill(x + 6, y + 2, x + 14, y + 10, 0x990D1424);
 
-		int xPing = x + ancho - 6 - anchoPing;
-		int xPuntos = xPing - 8 - anchoPuntos;
-		int xVida = (anchoPuntos > 0 ? xPuntos : xPing) - 8 - anchoVida;
-		int libre = (anchoVida > 0 ? xVida : anchoPuntos > 0 ? xPuntos : xPing) - 8 - (x + 19) - (f.yo() ? anchoTu : 0);
+		int xPing = x + ancho - 6 - m.ping();
+		int xMuertes = xPing - ENTRE_CAMPOS - m.muertes();
+		int xPuntos = xMuertes - ENTRE_CAMPOS - m.puntos();
+		int xVida = (m.puntos() > 0 ? xPuntos : xMuertes) - ENTRE_CAMPOS - anchoVida;
+		int libre = Math.max(0, xVida - ENTRE_CAMPOS - (x + 19) - (f.yo() ? m.tu() : 0));
 		int color = f.espectador() ? Estilo.MUY_TENUE : Estilo.TEXTO;
 		int finNombre;
 		if (fuente.width(f.nombre()) <= libre) {
 			g.drawString(fuente, f.nombre(), x + 19, y + 2, color);
 			finNombre = x + 19 + fuente.width(f.nombre());
 		} else {
-			String recortado = Estilo.recortar(fuente, f.nombre().getString(), libre);
+			String recortado = recortar(fuente, f.nombre().getString(), libre);
 			g.drawString(fuente, recortado, x + 19, y + 2, color);
 			finNombre = x + 19 + fuente.width(recortado);
 		}
 		if (f.yo()) g.drawString(fuente, "tú", finNombre + fuente.width(" "), y + 2, Estilo.QUESO);
 
-		if (anchoVida > 0) dibujarVida(g, fuente, f, xVida, y, corto);
-		if (f.puntos() != null) g.drawString(fuente, f.puntos(), xPuntos + anchoPuntos - fuente.width(f.puntos()), y + 2, Estilo.QUESO);
+		dibujarVida(g, fuente, f, xVida, y, corto);
+		if (f.puntos() != null) {
+			if (fuente.width(f.puntos()) <= m.puntos()) g.drawString(fuente, f.puntos(), xPuntos + m.puntos() - fuente.width(f.puntos()), y + 2, Estilo.QUESO);
+			else {
+				String puntos = recortar(fuente, f.puntos().getString(), m.puntos());
+				g.drawString(fuente, puntos, xPuntos + m.puntos() - fuente.width(puntos), y + 2, Estilo.QUESO);
+			}
+		}
+
+		boolean conocidas = f.muertes() != null && f.muertes() >= 0;
+		Estilo.icono(g, IconosPixel.CALAVERA, xMuertes, y + 2, 1, conocidas ? Estilo.TENUE : Estilo.MUY_TENUE);
+		String muertes = textoMuertes(f);
+		g.drawString(fuente, muertes, xMuertes + m.muertes() - fuente.width(muertes), y + 2, conocidas ? Estilo.QUESO : Estilo.MUY_TENUE);
 
 		int colorPing = f.ping() < 0 ? Estilo.MUY_TENUE : f.ping() < 150 ? Estilo.HIERBA : f.ping() < 300 ? Estilo.QUESO : Estilo.ERROR;
 		Estilo.icono(g, IconosPixel.SENAL, xPing, y + 2, 1, colorPing);
-		String ms = f.ping() < 0 ? "?" : f.ping() + " ms";
-		g.drawString(fuente, ms, xPing + anchoPing - fuente.width(ms), y + 2, Estilo.TENUE);
+		String ms = textoPing(f);
+		g.drawString(fuente, ms, xPing + m.ping() - fuente.width(ms), y + 2, Estilo.TENUE);
+	}
+
+	private static String textoMuertes(Fila f) {
+		return f.muertes() == null || f.muertes() < 0 ? "-" : f.muertes().toString();
+	}
+
+	private static String textoPing(Fila f) {
+		return f.ping() < 0 ? "?" : f.ping() + " ms";
+	}
+
+	private static String recortar(Font fuente, String texto, int ancho) {
+		return ancho < fuente.width("…") ? "" : Estilo.recortar(fuente, texto, ancho);
 	}
 
 	/** Los corazones de Minecraft (los del paquete de recursos que se use) o, en corto, uno y el número. */

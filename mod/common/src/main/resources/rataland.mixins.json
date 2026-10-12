@@ -15,6 +15,7 @@
     "ConnectScreenMixin",
     "DeathScreenMixin",
     "DisconnectedScreenAccessor",
+    "GuiMixin",
     "MinecraftClientMixin",
     "PackSelectionScreenAccessor",
     "PlayerTabOverlayMixin",
