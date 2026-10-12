@@ -300,19 +300,6 @@
       }
     },
     {
-      "ruta": "mods/zombieawareness-fabric-1.21.0-1.13.2.jar",
-      "url": "https://cdn.modrinth.com/data/mMTOWOaA/versions/lBdgO4GL/zombieawareness-fabric-1.21.0-1.13.2.jar",
-      "sha1": "040a6cb20164c33db3a629e1a65af7134d612988",
-      "tamano": 721869,
-      "modrinth": {
-        "proyecto": "mMTOWOaA",
-        "version": "lBdgO4GL",
-        "numero": "1.21.0-1.13.2",
-        "nombre": "Zombie Awareness",
-        "icono": "https://cdn.modrinth.com/data/mMTOWOaA/a05ff0c2146142ba350fe458c6a9d0691cdfd0a8_96.webp"
-      }
-    },
-    {
       "ruta": "mods/coroutil-fabric-1.21.1-1.3.8.jar",
       "url": "https://cdn.modrinth.com/data/rLLJ1OZM/versions/U0NUocji/coroutil-fabric-1.21.1-1.3.8.jar",
       "sha1": "1bb71c0df6959b06915d6d62b8040aa0892f08ae",
