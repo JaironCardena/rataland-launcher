@@ -1,6 +1,6 @@
 {
   "urlBase": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/",
-  "minecraft": "1.21.11",
+  "minecraft": "26.3",
   "loader": {
     "tipo": "fabric",
     "version": "0.19.5"
@@ -79,14 +79,14 @@
       }
     },
     {
-      "ruta": "resourcepacks/Faithful 64x - December 2025 Release.zip",
-      "url": "https://cdn.modrinth.com/data/r4GILswZ/versions/vyty9ijM/Faithful%2064x%20-%20December%202025%20Release.zip",
-      "sha1": "62f9e6170fac846648ade2a1873ad5c65e19d658",
-      "tamano": 16053919,
+      "ruta": "resourcepacks/Faithful 64x - Release 15.zip",
+      "url": "https://cdn.modrinth.com/data/r4GILswZ/versions/6QfM0mZq/Faithful%2064x%20-%20Release%2015.zip",
+      "sha1": "b0e02f10d2e45151832360557fc84ddcc2b052e9",
+      "tamano": 19411638,
       "modrinth": {
         "proyecto": "r4GILswZ",
-        "version": "vyty9ijM",
-        "numero": "Release-12",
+        "version": "6QfM0mZq",
+        "numero": "Release-15-Wilderness-Bound-Drop",
         "nombre": "Faithful 64x",
         "icono": "https://cdn.modrinth.com/data/r4GILswZ/9ff7d3c66d6a263c158c2ef034b0361fdfbf354b.png"
       }
@@ -135,7 +135,7 @@
     "resourcepacks/SodiumTranslations.zip",
     "resourcepacks/LowOnFire v26.2§8.zip",
     "resourcepacks/Low Shield.zip",
-    "resourcepacks/Faithful 64x - December 2025 Release.zip",
+    "resourcepacks/Faithful 64x - Release 15.zip",
     "resourcepacks/UndeadNights-Espanol-RataLand.zip"
   ]
 }
