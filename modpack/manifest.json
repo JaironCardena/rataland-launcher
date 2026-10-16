@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-16T05:48:36.036Z",
+  "generado": "2026-10-16T17:39:19.722Z",
   "minecraft": "26.3",
   "loader": {
     "tipo": "fabric",
@@ -49,123 +49,6 @@
       "sha1": "ae569ca301773ba0439157925fe9388195b8b6f4",
       "tamano": 25068,
       "git": "8778310b66c1ea6b626243f7ec89ffbe27daa31d"
-    },
-    {
-      "ruta": "mods/lithium-fabric-0.26.2+mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/gvQqBUqZ/versions/xS0Q8LSi/lithium-fabric-0.26.2%2Bmc26.3.jar",
-      "sha1": "dd5a4ec2c68d7601d8bce9076f789c55a5f8bef3",
-      "tamano": 914543,
-      "modrinth": {
-        "proyecto": "gvQqBUqZ",
-        "version": "xS0Q8LSi",
-        "numero": "mc26.3-0.26.2-fabric",
-        "nombre": "Lithium",
-        "icono": "https://cdn.modrinth.com/data/gvQqBUqZ/bcc8686c13af0143adf4285d741256af824f70b7_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/ferritecore-9.0.0-fabric.jar",
-      "url": "https://cdn.modrinth.com/data/uXXizFIs/versions/d5ddUdiB/ferritecore-9.0.0-fabric.jar",
-      "sha1": "eac76ff0f3753422c61b2c44487d0d195d88d4bc",
-      "tamano": 72677,
-      "modrinth": {
-        "proyecto": "uXXizFIs",
-        "version": "d5ddUdiB",
-        "numero": "9.0.0-fabric",
-        "nombre": "FerriteCore",
-        "icono": "https://cdn.modrinth.com/data/uXXizFIs/222a126f26f8f9ae1eb339f3b767677f18bff31f_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/ImmediatelyFast-Fabric-1.17.1+26.3.jar",
-      "url": "https://cdn.modrinth.com/data/5ZwdcRci/versions/3MP9UR23/ImmediatelyFast-Fabric-1.17.1%2B26.3.jar",
-      "sha1": "f565bbeb201f2305e81761429d3f1f47e1c3a321",
-      "tamano": 99586,
-      "modrinth": {
-        "proyecto": "5ZwdcRci",
-        "version": "3MP9UR23",
-        "numero": "1.17.1+26.3-fabric",
-        "nombre": "ImmediatelyFast",
-        "icono": "https://cdn.modrinth.com/data/5ZwdcRci/e57b6b451425692ac17ad322d5e14bea686a383a_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/entityculling-fabric-1.11.3-mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/NNAgCjsB/versions/X1g3VhTx/entityculling-fabric-1.11.3-mc26.3.jar",
-      "sha1": "45f47f7a067f5efd733a32767dc3d1d770678b2a",
-      "tamano": 1508547,
-      "modrinth": {
-        "proyecto": "NNAgCjsB",
-        "version": "X1g3VhTx",
-        "numero": "1.11.3",
-        "nombre": "Entity Culling",
-        "icono": "https://cdn.modrinth.com/data/NNAgCjsB/7873452d6cede4daed12da3d7d8c193ab88b4fd6_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/appleskin-fabric-mc26.3-3.0.10.jar",
-      "url": "https://cdn.modrinth.com/data/EsAfCjCV/versions/PHjDtQay/appleskin-fabric-mc26.3-3.0.10.jar",
-      "sha1": "3d19e40c5f97186857db98e622c01c2cd0030497",
-      "tamano": 180194,
-      "modrinth": {
-        "proyecto": "EsAfCjCV",
-        "version": "PHjDtQay",
-        "numero": "3.0.10+mc26.3",
-        "nombre": "AppleSkin",
-        "icono": "https://cdn.modrinth.com/data/EsAfCjCV/icon.png"
-      }
-    },
-    {
-      "ruta": "mods/Jade-mc26.3-Fabric-26.3.5.jar",
-      "url": "https://cdn.modrinth.com/data/nvQzSEkH/versions/71CTWqdE/Jade-mc26.3-Fabric-26.3.5.jar",
-      "sha1": "da61413c586c8918c14e2bbfdc808ce2d56ea9df",
-      "tamano": 1092685,
-      "modrinth": {
-        "proyecto": "nvQzSEkH",
-        "version": "71CTWqdE",
-        "numero": "26.3.5+fabric",
-        "nombre": "Jade 🔍",
-        "icono": "https://cdn.modrinth.com/data/nvQzSEkH/b04217bc2b7dc524c4d12f81ff42cc1cefb9b0fc_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/skinrestorer-2.11.0+26.3-fabric.jar",
-      "url": "https://cdn.modrinth.com/data/ghrZDhGW/versions/K7BFrFJD/skinrestorer-2.11.0%2B26.3-fabric.jar",
-      "sha1": "1da011465f62f631a95775aa9843a8b413a71db5",
-      "tamano": 285984,
-      "modrinth": {
-        "proyecto": "ghrZDhGW",
-        "version": "K7BFrFJD",
-        "numero": "2.11.0+26.3-fabric",
-        "nombre": "Skin Restorer",
-        "icono": "https://cdn.modrinth.com/data/ghrZDhGW/f5bc55cd7b07f988b5f28d7d3f0a4c8e9f480bc1_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/lambdynamiclights-4.13.0+26.3.jar",
-      "url": "https://cdn.modrinth.com/data/yBW8D80W/versions/rylKnJ4M/lambdynamiclights-4.13.0%2B26.3.jar",
-      "sha1": "18c8ab40f03219bfcf809a83db6e3958ed8bb866",
-      "tamano": 1345715,
-      "modrinth": {
-        "proyecto": "yBW8D80W",
-        "version": "rylKnJ4M",
-        "numero": "4.13.0+26.3",
-        "nombre": "LambDynamicLights - Dynamic Lights",
-        "icono": "https://cdn.modrinth.com/data/yBW8D80W/d4f5c3ff8df7caf024178b04eca6d69f95979cfe_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/fabric-api-0.163.0+26.3.jar",
-      "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/bq3SsNGk/fabric-api-0.163.0%2B26.3.jar",
-      "sha1": "65ada8c72b61ffb256e956baf53df28155daa479",
-      "tamano": 1774707,
-      "modrinth": {
-        "proyecto": "P7dR8mSH",
-        "version": "bq3SsNGk",
-        "numero": "0.163.0+26.3",
-        "nombre": "Fabric API",
-        "icono": "https://cdn.modrinth.com/data/P7dR8mSH/icon.png"
-      }
     },
     {
       "ruta": "resourcepacks/SodiumTranslations.zip",
@@ -220,19 +103,6 @@
       }
     },
     {
-      "ruta": "mods/iris-fabric-1.11.7+mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/YL57xq9U/versions/vTN4NRGW/iris-fabric-1.11.7%2Bmc26.3.jar",
-      "sha1": "fa03640ba1e4ef2f7ae3619c6373a06e46d0ba2c",
-      "tamano": 2850938,
-      "modrinth": {
-        "proyecto": "YL57xq9U",
-        "version": "vTN4NRGW",
-        "numero": "1.11.7+26.3-fabric",
-        "nombre": "Iris Shaders",
-        "icono": "https://cdn.modrinth.com/data/YL57xq9U/18d0e7f076d3d6ed5bedd472b853909aac5da202_96.webp"
-      }
-    },
-    {
       "ruta": "shaderpacks/ComplementaryReimagined_r5.9.3.zip",
       "url": "https://cdn.modrinth.com/data/HVnmMxH1/versions/Bqen1mJX/ComplementaryReimagined_r5.9.3.zip",
       "sha1": "838139b54cddb56b2e83cd260d8efd960ac536d6",
@@ -269,45 +139,6 @@
         "numero": "10.1.8",
         "nombre": "BSL Shaders",
         "icono": "https://cdn.modrinth.com/data/Q1vvjJYV/2a611a3cb434fb52fb81fa5dace13c5d8b67e55d_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/journeymap-fabric-26.3-6.0.10.jar",
-      "url": "https://cdn.modrinth.com/data/lfHFW1mp/versions/2zmj8ela/journeymap-fabric-26.3-6.0.10.jar",
-      "sha1": "8fb9d3039e0acca2e1d5f5ced71ab5aaac22fdf8",
-      "tamano": 4384661,
-      "modrinth": {
-        "proyecto": "lfHFW1mp",
-        "version": "2zmj8ela",
-        "numero": "26.3-6.0.10+fabric",
-        "nombre": "JourneyMap",
-        "icono": "https://cdn.modrinth.com/data/lfHFW1mp/a1c571a21a88f6fa59eab67829f216f65ab393ee_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/sodium-fabric-0.9.2+mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/AANobbMI/versions/bAZQdGpg/sodium-fabric-0.9.2%2Bmc26.3.jar",
-      "sha1": "9acfe851e36f4fb27d7c5baa224e8bd4e0334283",
-      "tamano": 1908068,
-      "modrinth": {
-        "proyecto": "AANobbMI",
-        "version": "bAZQdGpg",
-        "numero": "mc26.3-0.9.2-fabric",
-        "nombre": "Sodium",
-        "icono": "https://cdn.modrinth.com/data/AANobbMI/295862f4724dc3f78df3447ad6072b2dcd3ef0c9_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/antixray-fabric-1.4.16+26.3.jar",
-      "url": "https://cdn.modrinth.com/data/sml2FMaA/versions/8CvHIf1r/antixray-fabric-1.4.16%2B26.3.jar",
-      "sha1": "d450eaf1d877efd9c05c9ae4d9b5ef7dafae05d2",
-      "tamano": 147538,
-      "modrinth": {
-        "proyecto": "sml2FMaA",
-        "version": "8CvHIf1r",
-        "numero": "fabric-1.4.16+26.3",
-        "nombre": "AntiXray",
-        "icono": "https://cdn.modrinth.com/data/sml2FMaA/icon.png"
       }
     }
   ]
