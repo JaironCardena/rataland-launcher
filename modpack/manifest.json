@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-16T00:57:41.469Z",
+  "generado": "2026-10-16T01:01:47.714Z",
   "minecraft": "26.3",
   "loader": {
     "tipo": "fabric",
@@ -308,6 +308,19 @@
         "numero": "mc26.3-0.9.2-fabric",
         "nombre": "Sodium",
         "icono": "https://cdn.modrinth.com/data/AANobbMI/295862f4724dc3f78df3447ad6072b2dcd3ef0c9_96.webp"
+      }
+    },
+    {
+      "ruta": "mods/antixray-fabric-1.4.16+26.3.jar",
+      "url": "https://cdn.modrinth.com/data/sml2FMaA/versions/8CvHIf1r/antixray-fabric-1.4.16%2B26.3.jar",
+      "sha1": "d450eaf1d877efd9c05c9ae4d9b5ef7dafae05d2",
+      "tamano": 147538,
+      "modrinth": {
+        "proyecto": "sml2FMaA",
+        "version": "8CvHIf1r",
+        "numero": "fabric-1.4.16+26.3",
+        "nombre": "AntiXray",
+        "icono": "https://cdn.modrinth.com/data/sml2FMaA/icon.png"
       }
     }
   ]
