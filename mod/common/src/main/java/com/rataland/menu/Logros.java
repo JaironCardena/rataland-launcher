@@ -197,8 +197,11 @@ public final class Logros {
 		texto = Math.max(texto, 11 + fuente.width(l.jugador + (l.yo ? " tú" : "") + " · " + l.tipo.getDisplayName().getString()));
 		int w = Math.min(Math.min(ANCHO_MAX, ancho - 40), Math.max(ANCHO_MIN, 44 + texto + 10));
 		int x = (ancho - w) / 2;
-		// Arriba en el centro, por debajo de las barras de jefe y por encima de la mira; entra bajando un poco
-		int y = Math.max(46, Math.round(alto * 0.2f)) - Math.round((1f - opacidad) * 8f);
+		// Arriba en el centro, por encima de la mira y por debajo de los avisos, las barras de jefe y el Tab;
+		// entra bajando un poco
+		int usados = ((com.rataland.menu.mixin.ToastManagerAccessor) Minecraft.getInstance().gui.toastManager()).rataland$huecos().length();
+		int debajo = Avisos.arriba() + usados * 32 + 6;
+		int y = Math.max(Math.max(46, Math.round(alto * 0.2f)), debajo) - Math.round((1f - opacidad) * 8f);
 		int color = colorTipo(l.tipo);
 
 		Estilo.escalon(g, x, y, w, ALTO, conAlfa(0xF20D1424, opacidad));

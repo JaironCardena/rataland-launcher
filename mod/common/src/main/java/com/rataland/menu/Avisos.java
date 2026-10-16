@@ -3,6 +3,7 @@ package com.rataland.menu;
 import net.minecraft.util.Util;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementType;
+import com.rataland.menu.mixin.BossHealthOverlayAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.AdvancementToast;
 import net.minecraft.client.gui.components.toasts.RecipeToast;
@@ -52,6 +53,20 @@ public final class Avisos {
 		String evento = RataLand.eventoTitulo.isEmpty() ? "El próximo evento" : RataLand.eventoTitulo;
 		String hora = HORA.format(Instant.ofEpochMilli(RataLand.eventoInicio).atZone(ZoneId.systemDefault()));
 		juego.gui.toastManager().addToast(AvisoRataLand.queso(titulo, evento + " a las " + hora));
+	}
+
+	/**
+	 * Desde dónde se ponen los avisos, arriba en el centro: debajo de las barras de jefe (las hordas,
+	 * por ejemplo) y de la lista del Tab si se está viendo.
+	 */
+	public static int arriba() {
+		Minecraft juego = Minecraft.getInstance();
+		int y = 4;
+		int jefes = ((BossHealthOverlayAccessor) juego.gui.hud.getBossOverlay()).rataland$eventos().size();
+		if (jefes > 0) y = Math.min(jefes * 19 + 2, juego.getWindow().getGuiScaledHeight() / 3 + 5);
+		int tabla = TablaJugadores.abajoSiSeVe();
+		if (tabla > 0) y = Math.max(y, tabla + 4);
+		return y;
 	}
 
 	/** Al terminar de entrar a un servidor. */

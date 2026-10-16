@@ -12,6 +12,7 @@
     "AdvancementToastMixin",
     "AdvancementWidgetMixin",
     "AdvancementsScreenMixin",
+    "BossHealthOverlayAccessor",
     "ChatListenerMixin",
     "ClientPlayNetworkHandlerMixin",
     "ConnectScreenMixin",
@@ -32,6 +33,8 @@
     "StatsScreenAccessor",
     "StatsScreenMixin",
     "SystemToastMixin",
+    "ToastInstanceMixin",
+    "ToastManagerAccessor",
     "ToastManagerMixin",
     "TutorialToastMixin",
     "WindowMixin"

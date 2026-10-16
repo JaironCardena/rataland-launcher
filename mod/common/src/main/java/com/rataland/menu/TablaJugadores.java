@@ -1,5 +1,6 @@
 package com.rataland.menu;
 
+import net.minecraft.util.Util;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -51,6 +52,15 @@ public final class TablaJugadores {
 		}
 	}
 
+	/** Dónde acaba la lista por abajo y cuándo se dibujó por última vez (los avisos se ponen debajo). */
+	private static int ultimoAbajo;
+	private static long ultimaVez;
+
+	/** Lo que ocupa la lista por arriba si se está viendo (se tiene pulsado Tab), o 0. */
+	public static int abajoSiSeVe() {
+		return Util.getMillis() - ultimaVez < 150 ? ultimoAbajo : 0;
+	}
+
 	public static void dibujar(GuiGraphicsExtractor g, Font fuente, int anchoPantalla, @Nullable Component cabecera, @Nullable Component pie, List<Fila> filas) {
 		Medidas m = medir(fuente, filas);
 		int maximo = Math.max(1, anchoPantalla - 20);
@@ -83,6 +93,8 @@ public final class TablaJugadores {
 		List<FormattedCharSequence> abajo = lineas(fuente, pie, ancho);
 		int alto = alto(porColumna, arriba.size(), abajo.size());
 
+		ultimoAbajo = 8 + (int) Math.ceil(alto * escala);
+		ultimaVez = Util.getMillis();
 		g.pose().pushMatrix();
 		g.pose().translate((float) ((anchoPantalla - ancho * escala) / 2), 8f);
 		g.pose().scale((float) escala, (float) escala);
