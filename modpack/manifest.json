@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-16T00:04:45.697Z",
+  "generado": "2026-10-16T00:16:00.685Z",
   "minecraft": "26.3",
   "loader": {
     "tipo": "fabric",
@@ -37,18 +37,18 @@
   ],
   "archivos": [
     {
-      "ruta": "mods/rataland-menu-fabric-26.3-2.0.0.jar",
-      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-fabric-26.3-2.0.0.jar",
-      "sha1": "99ef1fc1a6143d6362c5582b31c8af38fe7be0a0",
-      "tamano": 234589,
-      "git": "91f740e2ddb314a195794d14b76f0a11bf97d401"
+      "ruta": "mods/rataland-menu-fabric-26.3-2.1.0.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-fabric-26.3-2.1.0.jar",
+      "sha1": "1282e522d9a0644ea919d0e171a29e3d1431a1f3",
+      "tamano": 246317,
+      "git": "65c4f0085cb083edc970575531e5f79e914e23f9"
     },
     {
       "ruta": "resourcepacks/UndeadNights-Espanol-RataLand.zip",
       "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/resourcepacks/UndeadNights-Espanol-RataLand.zip",
-      "sha1": "d5144cbc0a597b290f52aa2ea0666e84a44da99f",
-      "tamano": 25643,
-      "git": "924b31845b2e270bc92fb5d84d0f6841210daf25"
+      "sha1": "ae569ca301773ba0439157925fe9388195b8b6f4",
+      "tamano": 25068,
+      "git": "8778310b66c1ea6b626243f7ec89ffbe27daa31d"
     },
     {
       "ruta": "mods/lithium-fabric-0.26.2+mc26.3.jar",
