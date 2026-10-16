@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-16T18:12:15.490Z",
+  "generado": "2026-10-16T18:13:00.654Z",
   "minecraft": "26.3",
   "loader": {
     "tipo": "fabric",
@@ -133,13 +133,6 @@
       "sha1": "9acfe851e36f4fb27d7c5baa224e8bd4e0334283",
       "tamano": 1908068,
       "git": "22b1fde967b10d4a81743571d3dd144bc2410aba"
-    },
-    {
-      "ruta": "mods/UndeadNights-2.2.6-Fabric-mc26.3.jar",
-      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/UndeadNights-2.2.6-Fabric-mc26.3.jar",
-      "sha1": "9f79cdd01a7536ef4e0f570f08c30729934c8344",
-      "tamano": 1396317,
-      "git": "f8877fae646a9443edcc377cf9bd2b508debf2da"
     },
     {
       "ruta": "resourcepacks/UndeadNights-Espanol-RataLand.zip",
