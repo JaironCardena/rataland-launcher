@@ -6,8 +6,8 @@
     "version": "0.19.5"
   },
   "servidor": {
-    "ip": "rataland.playmc.be",
-    "puerto": 33838,
+    "ip": "papaya.fps.ms",
+    "puerto": 26922,
     "entrarDirecto": false
   },
   "enlaces": {},

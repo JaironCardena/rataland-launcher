@@ -1,13 +1,13 @@
 {
-  "generado": "2026-10-16T18:13:00.654Z",
+  "generado": "2026-10-16T18:17:11.805Z",
   "minecraft": "26.3",
   "loader": {
     "tipo": "fabric",
     "version": "0.19.5"
   },
   "servidor": {
-    "ip": "rataland.playmc.be",
-    "puerto": 33838,
+    "ip": "papaya.fps.ms",
+    "puerto": 26922,
     "entrarDirecto": false
   },
   "carpetasSincronizadas": [
