@@ -14,7 +14,7 @@ app.setName(config.nombre)
 // Hace que Windows agrupe la ventana con el acceso directo y use su icono en la barra de tareas.
 if (process.platform === 'win32') app.setAppUserModelId('com.rataland.launcher')
 
-const { leerJson, escribirJson } = require('./util')
+const { leerJson, escribirJson, explicarErrorRed } = require('./util')
 const { obtenerManifiesto, combinarPerfil } = require('./manifiesto')
 const { prepararJuego } = require('./minecraft')
 const { sincronizar } = require('./sincronizar')
@@ -24,6 +24,15 @@ const { consultarServidor, direccionDeJuego, despertarServidor } = require('./se
 const { crearCuentas } = require('./cuentas')
 const { crearSkins } = require('./skins')
 const { crearActualizador } = require('./actualizador')
+
+// Las descargas del launcher (mods, Minecraft, Java) también confían en los certificados de Windows,
+// como Chrome: con antivirus o proxies que revisan las conexiones seguras fallaban con "fetch failed".
+try {
+  const tls = require('tls')
+  tls.setDefaultCACertificates([...new Set([...tls.getCACertificates('bundled'), ...tls.getCACertificates('system')])])
+} catch (e) {
+  console.warn('Sin los certificados de Windows:', e.message)
+}
 
 const cuentas = crearCuentas(dirDatos)
 const skins = crearSkins(cuentas, { raiz, dirDatos, agente: `RataLand-Launcher/${app.getVersion()}` })
@@ -125,6 +134,11 @@ const ERRORES_ARCHIVOS = {
 }
 
 function mensajeError (e) {
+  // fetch solo dice "fetch failed": se explica qué pasó con la conexión
+  if (e instanceof Error && /^fetch failed$/i.test(e.message)) {
+    const motivo = explicarErrorRed(e)
+    return `Falló una descarga: el sitio ${motivo || 'no respondió'}. Vuelve a intentarlo; si sigue, pulsa Ver registros.`
+  }
   if (e instanceof Error) return e.message
   if (e && typeof e.error === 'string') return ERRORES_ARCHIVOS[e.error] || `Error del juego: ${e.error}`
   return String(e)
@@ -219,8 +233,18 @@ async function jugar (reparar) {
   } catch (e) {
     jugando = false
     console.error(e)
+    anotarError(e)
     return { ok: false, error: mensajeError(e) }
   }
+}
+
+/** Guarda el error completo (con su causa) en logs/rataland-launcher.log, la carpeta de «Ver registros». */
+function anotarError (e) {
+  const partes = []
+  for (let x = e; x && partes.length < 5; x = x.cause) partes.push(x.stack || `${x.code || ''} ${x.message || x}`)
+  const linea = `${new Date().toISOString()} Launcher ${app.getVersion()}: ${partes.join('\n  causa: ')}\n\n`
+  const dir = path.join(raiz, 'logs')
+  fs.promises.mkdir(dir, { recursive: true }).then(() => fs.promises.appendFile(path.join(dir, 'rataland-launcher.log'), linea)).catch(() => {})
 }
 
 function registrarIpc () {

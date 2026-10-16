@@ -5,6 +5,7 @@ const crypto = require('crypto')
 const { Readable } = require('stream')
 const { pipeline } = require('stream/promises')
 const { fileURLToPath } = require('url')
+const { errorDeRed } = require('./util')
 
 const espera = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -23,7 +24,7 @@ function sha1Archivo (ruta) {
  * Escribe primero en un .part y lo renombra al terminar, así nunca queda un archivo a medias.
  * `alProgreso(bytes)` recibe los bytes nuevos (negativos si un intento falla y se descuenta).
  */
-async function descargar (url, destino, { sha1, alProgreso, intentos = 3 } = {}) {
+async function descargar (url, destino, { sha1, alProgreso, intentos = 4 } = {}) {
   await fsp.mkdir(path.dirname(destino), { recursive: true })
   const temporal = destino + '.part'
   let ultimoError
@@ -58,10 +59,10 @@ async function descargar (url, destino, { sha1, alProgreso, intentos = 3 } = {})
       ultimoError = e
       alProgreso?.(-recibidos)
       await fsp.rm(temporal, { force: true })
-      if (intento < intentos) await espera(1000 * intento)
+      if (intento < intentos) await espera(2000 * intento)
     }
   }
-  throw ultimoError
+  throw errorDeRed(ultimoError, url, path.basename(destino))
 }
 
 /** Ejecuta `fn` sobre cada elemento con como mucho `limite` a la vez. */
