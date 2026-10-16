@@ -6,7 +6,7 @@
     "version": "0.19.5"
   },
   "servidor": {
-    "ip": "verify.fps.ms",
+    "ip": "rataland.playmc.be",
     "puerto": 33838,
     "entrarDirecto": false
   },
