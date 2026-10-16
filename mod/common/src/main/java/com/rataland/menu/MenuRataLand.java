@@ -73,6 +73,8 @@ public class MenuRataLand extends Screen {
 
 	@Override
 	protected void init() {
+		// Jade (lo que miras) va arriba a la izquierda: arriba en el centro van los avisos
+		JadeRataLand.apartar();
 		// Al volver aquí (cancelar la conexión, salir del servidor…) ya no se está entrando ni esperando
 		Conexion.entrando = false;
 		SalaEspera.terminar();
