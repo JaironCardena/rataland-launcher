@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-16T17:50:10.989Z",
+  "generado": "2026-10-16T18:12:15.490Z",
   "minecraft": "26.3",
   "loader": {
     "tipo": "fabric",
@@ -37,11 +37,109 @@
   ],
   "archivos": [
     {
+      "ruta": "mods/antixray-fabric-1.4.16+26.3.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/antixray-fabric-1.4.16%2B26.3.jar",
+      "sha1": "d450eaf1d877efd9c05c9ae4d9b5ef7dafae05d2",
+      "tamano": 147538,
+      "git": "4046c520b197ee36fb772c54406ad0f96b8c8e1b"
+    },
+    {
+      "ruta": "mods/appleskin-fabric-mc26.3-3.0.10.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/appleskin-fabric-mc26.3-3.0.10.jar",
+      "sha1": "3d19e40c5f97186857db98e622c01c2cd0030497",
+      "tamano": 180194,
+      "git": "85e9abc44480ce81a423347546c2b84b7c25fe51"
+    },
+    {
+      "ruta": "mods/entityculling-fabric-1.11.3-mc26.3.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/entityculling-fabric-1.11.3-mc26.3.jar",
+      "sha1": "45f47f7a067f5efd733a32767dc3d1d770678b2a",
+      "tamano": 1508547,
+      "git": "f353fdee7b50e198833ae85c542dcff7b30bdb22"
+    },
+    {
+      "ruta": "mods/fabric-api-0.163.0+26.3.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/fabric-api-0.163.0%2B26.3.jar",
+      "sha1": "65ada8c72b61ffb256e956baf53df28155daa479",
+      "tamano": 1774707,
+      "git": "e3c0faaa54239717fd5c27262c6b3a1b77f3f290"
+    },
+    {
+      "ruta": "mods/ferritecore-9.0.0-fabric.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/ferritecore-9.0.0-fabric.jar",
+      "sha1": "eac76ff0f3753422c61b2c44487d0d195d88d4bc",
+      "tamano": 72677,
+      "git": "2cf6f58e892995f4cc24d3f72dc7d682db635bee"
+    },
+    {
+      "ruta": "mods/ImmediatelyFast-Fabric-1.17.1+26.3.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/ImmediatelyFast-Fabric-1.17.1%2B26.3.jar",
+      "sha1": "f565bbeb201f2305e81761429d3f1f47e1c3a321",
+      "tamano": 99586,
+      "git": "0b7ad5d067e3492dd6e5069523db7803ec41c05e"
+    },
+    {
+      "ruta": "mods/iris-fabric-1.11.7+mc26.3.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/iris-fabric-1.11.7%2Bmc26.3.jar",
+      "sha1": "fa03640ba1e4ef2f7ae3619c6373a06e46d0ba2c",
+      "tamano": 2850938,
+      "git": "53b646bdb93f5fb007a14a81e1463d0c9f671699"
+    },
+    {
+      "ruta": "mods/Jade-mc26.3-Fabric-26.3.5.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/Jade-mc26.3-Fabric-26.3.5.jar",
+      "sha1": "da61413c586c8918c14e2bbfdc808ce2d56ea9df",
+      "tamano": 1092685,
+      "git": "5dd9dcd1b70899ddf173cbaa142b4d5cb7d318ba"
+    },
+    {
+      "ruta": "mods/journeymap-fabric-26.3-6.0.10.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/journeymap-fabric-26.3-6.0.10.jar",
+      "sha1": "8fb9d3039e0acca2e1d5f5ced71ab5aaac22fdf8",
+      "tamano": 4384661,
+      "git": "cc612bccd89c627a1bdcf8c19765cc1e028dad5a"
+    },
+    {
+      "ruta": "mods/lambdynamiclights-4.13.0+26.3.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/lambdynamiclights-4.13.0%2B26.3.jar",
+      "sha1": "18c8ab40f03219bfcf809a83db6e3958ed8bb866",
+      "tamano": 1345715,
+      "git": "f1ddd7d3900f0b1e13a168ebaffcb5901b6c68b1"
+    },
+    {
+      "ruta": "mods/lithium-fabric-0.26.2+mc26.3.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/lithium-fabric-0.26.2%2Bmc26.3.jar",
+      "sha1": "dd5a4ec2c68d7601d8bce9076f789c55a5f8bef3",
+      "tamano": 914543,
+      "git": "a68935c5975659c4561524866a0dfacdb684e718"
+    },
+    {
       "ruta": "mods/rataland-menu-fabric-26.3-2.3.0.jar",
       "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-fabric-26.3-2.3.0.jar",
       "sha1": "242b3badf6758c6386ece8a15d321d0887f35106",
       "tamano": 248564,
       "git": "a0752885b425675d091c0ba0996ab9c0d957b496"
+    },
+    {
+      "ruta": "mods/skinrestorer-2.11.0+26.3-fabric.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/skinrestorer-2.11.0%2B26.3-fabric.jar",
+      "sha1": "1da011465f62f631a95775aa9843a8b413a71db5",
+      "tamano": 285984,
+      "git": "1a9ecde808177644a140bde4d6af6ffada91609a"
+    },
+    {
+      "ruta": "mods/sodium-fabric-0.9.2+mc26.3.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/sodium-fabric-0.9.2%2Bmc26.3.jar",
+      "sha1": "9acfe851e36f4fb27d7c5baa224e8bd4e0334283",
+      "tamano": 1908068,
+      "git": "22b1fde967b10d4a81743571d3dd144bc2410aba"
+    },
+    {
+      "ruta": "mods/UndeadNights-2.2.6-Fabric-mc26.3.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/UndeadNights-2.2.6-Fabric-mc26.3.jar",
+      "sha1": "9f79cdd01a7536ef4e0f570f08c30729934c8344",
+      "tamano": 1396317,
+      "git": "f8877fae646a9443edcc377cf9bd2b508debf2da"
     },
     {
       "ruta": "resourcepacks/UndeadNights-Espanol-RataLand.zip",
