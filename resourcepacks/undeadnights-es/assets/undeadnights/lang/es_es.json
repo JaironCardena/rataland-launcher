@@ -130,8 +130,6 @@
   "text.autoconfig.undeadnights.option.maxHealthEliteZombies.@Tooltip": "Vida máxima de los zombis de élite | predeterminado: 40.0",
   "text.autoconfig.undeadnights.option.maxHealthDemolitionZombies": "Vida máxima de los zombis demoledores",
   "text.autoconfig.undeadnights.option.maxHealthDemolitionZombies.@Tooltip": "Vida máxima de los zombis demoledores | predeterminado: 40.0",
-  "text.autoconfig.undeadnights.option.enableAsynchronousHordeSpawning": "Activar la generación asíncrona de hordas [en desarrollo]",
-  "text.autoconfig.undeadnights.option.enableAsynchronousHordeSpawning.@Tooltip": "Genera las hordas de forma asíncrona para reducir los retrasos del servidor [en desarrollo] | predeterminado: desactivado",
   "text.autoconfig.undeadnights.option.printDebugMessages": "Registrar mensajes de depuración",
   "text.autoconfig.undeadnights.option.printDebugMessages.@Tooltip": "Guarda mensajes de depuración en el registro | predeterminado: desactivado",
   "text.autoconfig.undeadnights.option.debugMakeHordeMobsGlow": "Hacer brillar a las criaturas de las hordas para depurar",

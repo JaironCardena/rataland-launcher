@@ -1,6 +1,7 @@
 {
   "pack": {
-    "pack_format": 34,
-    "description": "Undead Nights en español · RataLand\nMinecraft 1.21–1.21.1 · Undead Nights 2.1.1"
+    "min_format": 97,
+    "max_format": 97,
+    "description": "Undead Nights en español · RataLand\nMinecraft 26.3 · Undead Nights 2.2.6"
   }
 }
