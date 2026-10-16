@@ -14,5 +14,21 @@
     "archivo": "rataland-menu-neoforge-1.21.1-1.9.4.jar",
     "sha1": "0c24a3833a24fad665c802e02e24e60fb16269d3",
     "tamano": 232898
+  },
+  {
+    "cargador": "fabric",
+    "minecraft": "26.3",
+    "version": "2.0.0",
+    "archivo": "rataland-menu-fabric-26.3-2.0.0.jar",
+    "sha1": "99ef1fc1a6143d6362c5582b31c8af38fe7be0a0",
+    "tamano": 234589
+  },
+  {
+    "cargador": "neoforge",
+    "minecraft": "26.3",
+    "version": "2.0.0",
+    "archivo": "rataland-menu-neoforge-26.3-2.0.0.jar",
+    "sha1": "b6f43479805939981683d2c69299c192b9800a08",
+    "tamano": 234824
   }
 ]
