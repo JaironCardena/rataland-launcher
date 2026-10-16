@@ -28,7 +28,7 @@ public final class Conexion {
 		Minecraft juego = Minecraft.getInstance();
 		CompletableFuture.supplyAsync(RataLand::direccionParaConectar).whenComplete((encontrada, error) -> juego.execute(() -> {
 			buscando = false;
-			if (juego.screen != desde) return;
+			if (juego.gui.screen() != desde) return;
 			conectar(desde, encontrada != null ? encontrada : RataLand.direccion());
 		}));
 	}
@@ -46,7 +46,7 @@ public final class Conexion {
 
 	/** Cada tick: ya dentro del mundo (sin pantallas de carga), deja de estar «entrando» y de esperar. */
 	public static void tick(Minecraft juego) {
-		if (juego.level != null && juego.screen == null) {
+		if (juego.level != null && juego.gui.screen() == null) {
 			entrando = false;
 			SalaEspera.terminar();
 		}

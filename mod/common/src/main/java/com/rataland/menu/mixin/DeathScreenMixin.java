@@ -6,7 +6,7 @@ import com.rataland.menu.Fondo;
 import com.rataland.menu.IconosPixel;
 import com.rataland.menu.Prueba;
 import com.rataland.menu.RataLand;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -18,10 +18,12 @@ import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
@@ -46,6 +48,8 @@ public abstract class DeathScreenMixin extends Screen {
 	@Final
 	private boolean hardcore;
 	@Shadow
+	@Final
+	@Mutable
 	private Component deathScore;
 	@Shadow
 	@Final
@@ -83,6 +87,12 @@ public abstract class DeathScreenMixin extends Screen {
 		throw new AssertionError();
 	}
 
+	/** La puntuación se calcula de nuevo al abrirla; sin jugador (en las pruebas) no hay. */
+	@Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getScore()I"))
+	private int rataland$puntos(LocalPlayer jugador) {
+		return jugador == null ? 0 : jugador.getScore();
+	}
+
 	@Inject(method = "init", at = @At("HEAD"), cancellable = true)
 	private void rataland$init(CallbackInfo ci) {
 		ci.cancel();
@@ -117,8 +127,8 @@ public abstract class DeathScreenMixin extends Screen {
 		this.setButtonsActive(false);
 	}
 
-	@Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
-	private void rataland$fondo(GuiGraphics g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+	@Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
+	private void rataland$fondo(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		ci.cancel();
 		if (this.minecraft.level == null) Fondo.dibujar(g, this.width, this.height);
 		// El mundo, oscurecido y con un tinte rojo arriba
@@ -131,30 +141,30 @@ public abstract class DeathScreenMixin extends Screen {
 		Estilo.icono(g, IconosPixel.CALAVERA, x + 18, y + 18, 2, Estilo.ERROR);
 	}
 
-	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
-	private void rataland$render(GuiGraphics g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+	@Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
+	private void rataland$render(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		ci.cancel();
-		super.render(g, mouseX, mouseY, delta);
+		super.extractRenderState(g, mouseX, mouseY, delta);
 		int x = this.rataland$x + 14;
 		int y = this.rataland$y + 14 + 24 + 8;
-		g.pose().pushPose();
-		g.pose().translate(x, y, 0f);
-		g.pose().scale(2f, 2f, 1f);
-		g.drawString(this.font, this.title, 0, 0, Estilo.TEXTO);
-		g.pose().popPose();
+		g.pose().pushMatrix();
+		g.pose().translate(x, y);
+		g.pose().scale(2f, 2f);
+		g.text(this.font, this.title, 0, 0, Estilo.TEXTO);
+		g.pose().popMatrix();
 		y += 16 + 8;
 		for (FormattedCharSequence linea : this.rataland$causa) {
-			g.drawString(this.font, linea, x, y, Estilo.CLARO);
+			g.text(this.font, linea, x, y, Estilo.CLARO);
 			y += 10;
 		}
 		y += 6;
-		g.drawString(this.font, this.deathScore, x, y, Estilo.TENUE);
+		g.text(this.font, this.deathScore, x, y, Estilo.TENUE);
 		if (!this.rataland$lugar.isEmpty()) {
-			g.drawString(this.font, this.rataland$lugar, this.rataland$x + this.rataland$w - 14 - this.font.width(this.rataland$lugar), y, Estilo.MUY_TENUE);
+			g.text(this.font, this.rataland$lugar, this.rataland$x + this.rataland$w - 14 - this.font.width(this.rataland$lugar), y, Estilo.MUY_TENUE);
 		}
 
 		if (RataLand.MODO_CAPTURA && ++this.rataland$fotogramas == 60) {
-			Prueba.alSiguienteTick("rataland-muerte.png", () -> this.minecraft.setScreen(new Prueba.Tabla()));
+			Prueba.alSiguienteTick("rataland-muerte.png", () -> this.minecraft.gui.setScreen(new Prueba.Tabla()));
 		}
 	}
 }

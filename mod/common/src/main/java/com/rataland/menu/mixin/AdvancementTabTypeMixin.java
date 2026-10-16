@@ -1,7 +1,7 @@
 package com.rataland.menu.mixin;
 
 import com.rataland.menu.Estilo;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,11 +34,9 @@ public abstract class AdvancementTabTypeMixin {
 	@Shadow
 	public abstract int getY(int indice);
 
-	@Inject(method = "draw", at = @At("HEAD"), cancellable = true)
-	private void rataland$pestana(GuiGraphics g, int x, int y, boolean elegida, int indice, CallbackInfo ci) {
+	@Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
+	private void rataland$pestana(GuiGraphicsExtractor g, int px, int py, boolean elegida, int indice, CallbackInfo ci) {
 		ci.cancel();
-		int px = x + this.getX(indice);
-		int py = y + this.getY(indice);
 		int w = this.width;
 		int h = this.height;
 		Estilo.escalon(g, px, py, w, h, elegida ? 0xFF101828 : 0xFF0A0F1A);

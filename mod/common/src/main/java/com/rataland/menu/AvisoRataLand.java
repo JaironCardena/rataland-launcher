@@ -2,10 +2,10 @@ package com.rataland.menu;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
-import net.minecraft.client.gui.components.toasts.ToastComponent;
+import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.advancements.AdvancementType;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -28,6 +28,7 @@ public class AvisoRataLand implements Toast {
 	private final boolean destacado;
 	private final UUID jugador;
 	private final String nombreCara;
+	private Visibility visibilidad = Visibility.SHOW;
 
 	private AvisoRataLand(String titulo, String texto, String[] icono, int colorIcono, int fondoIcono, boolean destacado, UUID jugador, String nombreCara) {
 		this.titulo = titulo;
@@ -66,37 +67,45 @@ public class AvisoRataLand implements Toast {
 	}
 
 	@Override
-	public Visibility render(GuiGraphics g, ToastComponent avisos, long tiempo) {
-		Font fuente = Minecraft.getInstance().font;
+	public Visibility getWantedVisibility() {
+		return visibilidad;
+	}
+
+	@Override
+	public void update(ToastManager avisos, long tiempo) {
+		visibilidad = tiempo >= DURACION * avisos.getNotificationDisplayTimeMultiplier() ? Visibility.HIDE : Visibility.SHOW;
+	}
+
+	@Override
+	public void extractRenderState(GuiGraphicsExtractor g, Font fuente, long tiempo) {
 		fondo(g, destacado ? Estilo.QUESO : 0x30D6E2FF);
 		if (nombreCara != null) {
 			// Se busca en cada dibujo: al entrar alguien su skin aún se está descargando, y al ponérsela
 			// el servidor lo vuelve a añadir a la lista con otra ficha
 			ClientPacketListener red = Minecraft.getInstance().getConnection();
 			PlayerInfo info = red != null && jugador != null ? red.getPlayerInfo(jugador) : null;
-			if (info != null) PlayerFaceRenderer.draw(g, info.getSkin(), 6, 6, 20);
+			if (info != null) PlayerFaceExtractor.extractRenderState(g, info.getSkin(), 6, 6, 20);
 			else Cabezas.dibujar(g, nombreCara, 6, 6, 20);
 		} else {
 			Estilo.escalon(g, 5, 5, 22, 22, fondoIcono);
 			Estilo.icono(g, icono, 8, 8, 2, colorIcono);
 		}
-		g.drawString(fuente, Estilo.recortar(fuente, titulo, ANCHO - 40), 33, 7, destacado ? Estilo.QUESO : Estilo.TEXTO, false);
-		g.drawString(fuente, Estilo.recortar(fuente, texto, ANCHO - 40), 33, 18, Estilo.TENUE, false);
-		return tiempo >= DURACION ? Visibility.HIDE : Visibility.SHOW;
+		g.text(fuente, Estilo.recortar(fuente, titulo, ANCHO - 40), 33, 7, destacado ? Estilo.QUESO : Estilo.TEXTO, false);
+		g.text(fuente, Estilo.recortar(fuente, texto, ANCHO - 40), 33, 18, Estilo.TENUE, false);
 	}
 
-	private static void fondo(GuiGraphics g, int borde) {
+	private static void fondo(GuiGraphicsExtractor g, int borde) {
 		fondo(g, ANCHO, ALTO, borde);
 	}
 
 	/** El fondo de los avisos de RataLand, de cualquier tamaño (también para los de Minecraft). */
-	public static void fondo(GuiGraphics g, int ancho, int alto, int borde) {
+	public static void fondo(GuiGraphicsExtractor g, int ancho, int alto, int borde) {
 		Estilo.escalon(g, 0, 0, ancho, alto, 0xF00D1424);
 		Estilo.bordeEscalon(g, 0, 0, ancho, alto, borde);
 	}
 
 	/** El hueco oscuro del icono, a la izquierda del aviso. */
-	public static void cajaIcono(GuiGraphics g) {
+	public static void cajaIcono(GuiGraphicsExtractor g) {
 		Estilo.escalon(g, 5, 5, 22, 22, 0xFF1B2236);
 	}
 
@@ -105,13 +114,13 @@ public class AvisoRataLand implements Toast {
 	 * («¡Progreso realizado!», «¡Objetivo alcanzado!», «¡Desafío completado!») y su nombre. Los
 	 * desafíos van en morado, como en Minecraft; los objetivos, con el marco de queso.
 	 */
-	public static void dibujarLogro(GuiGraphics g, AdvancementType tipo, Component titulo, ItemStack icono) {
+	public static void dibujarLogro(GuiGraphicsExtractor g, AdvancementType tipo, Component titulo, ItemStack icono) {
 		Font fuente = Minecraft.getInstance().font;
 		int color = tipo == AdvancementType.CHALLENGE ? 0xFFD58BFF : Estilo.QUESO;
 		fondo(g, tipo == AdvancementType.TASK ? 0x30D6E2FF : color);
 		Estilo.escalon(g, 5, 5, 22, 22, 0xFF1B2236);
-		g.renderFakeItem(icono, 8, 8);
-		g.drawString(fuente, Estilo.recortar(fuente, tipo.getDisplayName().getString(), ANCHO - 40), 33, 7, color, false);
-		g.drawString(fuente, Estilo.recortar(fuente, titulo.getString(), ANCHO - 40), 33, 18, Estilo.TEXTO, false);
+		g.fakeItem(icono, 8, 8);
+		g.text(fuente, Estilo.recortar(fuente, tipo.getDisplayName().getString(), ANCHO - 40), 33, 7, color, false);
+		g.text(fuente, Estilo.recortar(fuente, titulo.getString(), ANCHO - 40), 33, 18, Estilo.TEXTO, false);
 	}
 }

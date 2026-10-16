@@ -3,7 +3,7 @@ package com.rataland.menu;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,20 +28,20 @@ public final class RataLand {
 
 	public static final int FONDO_ANCHO = 640;
 	public static final int FONDO_ALTO = 360;
-	public static final ResourceLocation LOGO = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/logo.png");
+	public static final Identifier LOGO = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/logo.png");
 	public static final int LOGO_ANCHO = 67;
 	public static final int LOGO_ALTO = 23;
-	public static final ResourceLocation RATA = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/rata.png");
-	public static final ResourceLocation BOTON_TIERRA = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/boton_tierra.png");
-	public static final ResourceLocation BOTON_HIERBA = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/boton_hierba.png");
+	public static final Identifier RATA = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/rata.png");
+	public static final Identifier BOTON_TIERRA = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/boton_tierra.png");
+	public static final Identifier BOTON_HIERBA = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/boton_hierba.png");
 
 	/** Escenas de fondo: la que se use la elige el panel del modpack. */
-	public static final Map<String, ResourceLocation> FONDOS = Map.of(
-			"noche", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo.png"),
-			"cloacas", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_cloacas.png"),
-			"amanecer", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_amanecer.png"),
-			"pesca", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_pesca.png"),
-			"mina", ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_mina.png"));
+	public static final Map<String, Identifier> FONDOS = Map.of(
+			"noche", Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo.png"),
+			"cloacas", Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_cloacas.png"),
+			"amanecer", Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_amanecer.png"),
+			"pesca", Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_pesca.png"),
+			"mina", Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/fondo_mina.png"));
 
 	/** Color de fondo de la pantalla de carga (ARGB). */
 	public static final int COLOR_CARGA = 0xFF0F1626;
@@ -126,7 +126,7 @@ public final class RataLand {
 		}
 	}
 
-	public static ResourceLocation fondoActual() {
+	public static Identifier fondoActual() {
 		return FONDOS.getOrDefault(escena, FONDOS.get("noche"));
 	}
 

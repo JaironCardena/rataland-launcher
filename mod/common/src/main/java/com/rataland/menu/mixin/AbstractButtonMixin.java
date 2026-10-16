@@ -1,14 +1,14 @@
 package com.rataland.menu.mixin;
 
 import com.rataland.menu.Estilo;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Los botones de las pantallas de Minecraft (Opciones, Gráficos, Controles…) con la piedra de RataLand
@@ -21,9 +21,10 @@ public abstract class AbstractButtonMixin extends AbstractWidget {
 		super(x, y, ancho, alto, texto);
 	}
 
-	@Redirect(method = "renderWidget", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"))
-	private void rataland$piedra(GuiGraphics g, ResourceLocation sprite, int x, int y, int w, int h) {
-		Estilo.botonPiedra(g, x, y, w, h, Estilo.PIEDRA, this.isHovered() && this.active, this.isFocused() && !this.isHovered(), this.active);
+	@Inject(method = "extractDefaultSprite", at = @At("HEAD"), cancellable = true)
+	private void rataland$piedra(GuiGraphicsExtractor g, CallbackInfo ci) {
+		ci.cancel();
+		Estilo.botonPiedra(g, this.getX(), this.getY(), this.getWidth(), this.getHeight(), Estilo.PIEDRA, this.isHovered() && this.active,
+				this.isFocused() && !this.isHovered(), this.active);
 	}
 }

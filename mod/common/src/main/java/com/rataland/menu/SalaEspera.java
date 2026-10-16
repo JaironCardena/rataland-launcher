@@ -1,8 +1,8 @@
 package com.rataland.menu;
 
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
@@ -80,7 +80,7 @@ public final class SalaEspera {
 	 * La tarjeta «Despertando RataLand», con el mismo aspecto que «Entrando en RataLand». `siguiente`:
 	 * segundos que faltan para el próximo intento, o -1 si ya se está intentando entrar.
 	 */
-	public static void dibujar(GuiGraphics g, Font fuente, int ancho, int alto, int siguiente) {
+	public static void dibujar(GuiGraphicsExtractor g, Font fuente, int ancho, int alto, int siguiente) {
 		g.fill(0, 0, ancho, alto, 0x66080D1A);
 		int[] c = caja(fuente, ancho, alto);
 		int x = c[0];
@@ -89,15 +89,15 @@ public final class SalaEspera {
 		Estilo.escalon(g, x, y, w, c[3], 0xEB0D1424);
 		Estilo.bordeEscalon(g, x, y, w, c[3], Estilo.LINEA);
 
-		g.pose().pushPose();
-		g.pose().translate(x + 14, y + 12, 0f);
-		g.pose().scale(1.5f, 1.5f, 1f);
-		g.drawString(fuente, "Despertando " + RataLand.nombre, 0, 0, Estilo.TEXTO);
-		g.pose().popPose();
+		g.pose().pushMatrix();
+		g.pose().translate(x + 14, y + 12);
+		g.pose().scale(1.5f, 1.5f);
+		g.text(fuente, "Despertando " + RataLand.nombre, 0, 0, Estilo.TEXTO);
+		g.pose().popMatrix();
 
 		int ty = y + 34;
 		for (FormattedCharSequence linea : lineas(fuente, w)) {
-			g.drawString(fuente, linea, x + 14, ty, Estilo.CLARO);
+			g.text(fuente, linea, x + 14, ty, Estilo.CLARO);
 			ty += 10;
 		}
 
@@ -105,14 +105,14 @@ public final class SalaEspera {
 		int fy = ty + 6;
 		if (siguiente < 0) {
 			g.fill(x + 14, fy + 1, x + 20, fy + 7, Estilo.QUESO);
-			g.drawString(fuente, "Intentando entrar" + TarjetaEntrando.puntos(), x + 28, fy, Estilo.QUESO);
+			g.text(fuente, "Intentando entrar" + TarjetaEntrando.puntos(), x + 28, fy, Estilo.QUESO);
 		} else {
 			Estilo.icono(g, IconosPixel.RELOJ, x + 13, fy, 1, Estilo.TENUE);
-			g.drawString(fuente, "Nuevo intento en " + siguiente + " s", x + 28, fy, Estilo.TENUE);
+			g.text(fuente, "Nuevo intento en " + siguiente + " s", x + 28, fy, Estilo.TENUE);
 		}
 		long s = esperado() / 1000;
 		String tiempo = "Esperando " + s / 60 + ":" + (s % 60 < 10 ? "0" : "") + s % 60;
-		g.drawString(fuente, tiempo, x + w - 14 - fuente.width(tiempo), fy, Estilo.MUY_TENUE);
+		g.text(fuente, tiempo, x + w - 14 - fuente.width(tiempo), fy, Estilo.MUY_TENUE);
 
 		// No se sabe cuánto falta: la barra avanza deprisa al principio y cada vez más despacio
 		float avance = 0.06f + 0.86f * (1f - (float) Math.exp(-esperado() / 80_000.0));

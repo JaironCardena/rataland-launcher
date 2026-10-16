@@ -1,7 +1,7 @@
 package com.rataland.menu;
 
 import net.minecraft.client.Screenshot;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -151,7 +151,7 @@ public class PantallaDesconectado extends Screen {
 		this.addRenderableWidget(new BotonRataLand(this.x + 14, yb, 124, 26, Component.literal("Reintentar"), b -> Conexion.entrar(this),
 				BotonRataLand.Estilo.HIERBA, 1.5f));
 		this.addRenderableWidget(new BotonRataLand(this.x + 14 + 124 + 8, yb, Math.min(120, this.w - 28 - 132), 26, Component.literal("Volver al menú"),
-				b -> this.minecraft.setScreen(new MenuRataLand()), BotonRataLand.Estilo.PIEDRA));
+				b -> this.minecraft.gui.setScreen(new MenuRataLand()), BotonRataLand.Estilo.PIEDRA));
 		this.yDetalle = yb + 26 + 10;
 		this.addRenderableWidget(new EnlaceRataLand(this.x + 13, this.yDetalle, Component.literal(this.detalles ? "Ocultar el mensaje de Minecraft" : "Ver el mensaje de Minecraft"), b -> {
 			this.detalles = !this.detalles;
@@ -160,37 +160,37 @@ public class PantallaDesconectado extends Screen {
 	}
 
 	@Override
-	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
+	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
 		Fondo.dibujar(g, this.width, this.height);
 		g.fill(0, 0, this.width, this.height, 0x9E080D1A);
 		Estilo.escalon(g, this.x, this.y, this.w, this.h, 0xED0D1424);
 		Estilo.bordeEscalon(g, this.x, this.y, this.w, this.h, Estilo.LINEA);
 		Estilo.escalon(g, this.x + 14, this.y + 14, 24, 24, 0xFF1B2236);
 		Estilo.icono(g, icono(), this.x + 18, this.y + 18, 2, colorIcono());
-		g.pose().pushPose();
-		g.pose().translate(this.x + 14, this.y + 14 + 24 + 8, 0f);
-		g.pose().scale(1.5f, 1.5f, 1f);
-		g.drawString(this.font, titulo(), 0, 0, Estilo.TEXTO);
-		g.pose().popPose();
+		g.pose().pushMatrix();
+		g.pose().translate(this.x + 14, this.y + 14 + 24 + 8);
+		g.pose().scale(1.5f, 1.5f);
+		g.text(this.font, titulo(), 0, 0, Estilo.TEXTO);
+		g.pose().popMatrix();
 		int ty = this.y + 14 + 24 + 8 + 12 + 6;
 		for (FormattedCharSequence linea : this.lineasTexto) {
-			g.drawString(this.font, linea, this.x + 14, ty, Estilo.CLARO);
+			g.text(this.font, linea, this.x + 14, ty, Estilo.CLARO);
 			ty += 10;
 		}
 		if (this.detalles) {
 			int dy = this.yDetalle + 11 + 4;
 			for (FormattedCharSequence linea : this.lineasDetalle) {
-				g.drawString(this.font, linea, this.x + 14, dy, Estilo.MUY_TENUE);
+				g.text(this.font, linea, this.x + 14, dy, Estilo.MUY_TENUE);
 				dy += 10;
 			}
 		}
 	}
 
 	@Override
-	public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
-		super.render(g, mouseX, mouseY, delta);
+	public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+		super.extractRenderState(g, mouseX, mouseY, delta);
 		if (RataLand.MODO_CAPTURA && ++this.fotogramas == 80) {
-			Screenshot.grab(this.minecraft.gameDirectory, "rataland-desconectado.png", this.minecraft.getMainRenderTarget(), t -> {});
+			Screenshot.grab(this.minecraft.gameDirectory, "rataland-desconectado.png", this.minecraft.gameRenderer.mainRenderTarget(), 1, t -> {});
 			RataLand.LOG.info("Prueba: sin poder entrar se muestra «{}» ({})", titulo(), this.razon.getString());
 			this.minecraft.stop();
 		}
@@ -198,6 +198,6 @@ public class PantallaDesconectado extends Screen {
 
 	@Override
 	public void onClose() {
-		this.minecraft.setScreen(new MenuRataLand());
+		this.minecraft.gui.setScreen(new MenuRataLand());
 	}
 }

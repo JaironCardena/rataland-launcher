@@ -1,15 +1,15 @@
 package com.rataland.menu;
 
+import net.minecraft.client.renderer.RenderPipelines;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.core.UUIDUtil;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
@@ -29,21 +29,19 @@ public final class Cabezas {
 	private Cabezas() {}
 
 	private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-	private static final Map<String, ResourceLocation> LISTAS = new ConcurrentHashMap<>();
+	private static final Map<String, Identifier> LISTAS = new ConcurrentHashMap<>();
 	private static final Map<String, Boolean> PEDIDAS = new ConcurrentHashMap<>();
 
 	/** Dibuja la cabeza de `nombre` de `tam`×`tam`. */
-	public static void dibujar(GuiGraphics g, String nombre, int x, int y, int tam) {
+	public static void dibujar(GuiGraphicsExtractor g, String nombre, int x, int y, int tam) {
 		String clave = nombre.toLowerCase(Locale.ROOT);
-		ResourceLocation cara = LISTAS.get(clave);
+		Identifier cara = LISTAS.get(clave);
 		if (cara != null) {
-			RenderSystem.enableBlend();
-			g.blit(cara, x, y, tam, tam, 0, 0, 8, 8, 8, 8);
-			RenderSystem.disableBlend();
+			g.blit(RenderPipelines.GUI_TEXTURED, cara, x, y, 0, 0, tam, tam, 8, 8, 8, 8);
 			return;
 		}
 		pedir(clave);
-		PlayerFaceRenderer.draw(g, DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(nombre)), x, y, tam);
+		PlayerFaceExtractor.extractRenderState(g, DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(nombre)), x, y, tam);
 	}
 
 	private static void pedir(String nombre) {
@@ -56,7 +54,11 @@ public final class Cabezas {
 				if (respuesta.statusCode() != 200) return;
 				NativeImage imagen = NativeImage.read(new ByteArrayInputStream(respuesta.body()));
 				Minecraft juego = Minecraft.getInstance();
-				juego.execute(() -> LISTAS.put(nombre, juego.getTextureManager().register("rataland_cabeza_" + nombre, new DynamicTexture(imagen))));
+				Identifier id = Identifier.fromNamespaceAndPath(RataLand.MOD_ID, "cabeza/" + nombre);
+				juego.execute(() -> {
+					juego.getTextureManager().register(id, new DynamicTexture(() -> "Cabeza de " + nombre, imagen));
+					LISTAS.put(nombre, id);
+				});
 			} catch (Exception e) {
 				RataLand.LOG.debug("Sin cabeza para {}: {}", nombre, e.toString());
 			}

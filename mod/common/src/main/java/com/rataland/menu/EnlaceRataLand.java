@@ -1,7 +1,7 @@
 package com.rataland.menu;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 
@@ -12,10 +12,10 @@ public class EnlaceRataLand extends Button {
 	}
 
 	@Override
-	protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float delta) {
+	protected void extractContents(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
 		boolean marcado = isHoveredOrFocused();
 		int color = marcado ? 0xFFFFD76A : Estilo.QUESO;
-		g.drawString(Minecraft.getInstance().font, getMessage(), getX() + 1, getY() + 1, color);
+		g.text(Minecraft.getInstance().font, getMessage(), getX() + 1, getY() + 1, color);
 		if (marcado) g.fill(getX() + 1, getY() + 10, getX() + getWidth() - 1, getY() + 11, color);
 	}
 }

@@ -1,12 +1,13 @@
 package com.rataland.menu;
 
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Botón con el estilo de RataLand: bloque de hierba (el principal), piedra (los demás), piedra con
@@ -51,7 +52,7 @@ public class BotonRataLand extends Button {
 	}
 
 	@Override
-	protected void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
+	protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
 		int x = getX();
 		int y = getY();
 		int w = getWidth();
@@ -85,7 +86,7 @@ public class BotonRataLand extends Button {
 			int alto = 8 + 4 + 8;
 			int iy = y + (h - alto) / 2;
 			com.rataland.menu.Estilo.icono(context, icono, x + (w - 8) / 2, iy, 1, colorIcono);
-			context.drawCenteredString(fuente, com.rataland.menu.Estilo.recortar(fuente, getMessage().getString(), w - 4), x + w / 2, iy + 12, color);
+			context.centeredText(fuente, com.rataland.menu.Estilo.recortar(fuente, getMessage().getString(), w - 4), x + w / 2, iy + 12, color);
 			return;
 		}
 
@@ -99,19 +100,19 @@ public class BotonRataLand extends Button {
 			com.rataland.menu.Estilo.icono(context, icono, Math.round(inicio), Math.round(cy - 4), 1, color == 0xFFFFFFFF ? colorIcono : color);
 			cx = inicio + 14 + anchoTexto / 2f;
 		}
-		context.pose().pushPose();
-		context.pose().translate(cx, cy, 0);
-		context.pose().scale(escalaTexto, escalaTexto, 1f);
-		context.drawCenteredString(fuente, getMessage(), 0, -4, color);
-		context.pose().popPose();
+		context.pose().pushMatrix();
+		context.pose().translate(cx, cy);
+		context.pose().scale(escalaTexto, escalaTexto);
+		context.centeredText(fuente, getMessage(), 0, -4, color);
+		context.pose().popMatrix();
 	}
 
-	private static void mosaico(GuiGraphics context, ResourceLocation textura, int x, int y, int w, int h, int tw, int th) {
+	private static void mosaico(GuiGraphicsExtractor context, Identifier textura, int x, int y, int w, int h, int tw, int th) {
 		for (int py = y; py < y + h; py += th) {
 			for (int px = x; px < x + w; px += tw) {
 				int cw = Math.min(tw, x + w - px);
 				int ch = Math.min(th, y + h - py);
-				context.blit(textura, px, py, 0, 0, cw, ch, tw, th);
+				context.blit(RenderPipelines.GUI_TEXTURED, textura, px, py, 0, 0, cw, ch, tw, th);
 			}
 		}
 	}

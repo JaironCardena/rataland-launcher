@@ -6,7 +6,7 @@ import com.rataland.menu.RataLand;
 import com.rataland.menu.SalaEspera;
 import com.rataland.menu.TarjetaEntrando;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -52,22 +52,22 @@ public abstract class ConnectScreenMixin extends Screen {
 		}
 	}
 
-	@Redirect(method = "render", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
-	private void rataland$sinTextoGris(GuiGraphics g, Font fuente, Component texto, int x, int y, int color) {
-		if (!Conexion.entrando) g.drawCenteredString(fuente, texto, x, y, color);
+	@Redirect(method = "extractRenderState", at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;centeredText(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+	private void rataland$sinTextoGris(GuiGraphicsExtractor g, Font fuente, Component texto, int x, int y, int color) {
+		if (!Conexion.entrando) g.centeredText(fuente, texto, x, y, color);
 	}
 
 	@Override
-	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
-		super.renderBackground(g, mouseX, mouseY, delta);
+	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+		super.extractBackground(g, mouseX, mouseY, delta);
 		if (!Conexion.entrando) return;
 		if (SalaEspera.activa()) SalaEspera.dibujar(g, this.font, this.width, this.height, -1);
 		else TarjetaEntrando.dibujar(g, this.font, this.width, this.height, TarjetaEntrando.paso(this.status), true);
 	}
 
-	@Inject(method = "render", at = @At("TAIL"))
-	private void rataland$captura(GuiGraphics g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+	@Inject(method = "extractRenderState", at = @At("TAIL"))
+	private void rataland$captura(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		if (RataLand.MODO_CAPTURA && ++this.rataland$fotogramas == 80) Prueba.conectando((ConnectScreen) (Object) this);
 	}
 }

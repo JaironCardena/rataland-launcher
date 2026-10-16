@@ -2,10 +2,11 @@ package com.rataland.menu.mixin;
 
 import com.rataland.menu.AvisoRataLand;
 import com.rataland.menu.Estilo;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.RecipeToast;
 import net.minecraft.client.gui.components.toasts.Toast;
-import net.minecraft.resources.ResourceLocation;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -22,21 +23,21 @@ public abstract class RecipeToastMixin implements Toast {
 		return AvisoRataLand.ANCHO;
 	}
 
-	@Redirect(method = "render", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"))
-	private void rataland$fondo(GuiGraphics g, ResourceLocation sprite, int x, int y, int w, int h) {
+	@Redirect(method = "extractRenderState", at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"))
+	private void rataland$fondo(GuiGraphicsExtractor g, RenderPipeline tuberia, Identifier sprite, int x, int y, int w, int h) {
 		AvisoRataLand.fondo(g, w, h, 0x30D6E2FF);
 		AvisoRataLand.cajaIcono(g);
 	}
 
-	@ModifyArg(method = "render", index = 4, at = @At(value = "INVOKE", ordinal = 0,
-			target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)I"))
+	@ModifyArg(method = "extractRenderState", index = 4, at = @At(value = "INVOKE", ordinal = 0,
+			target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;text(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)V"))
 	private int rataland$colorTitulo(int color) {
 		return Estilo.QUESO;
 	}
 
-	@ModifyArg(method = "render", index = 4, at = @At(value = "INVOKE", ordinal = 1,
-			target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)I"))
+	@ModifyArg(method = "extractRenderState", index = 4, at = @At(value = "INVOKE", ordinal = 1,
+			target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;text(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)V"))
 	private int rataland$colorTexto(int color) {
 		return Estilo.TENUE;
 	}

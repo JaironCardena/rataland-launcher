@@ -1,5 +1,6 @@
 plugins {
-    id 'dev.architectury.loom' version '1.17-SNAPSHOT' apply false
+    // Desde Minecraft 26.1 el juego viene sin ofuscar: no hacen falta mappings ni remapear el jar
+    id 'dev.architectury.loom-no-remap' version '1.17-SNAPSHOT' apply false
     id 'architectury-plugin' version '3.5-SNAPSHOT'
     id 'com.gradleup.shadow' version '9.6.1' apply false
 }
@@ -14,10 +15,10 @@ allprojects {
 }
 
 subprojects {
-    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'dev.architectury.loom-no-remap'
     apply plugin: 'architectury-plugin'
 
-    // rataland-menu-fabric-1.4.0.jar, rataland-menu-neoforge-1.4.0.jar
+    // rataland-menu-fabric-2.0.0.jar, rataland-menu-neoforge-2.0.0.jar
     base {
         archivesName = "rataland-menu-${project.name}"
     }
@@ -26,22 +27,18 @@ subprojects {
         maven { name = 'NeoForged'; url = 'https://maven.neoforged.net/releases/' }
     }
 
-    loom {
-        silentMojangMappingsLicense()
-    }
-
     dependencies {
-        minecraft "net.minecraft:minecraft:${rootProject.minecraft_version}"
-        mappings loom.officialMojangMappings()
+        minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
     }
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     tasks.withType(JavaCompile).configureEach {
-        it.options.release = 21
+        it.options.release = 25
         it.options.encoding = 'UTF-8'
+        it.options.compilerArgs += ['-Xmaxerrs', '3000']
     }
 }

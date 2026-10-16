@@ -1,7 +1,7 @@
 package com.rataland.menu;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -18,7 +18,7 @@ public final class Cartel {
 	}
 
 	/** Etiqueta con borde de queso (como la del launcher). Devuelve su alto. */
-	public static int chip(GuiGraphics context, Font fuente, int x, int y, String texto) {
+	public static int chip(GuiGraphicsExtractor context, Font fuente, int x, int y, String texto) {
 		Estilo.etiqueta(context, fuente, x, y, texto);
 		return 15;
 	}
@@ -41,20 +41,20 @@ public final class Cartel {
 	}
 
 	/** El cartel de la cuenta atrás: marco de queso, reloj, título, el tiempo en grande y el día. */
-	public static void cuentaAtras(GuiGraphics context, Font fuente, int x, int y, float escalaTiempo) {
+	public static void cuentaAtras(GuiGraphicsExtractor context, Font fuente, int x, int y, float escalaTiempo) {
 		String[] t = textos();
 		int w = anchoCuentaAtras(fuente, escalaTiempo);
 		int h = altoCuentaAtras(escalaTiempo);
 		Estilo.marcoQueso(context, x, y, w, h);
 		Estilo.icono(context, IconosPixel.RELOJ, x + 9, y + (h - 16) / 2, 2, Estilo.QUESO);
 		int tx = x + 9 + RELOJ;
-		context.drawString(fuente, t[0], tx, y + 7, Estilo.TENUE);
-		context.pose().pushPose();
-		context.pose().translate(tx, y + 7 + 9 + 3, 0f);
-		context.pose().scale(escalaTiempo, escalaTiempo, 1f);
-		context.drawString(fuente, t[1], 0, 0, Estilo.QUESO);
-		context.pose().popPose();
-		context.drawString(fuente, t[2], tx, y + h - 6 - 9, Estilo.TENUE);
+		context.text(fuente, t[0], tx, y + 7, Estilo.TENUE);
+		context.pose().pushMatrix();
+		context.pose().translate(tx, y + 7 + 9 + 3);
+		context.pose().scale(escalaTiempo, escalaTiempo);
+		context.text(fuente, t[1], 0, 0, Estilo.QUESO);
+		context.pose().popMatrix();
+		context.text(fuente, t[2], tx, y + h - 6 - 9, Estilo.TENUE);
 	}
 
 	public static final int ALTO_CINTA = 22;
@@ -64,7 +64,7 @@ public final class Cartel {
 	 * La cuenta atrás en una sola línea, centrada en `centro`: reloj, título, el tiempo en grande y
 	 * el día. Si no cabe en `anchoMax`, sin el día; y si aún no cabe, sin el título.
 	 */
-	public static void cinta(GuiGraphics context, Font fuente, int centro, int y, int anchoMax) {
+	public static void cinta(GuiGraphicsExtractor context, Font fuente, int centro, int y, int anchoMax) {
 		String[] t = textos();
 		String titulo = t[0];
 		String dia = t[2].isEmpty() ? "" : Character.toLowerCase(t[2].charAt(0)) + t[2].substring(1);
@@ -79,15 +79,15 @@ public final class Cartel {
 		Estilo.icono(context, IconosPixel.RELOJ, cx, y + 7, 1, Estilo.QUESO);
 		cx += 8 + 6;
 		if (!titulo.isEmpty()) {
-			context.drawString(fuente, titulo, cx, y + 7, Estilo.CLARO);
+			context.text(fuente, titulo, cx, y + 7, Estilo.CLARO);
 			cx += fuente.width(titulo) + 6;
 		}
-		context.pose().pushPose();
-		context.pose().translate(cx, y + 5, 0f);
-		context.pose().scale(ESCALA_CINTA, ESCALA_CINTA, 1f);
-		context.drawString(fuente, t[1], 0, 0, Estilo.QUESO);
-		context.pose().popPose();
-		if (!dia.isEmpty()) context.drawString(fuente, dia, cx + anchoTiempo + 6, y + 7, Estilo.TENUE);
+		context.pose().pushMatrix();
+		context.pose().translate(cx, y + 5);
+		context.pose().scale(ESCALA_CINTA, ESCALA_CINTA);
+		context.text(fuente, t[1], 0, 0, Estilo.QUESO);
+		context.pose().popMatrix();
+		if (!dia.isEmpty()) context.text(fuente, dia, cx + anchoTiempo + 6, y + 7, Estilo.TENUE);
 	}
 
 	private static int anchoCinta(Font fuente, String titulo, int anchoTiempo, String dia) {

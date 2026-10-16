@@ -1,9 +1,11 @@
 package com.rataland.menu.mixin;
 
+import net.minecraft.client.renderer.RenderPipelines;
 import com.rataland.menu.Estilo;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget;
-import net.minecraft.resources.ResourceLocation;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -15,20 +17,21 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  */
 @Mixin(AdvancementWidget.class)
 public abstract class AdvancementWidgetMixin {
-	@Redirect(method = "drawHover", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"))
-	private void rataland$panel(GuiGraphics g, ResourceLocation sprite, int x, int y, int w, int h) {
+	@Redirect(method = "extractHover", at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"))
+	private void rataland$panel(GuiGraphicsExtractor g, RenderPipeline tuberia, Identifier sprite, int x, int y, int w, int h) {
 		if (!sprite.getPath().equals("advancements/title_box")) {
-			g.blitSprite(sprite, x, y, w, h);
+			g.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, w, h);
 			return;
 		}
 		Estilo.escalon(g, x, y, w, h, 0xF20D1424);
 		Estilo.bordeEscalon(g, x, y, w, h, Estilo.LINEA);
 	}
 
-	@Redirect(method = "drawHover", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIIIIIII)V"))
-	private void rataland$barra(GuiGraphics g, ResourceLocation sprite, int anchoTextura, int altoTextura, int u, int v, int x, int y, int w, int h) {
+	@Redirect(method = "extractHover", at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIIIIIII)V"))
+	private void rataland$barra(GuiGraphicsExtractor g, RenderPipeline tuberia, Identifier sprite, int anchoTextura, int altoTextura, int u, int v, int x, int y,
+			int w, int h) {
 		if (w <= 0) return;
 		boolean conseguido = sprite.getPath().endsWith("box_obtained");
 		int base = conseguido ? 0xFF8A5A14 : Estilo.PIEDRA;

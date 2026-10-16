@@ -1,10 +1,11 @@
 package com.rataland.menu;
 
+import net.minecraft.client.renderer.RenderPipelines;
 import com.mojang.math.Axis;
 import net.minecraft.SharedConstants;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Screenshot;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
@@ -97,12 +98,12 @@ public class MenuRataLand extends Screen {
 				Component.literal(Conexion.buscando() ? "Buscando..." : "Jugar"), b -> jugar(), BotonRataLand.Estilo.HIERBA, 2f));
 		int x = this.xAcciones;
 		this.addRenderableWidget(new BotonRataLand(x, yFila, anchoBoton, ALTO_BOTON, Component.literal("Opciones"),
-				b -> this.minecraft.setScreen(new OptionsScreen(this, this.minecraft.options)), BotonRataLand.Estilo.PIEDRA)
+				b -> this.minecraft.gui.setScreen(new OptionsScreen(this, this.minecraft.options)), BotonRataLand.Estilo.PIEDRA)
 				.conIcono(IconosPixel.AJUSTES, 0xFFFFFFFF));
 		x += anchoBoton + SEPARACION;
 		if (!RataLand.discord.isEmpty()) {
 			this.addRenderableWidget(new BotonRataLand(x, yFila, anchoBoton, ALTO_BOTON, Component.literal("Discord"),
-					ConfirmLinkScreen.confirmLink(this, RataLand.discord), BotonRataLand.Estilo.DISCORD).conIcono(IconosPixel.DISCORD, 0xFFFFFFFF));
+					ConfirmLinkScreen.confirmLink(this, java.net.URI.create(RataLand.discord)), BotonRataLand.Estilo.DISCORD).conIcono(IconosPixel.DISCORD, 0xFFFFFFFF));
 			x += anchoBoton + SEPARACION;
 		}
 		// El último se estira hasta el borde, por si la división no es exacta
@@ -134,7 +135,7 @@ public class MenuRataLand extends Screen {
 
 	/* ---------- Estado del servidor, encima de Jugar ---------- */
 
-	private void dibujarEstado(GuiGraphics g, int mouseX, int mouseY) {
+	private void dibujarEstado(GuiGraphicsExtractor g, int mouseX, int mouseY) {
 		EstadoServidor.Estado estado = EstadoServidor.estado();
 		int color;
 		String titulo;
@@ -180,7 +181,7 @@ public class MenuRataLand extends Screen {
 		Estilo.escalon(g, x, y, w, ALTO_ESTADO, 0xC2080D1A);
 		Estilo.punto(g, x + 6, y + 5, color);
 		int cx = x + 16;
-		g.drawString(this.font, titulo, cx, y + 4, Estilo.TEXTO);
+		g.text(this.font, titulo, cx, y + 4, Estilo.TEXTO);
 		cx += this.font.width(titulo);
 		if (caben > 0) {
 			cx += 6;
@@ -190,14 +191,14 @@ public class MenuRataLand extends Screen {
 				cx += 9;
 			}
 			if (mouseX >= desde && mouseX < cx && mouseY >= y && mouseY < y + ALTO_ESTADO) {
-				this.setTooltipForNextRenderPass(Component.literal(String.join(", ", nombres)));
+				g.setTooltipForNextFrame(this.font, Component.literal(String.join(", ", nombres)), mouseX, mouseY);
 			}
 			cx -= 1;
 		}
 		if (!detalle.isEmpty()) {
 			// Una rayita separa el estado del detalle
 			g.fill(cx + 6, y + 3, cx + 7, y + 12, 0x50D6E2FF);
-			g.drawString(this.font, detalle, cx + 13, y + 4, Estilo.TENUE);
+			g.text(this.font, detalle, cx + 13, y + 4, Estilo.TENUE);
 		}
 	}
 
@@ -207,7 +208,7 @@ public class MenuRataLand extends Screen {
 
 	/* ---------- Tu cuenta, arriba a la derecha ---------- */
 
-	private void dibujarCuenta(GuiGraphics g) {
+	private void dibujarCuenta(GuiGraphicsExtractor g) {
 		String nombre = this.minecraft.getUser().getName();
 		String cuenta = switch (RataLand.cuenta) {
 			case "microsoft" -> "Premium";
@@ -224,27 +225,27 @@ public class MenuRataLand extends Screen {
 		Personaje.cara(g, this.minecraft, x + 5, y + (h - 18) / 2, 18);
 		int tx = x + 5 + 18 + 6;
 		if (cuenta.isEmpty()) {
-			g.drawString(this.font, nombre, tx, y + 7, Estilo.TEXTO);
+			g.text(this.font, nombre, tx, y + 7, Estilo.TEXTO);
 		} else {
-			g.drawString(this.font, nombre, tx, y + 5, Estilo.TEXTO);
-			g.drawString(this.font, cuenta, tx, y + 16, Estilo.TENUE);
+			g.text(this.font, nombre, tx, y + 5, Estilo.TEXTO);
+			g.text(this.font, cuenta, tx, y + 16, Estilo.TENUE);
 		}
 	}
 
 	/* ---------- Dibujo ---------- */
 
 	@Override
-	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
+	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
 		Fondo.dibujar(g, this.width, this.height);
 		// Algo de oscuridad arriba y abajo para leer bien; el paisaje del medio, limpio
 		g.fillGradient(0, 0, this.width, Math.round(this.height * 0.34f), 0x99080D1A, 0x00080D1A);
 		g.fillGradient(0, Math.round(this.height * 0.6f), this.width, this.height, 0x00080D1A, 0xD6080D1A);
 
-		g.pose().pushPose();
-		g.pose().translate(this.xLogo, this.yLogo, 0f);
-		g.pose().scale(this.escalaLogo, this.escalaLogo, 1f);
-		g.blit(RataLand.LOGO, 0, 0, 0f, 0f, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO);
-		g.pose().popPose();
+		g.pose().pushMatrix();
+		g.pose().translate(this.xLogo, this.yLogo);
+		g.pose().scale(this.escalaLogo, this.escalaLogo);
+		g.blit(RenderPipelines.GUI_TEXTURED, RataLand.LOGO, 0, 0, 0f, 0f, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO);
+		g.pose().popMatrix();
 		dibujarFrase(g);
 
 		int arribaPersonaje = this.yLogo + this.altoLogo + 12;
@@ -257,12 +258,12 @@ public class MenuRataLand extends Screen {
 		dibujarPersonaje(g, arribaPersonaje);
 		dibujarEstado(g, mouseX, mouseY);
 
-		String version = "Minecraft " + SharedConstants.getCurrentVersion().getName() + " con " + RataLand.cargador;
-		if (6 + this.font.width(version) + 8 <= this.xAcciones) g.drawString(this.font, version, 6, this.height - 6 - 8, Estilo.MUY_TENUE);
+		String version = "Minecraft " + SharedConstants.getCurrentVersion().name() + " con " + RataLand.cargador;
+		if (6 + this.font.width(version) + 8 <= this.xAcciones) g.text(this.font, version, 6, this.height - 6 - 8, Estilo.MUY_TENUE);
 	}
 
 	/** Tu personaje, de pie en el paisaje a la derecha de los botones (si hay sitio). */
-	private void dibujarPersonaje(GuiGraphics g, int arriba) {
+	private void dibujarPersonaje(GuiGraphicsExtractor g, int arriba) {
 		String nombre = this.minecraft.getUser().getName();
 		int izquierda = this.xAcciones + this.anchoAcciones + 16;
 		int derecha = this.width - MARGEN;
@@ -278,11 +279,11 @@ public class MenuRataLand extends Screen {
 	}
 
 	@Override
-	public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
-		super.render(g, mouseX, mouseY, delta);
+	public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+		super.extractRenderState(g, mouseX, mouseY, delta);
 		if (RataLand.MODO_CAPTURA && Prueba.alPrincipio() && ++this.fotogramas == 80) {
-			Screenshot.grab(this.minecraft.gameDirectory, "rataland-menu.png", this.minecraft.getMainRenderTarget(), t -> {});
-			this.minecraft.setScreen(Prueba.SOLO_TAB ? new Prueba.Tabla() : new OptionsScreen(this, this.minecraft.options));
+			Screenshot.grab(this.minecraft.gameDirectory, "rataland-menu.png", this.minecraft.gameRenderer.mainRenderTarget(), 1, t -> {});
+			this.minecraft.gui.setScreen(Prueba.SOLO_TAB ? new Prueba.Tabla() : new OptionsScreen(this, this.minecraft.options));
 		}
 	}
 
@@ -290,18 +291,18 @@ public class MenuRataLand extends Screen {
 	 * Frase amarilla inclinada que late, como las de Minecraft. Empieza en la esquina del logo
 	 * y sube hacia la derecha, para no tapar el nombre.
 	 */
-	private void dibujarFrase(GuiGraphics context) {
+	private void dibujarFrase(GuiGraphicsExtractor context) {
 		int ancho = this.font.width(this.frase);
 		float base = 1.8f * 100f / (ancho + 32) * Math.min(1f, this.anchoLogo / 256f);
 		float latido = base * (1f - Mth.abs(Mth.sin((float) (Util.getMillis() % 1000L) / 1000f * ((float) Math.PI * 2f))) * 0.06f);
 		float mitad = ancho * base / 2f;
 		float angulo = 16f * Mth.DEG_TO_RAD;
-		context.pose().pushPose();
-		context.pose().translate(this.xLogo + this.anchoLogo - 20 + mitad * Mth.cos(angulo), this.yLogo + this.altoLogo - 2 - mitad * Mth.sin(angulo), 0f);
-		context.pose().mulPose(Axis.ZP.rotationDegrees(-16f));
-		context.pose().scale(latido, latido, latido);
-		context.drawCenteredString(this.font, this.frase, 0, -4, 0xFFFFFF55);
-		context.pose().popPose();
+		context.pose().pushMatrix();
+		context.pose().translate(this.xLogo + this.anchoLogo - 20 + mitad * Mth.cos(angulo), this.yLogo + this.altoLogo - 2 - mitad * Mth.sin(angulo));
+		context.pose().rotate(-16f * Mth.DEG_TO_RAD);
+		context.pose().scale(latido, latido);
+		context.centeredText(this.font, this.frase, 0, -4, 0xFFFFFF55);
+		context.pose().popMatrix();
 	}
 
 	@Override

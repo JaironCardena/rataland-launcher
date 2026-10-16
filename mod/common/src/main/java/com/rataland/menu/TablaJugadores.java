@@ -1,12 +1,12 @@
 package com.rataland.menu;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
-import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
+import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,10 +28,10 @@ public final class TablaJugadores {
 	public record Fila(Component nombre, PlayerSkin skin, int ping, boolean espectador, boolean yo, @Nullable Component puntos, int vida,
 			@Nullable Integer muertes) {}
 
-	private static final ResourceLocation CORAZON_VACIO = ResourceLocation.withDefaultNamespace("hud/heart/container");
-	private static final ResourceLocation CORAZON = ResourceLocation.withDefaultNamespace("hud/heart/full");
-	private static final ResourceLocation MEDIO_CORAZON = ResourceLocation.withDefaultNamespace("hud/heart/half");
-	private static final ResourceLocation CORAZON_DORADO = ResourceLocation.withDefaultNamespace("hud/heart/absorbing_full");
+	private static final Identifier CORAZON_VACIO = Identifier.withDefaultNamespace("hud/heart/container");
+	private static final Identifier CORAZON = Identifier.withDefaultNamespace("hud/heart/full");
+	private static final Identifier MEDIO_CORAZON = Identifier.withDefaultNamespace("hud/heart/half");
+	private static final Identifier CORAZON_DORADO = Identifier.withDefaultNamespace("hud/heart/absorbing_full");
 	/** Los diez corazones, de 8 en 8 (cada uno pisa un píxel del anterior, como en Minecraft). */
 	private static final int ANCHO_CORAZONES = 10 * 8 + 1;
 	/** Con menos sitio que esto para los nombres, la vida va en corto. */
@@ -51,7 +51,7 @@ public final class TablaJugadores {
 		}
 	}
 
-	public static void dibujar(GuiGraphics g, Font fuente, int anchoPantalla, @Nullable Component cabecera, @Nullable Component pie, List<Fila> filas) {
+	public static void dibujar(GuiGraphicsExtractor g, Font fuente, int anchoPantalla, @Nullable Component cabecera, @Nullable Component pie, List<Fila> filas) {
 		Medidas m = medir(fuente, filas);
 		int maximo = Math.max(1, anchoPantalla - 20);
 		int altoMaximo = Math.max(1, g.guiHeight() - 16);
@@ -83,17 +83,17 @@ public final class TablaJugadores {
 		List<FormattedCharSequence> abajo = lineas(fuente, pie, ancho);
 		int alto = alto(porColumna, arriba.size(), abajo.size());
 
-		g.pose().pushPose();
-		g.pose().translate((anchoPantalla - ancho * escala) / 2, 8, 0);
-		g.pose().scale((float) escala, (float) escala, 1);
+		g.pose().pushMatrix();
+		g.pose().translate((float) ((anchoPantalla - ancho * escala) / 2), 8f);
+		g.pose().scale((float) escala, (float) escala);
 		Estilo.panel(g, 0, 0, ancho, alto);
 		int ty = 7;
-		g.drawString(fuente, "En el servidor", 8, ty, Estilo.TEXTO);
-		g.drawString(fuente, cuantos, ancho - 8 - fuente.width(cuantos), ty, Estilo.TENUE);
+		g.text(fuente, "En el servidor", 8, ty, Estilo.TEXTO);
+		g.text(fuente, cuantos, ancho - 8 - fuente.width(cuantos), ty, Estilo.TENUE);
 		ty += 9 + 7;
 
 		for (FormattedCharSequence linea : arriba) {
-			g.drawString(fuente, linea, (ancho - fuente.width(linea)) / 2, ty, Estilo.CLARO);
+			g.text(fuente, linea, (ancho - fuente.width(linea)) / 2, ty, Estilo.CLARO);
 			ty += 10;
 		}
 		if (!arriba.isEmpty()) {
@@ -118,11 +118,11 @@ public final class TablaJugadores {
 			g.fill(8, ty + 2, ancho - 8, ty + 3, Estilo.LINEA);
 			ty += 6;
 			for (FormattedCharSequence linea : abajo) {
-				g.drawString(fuente, linea, (ancho - fuente.width(linea)) / 2, ty, Estilo.CLARO);
+				g.text(fuente, linea, (ancho - fuente.width(linea)) / 2, ty, Estilo.CLARO);
 				ty += 10;
 			}
 		}
-		g.pose().popPose();
+		g.pose().popMatrix();
 	}
 
 	private static Medidas medir(Font fuente, List<Fila> filas) {
@@ -157,22 +157,22 @@ public final class TablaJugadores {
 		return 7 + 9 + 7 + (arriba > 0 ? arriba * 10 + 6 : 0) + ALTO_CABECERA + filas * ALTO_FILA + (abajo > 0 ? 6 + abajo * 10 : 0) + 7;
 	}
 
-	private static void dibujarCabecera(GuiGraphics g, Font fuente, int x, int y, int ancho, int anchoVida, Medidas m) {
+	private static void dibujarCabecera(GuiGraphicsExtractor g, Font fuente, int x, int y, int ancho, int anchoVida, Medidas m) {
 		int xPing = x + ancho - 6 - m.ping();
 		int xMuertes = xPing - ENTRE_CAMPOS - m.muertes();
 		int xPuntos = xMuertes - ENTRE_CAMPOS - m.puntos();
 		int xVida = (m.puntos() > 0 ? xPuntos : xMuertes) - ENTRE_CAMPOS - anchoVida;
-		g.drawString(fuente, "Jugador", x + 6, y + 1, Estilo.TENUE);
-		g.drawString(fuente, "Vida", xVida, y + 1, Estilo.TENUE);
-		if (m.puntos() > 0) g.drawString(fuente, "Puntos", xPuntos, y + 1, Estilo.TENUE);
-		g.drawString(fuente, "Muertes", xMuertes, y + 1, Estilo.QUESO);
-		g.drawString(fuente, "Ping", xPing, y + 1, Estilo.TENUE);
+		g.text(fuente, "Jugador", x + 6, y + 1, Estilo.TENUE);
+		g.text(fuente, "Vida", xVida, y + 1, Estilo.TENUE);
+		if (m.puntos() > 0) g.text(fuente, "Puntos", xPuntos, y + 1, Estilo.TENUE);
+		g.text(fuente, "Muertes", xMuertes, y + 1, Estilo.QUESO);
+		g.text(fuente, "Ping", xPing, y + 1, Estilo.TENUE);
 		g.fill(x + 6, y + 12, x + ancho - 6, y + 13, Estilo.LINEA);
 	}
 
-	private static void dibujarFila(GuiGraphics g, Font fuente, Fila f, int x, int y, int ancho, int anchoVida, boolean corto, Medidas m) {
+	private static void dibujarFila(GuiGraphicsExtractor g, Font fuente, Fila f, int x, int y, int ancho, int anchoVida, boolean corto, Medidas m) {
 		if (f.yo()) Estilo.escalon(g, x, y, ancho, ALTO_FILA, 0x22F6C445);
-		PlayerFaceRenderer.draw(g, f.skin(), x + 6, y + 2, 8);
+		PlayerFaceExtractor.extractRenderState(g, f.skin(), x + 6, y + 2, 8);
 		if (f.espectador()) g.fill(x + 6, y + 2, x + 14, y + 10, 0x990D1424);
 
 		int xPing = x + ancho - 6 - m.ping();
@@ -183,33 +183,33 @@ public final class TablaJugadores {
 		int color = f.espectador() ? Estilo.MUY_TENUE : Estilo.TEXTO;
 		int finNombre;
 		if (fuente.width(f.nombre()) <= libre) {
-			g.drawString(fuente, f.nombre(), x + 19, y + 2, color);
+			g.text(fuente, f.nombre(), x + 19, y + 2, color);
 			finNombre = x + 19 + fuente.width(f.nombre());
 		} else {
 			String recortado = recortar(fuente, f.nombre().getString(), libre);
-			g.drawString(fuente, recortado, x + 19, y + 2, color);
+			g.text(fuente, recortado, x + 19, y + 2, color);
 			finNombre = x + 19 + fuente.width(recortado);
 		}
-		if (f.yo()) g.drawString(fuente, "tú", finNombre + fuente.width(" "), y + 2, Estilo.QUESO);
+		if (f.yo()) g.text(fuente, "tú", finNombre + fuente.width(" "), y + 2, Estilo.QUESO);
 
 		dibujarVida(g, fuente, f, xVida, y, corto);
 		if (f.puntos() != null) {
-			if (fuente.width(f.puntos()) <= m.puntos()) g.drawString(fuente, f.puntos(), xPuntos + m.puntos() - fuente.width(f.puntos()), y + 2, Estilo.QUESO);
+			if (fuente.width(f.puntos()) <= m.puntos()) g.text(fuente, f.puntos(), xPuntos + m.puntos() - fuente.width(f.puntos()), y + 2, Estilo.QUESO);
 			else {
 				String puntos = recortar(fuente, f.puntos().getString(), m.puntos());
-				g.drawString(fuente, puntos, xPuntos + m.puntos() - fuente.width(puntos), y + 2, Estilo.QUESO);
+				g.text(fuente, puntos, xPuntos + m.puntos() - fuente.width(puntos), y + 2, Estilo.QUESO);
 			}
 		}
 
 		boolean conocidas = f.muertes() != null && f.muertes() >= 0;
 		Estilo.icono(g, IconosPixel.CALAVERA, xMuertes, y + 2, 1, conocidas ? Estilo.TENUE : Estilo.MUY_TENUE);
 		String muertes = textoMuertes(f);
-		g.drawString(fuente, muertes, xMuertes + m.muertes() - fuente.width(muertes), y + 2, conocidas ? Estilo.QUESO : Estilo.MUY_TENUE);
+		g.text(fuente, muertes, xMuertes + m.muertes() - fuente.width(muertes), y + 2, conocidas ? Estilo.QUESO : Estilo.MUY_TENUE);
 
 		int colorPing = f.ping() < 0 ? Estilo.MUY_TENUE : f.ping() < 150 ? Estilo.HIERBA : f.ping() < 300 ? Estilo.QUESO : Estilo.ERROR;
 		Estilo.icono(g, IconosPixel.SENAL, xPing, y + 2, 1, colorPing);
 		String ms = textoPing(f);
-		g.drawString(fuente, ms, xPing + m.ping() - fuente.width(ms), y + 2, Estilo.TENUE);
+		g.text(fuente, ms, xPing + m.ping() - fuente.width(ms), y + 2, Estilo.TENUE);
 	}
 
 	private static String textoMuertes(Fila f) {
@@ -225,32 +225,30 @@ public final class TablaJugadores {
 	}
 
 	/** Los corazones de Minecraft (los del paquete de recursos que se use) o, en corto, uno y el número. */
-	private static void dibujarVida(GuiGraphics g, Font fuente, Fila f, int x, int y, boolean corto) {
+	private static void dibujarVida(GuiGraphicsExtractor g, Font fuente, Fila f, int x, int y, boolean corto) {
 		if (f.espectador() || f.vida() < 0) {
 			// Espectadores, y quien está lejos si el servidor no comparte la vida de todos
-			g.drawString(fuente, corto ? "-" : f.espectador() ? "mirando" : "lejos", x, y + 2, Estilo.MUY_TENUE);
+			g.text(fuente, corto ? "-" : f.espectador() ? "mirando" : "lejos", x, y + 2, Estilo.MUY_TENUE);
 			return;
 		}
 		int vida = Math.min(f.vida(), 20);
-		RenderSystem.enableBlend();
 		if (corto) {
-			g.blitSprite(CORAZON_VACIO, x, y + 1, 9, 9);
-			if (f.vida() > 0) g.blitSprite(f.vida() > 20 ? CORAZON_DORADO : vida == 1 ? MEDIO_CORAZON : CORAZON, x, y + 1, 9, 9);
-			g.drawString(fuente, corazones(f.vida()), x + 11, y + 2, f.vida() > 20 ? Estilo.QUESO : Estilo.TEXTO);
+			g.blitSprite(RenderPipelines.GUI_TEXTURED, CORAZON_VACIO, x, y + 1, 9, 9);
+			if (f.vida() > 0) g.blitSprite(RenderPipelines.GUI_TEXTURED, f.vida() > 20 ? CORAZON_DORADO : vida == 1 ? MEDIO_CORAZON : CORAZON, x, y + 1, 9, 9);
+			g.text(fuente, corazones(f.vida()), x + 11, y + 2, f.vida() > 20 ? Estilo.QUESO : Estilo.TEXTO);
 		} else {
 			for (int i = 0; i < 10; i++) {
 				int cx = x + i * 8;
-				g.blitSprite(CORAZON_VACIO, cx, y + 1, 9, 9);
-				if (vida >= i * 2 + 2) g.blitSprite(CORAZON, cx, y + 1, 9, 9);
-				else if (vida == i * 2 + 1) g.blitSprite(MEDIO_CORAZON, cx, y + 1, 9, 9);
+				g.blitSprite(RenderPipelines.GUI_TEXTURED, CORAZON_VACIO, cx, y + 1, 9, 9);
+				if (vida >= i * 2 + 2) g.blitSprite(RenderPipelines.GUI_TEXTURED, CORAZON, cx, y + 1, 9, 9);
+				else if (vida == i * 2 + 1) g.blitSprite(RenderPipelines.GUI_TEXTURED, MEDIO_CORAZON, cx, y + 1, 9, 9);
 			}
 			if (f.vida() > 20) {
 				int ax = x + ANCHO_CORAZONES + 3;
-				g.blitSprite(CORAZON_DORADO, ax, y + 1, 9, 9);
-				g.drawString(fuente, "+" + corazones(f.vida() - 20), ax + 11, y + 2, Estilo.QUESO);
+				g.blitSprite(RenderPipelines.GUI_TEXTURED, CORAZON_DORADO, ax, y + 1, 9, 9);
+				g.text(fuente, "+" + corazones(f.vida() - 20), ax + 11, y + 2, Estilo.QUESO);
 			}
 		}
-		RenderSystem.disableBlend();
 	}
 
 	/** Medios corazones en corazones, como se dicen: 13 → «6,5». */

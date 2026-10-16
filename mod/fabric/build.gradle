@@ -3,6 +3,7 @@ plugins {
 }
 
 architectury {
+    platformSetupLoomIde()
     fabric()
 }
 
@@ -15,7 +16,7 @@ configurations {
     runtimeClasspath.extendsFrom common
     developmentFabric.extendsFrom common
 
-    // Lo que se mete dentro del jar final: el código común ya preparado para Fabric
+    // Lo que se mete dentro del jar final: el código común ya preparado para este cargador
     shadowBundle {
         canBeResolved = true
         canBeConsumed = false
@@ -23,24 +24,31 @@ configurations {
 }
 
 dependencies {
-    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    implementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
 
-    common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
-    shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
+    common(project(path: ':common')) { transitive = false }
+    shadowBundle(project(path: ':common', configuration: 'transformProductionFabric')) { transitive = false }
 }
 
 processResources {
     inputs.property 'version', project.version
+
     filesMatching('fabric.mod.json') {
         expand 'version': project.version
     }
 }
 
-shadowJar {
-    configurations = [project.configurations.shadowBundle]
-    archiveClassifier = 'dev-shadow'
+// Sin remapear, el jar final es el de shadow: lo de este cargador más el código común
+jar {
+    archiveClassifier = 'raw'
 }
 
-remapJar {
-    inputFile.set shadowJar.archiveFile
+shadowJar {
+    dependsOn jar
+    mainSpec.sourcePaths.clear()
+    from(zipTree(jar.archiveFile))
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = null
 }
+
+assemble.dependsOn shadowJar

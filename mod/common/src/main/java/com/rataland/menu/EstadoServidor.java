@@ -1,7 +1,9 @@
 package com.rataland.menu;
 
-import com.mojang.authlib.GameProfile;
-import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.server.network.EventLoopGroupHolder;
+import net.minecraft.server.players.NameAndId;
+import net.minecraft.util.Util;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerStatusPinger;
 
@@ -66,7 +68,7 @@ public final class EstadoServidor {
 		Util.backgroundExecutor().execute(() -> {
 			try {
 				datos.ip = RataLand.direccionParaConectar();
-				PINGER.pingServer(datos, () -> {}, () -> respondio = true);
+				PINGER.pingServer(datos, () -> {}, () -> respondio = true, EventLoopGroupHolder.remote(Minecraft.getInstance().options.useNativeTransport()));
 			} catch (Exception e) {
 				RataLand.LOG.info("No se pudo consultar el servidor: {}", e.toString());
 			}
@@ -91,8 +93,8 @@ public final class EstadoServidor {
 		if (datos.players != null) {
 			conectados = datos.players.online();
 			List<String> lista = new ArrayList<>();
-			for (GameProfile perfil : datos.players.sample()) {
-				String nombre = perfil.getName();
+			for (NameAndId perfil : datos.players.sample()) {
+				String nombre = perfil.name();
 				// Algunos servidores mandan líneas de texto en vez de jugadores: solo nombres válidos
 				if (nombre != null && nombre.toLowerCase(Locale.ROOT).matches("[a-z0-9_]{2,16}")) lista.add(nombre);
 			}

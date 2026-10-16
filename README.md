@@ -174,7 +174,7 @@ Si cambias las texturas o los fondos del mod, vuelve a compilarlo (siguiente apa
 
 El launcher escribe `config/rataland.json` con la IP del servidor antes de abrir el juego, así que si cambias de servidor no hace falta recompilar el mod.
 
-El mod está hecho con Architectury: `mod/common` tiene todo (menús, fondos, mixins) y `mod/fabric` y `mod/neoforge` solo el punto de entrada de cada cargador. Para compilarlo tras cambiar el código o las texturas necesitas un JDK 25 (Gradle lo usa para compilar; el mod resultante funciona con el Java 21 de Minecraft):
+El mod está hecho con Architectury: `mod/common` tiene todo (menús, fondos, mixins) y `mod/fabric` y `mod/neoforge` solo el punto de entrada de cada cargador. Es para Minecraft **26.3** (desde la 2.0.0; la 1.9.x era para 1.21.1 y sigue en el historial de git). Desde 26.1 Minecraft viene sin ofuscar, así que se compila sin mappings ni remapeo (`dev.architectury.loom-no-remap`). Para compilarlo tras cambiar el código o las texturas necesitas un JDK 25, el mismo Java que usa Minecraft 26.3:
 
 ```bash
 cd mod && ./gradlew build

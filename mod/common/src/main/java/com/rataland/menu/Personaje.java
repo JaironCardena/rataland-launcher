@@ -1,13 +1,14 @@
 package com.rataland.menu;
 
+import net.minecraft.client.renderer.RenderPipelines;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.resources.PlayerSkin;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.PlayerModelType;
+import net.minecraft.world.entity.player.PlayerSkin;
+import net.minecraft.resources.Identifier;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +19,7 @@ import java.nio.file.Path;
  * pondrá SkinRestorer); si no está, se usa la que conoce el juego.
  */
 public final class Personaje {
-	private static ResourceLocation textura;
+	private static Identifier textura;
 	private static int altoTextura = 64;
 	private static boolean cargada;
 
@@ -37,7 +38,8 @@ public final class Personaje {
 				return;
 			}
 			altoTextura = imagen.getHeight();
-			textura = client.getTextureManager().register("rataland_personaje", new DynamicTexture(imagen));
+			textura = Identifier.fromNamespaceAndPath(RataLand.MOD_ID, "personaje");
+			client.getTextureManager().register(textura, new DynamicTexture(() -> "Personaje de RataLand", imagen));
 		} catch (Exception e) {
 			RataLand.LOG.warn("No se pudo leer la skin del launcher: {}", e.toString());
 		}
@@ -47,9 +49,9 @@ public final class Personaje {
 	 * Dibuja el personaje con la esquina de arriba a la izquierda en (x, y): mide 16×32 por la escala.
 	 * Encima, su nombre como en el juego.
 	 */
-	public static void dibujar(GuiGraphics context, Minecraft client, Font fuente, int x, int y, float escala, String nombre) {
+	public static void dibujar(GuiGraphicsExtractor context, Minecraft client, Font fuente, int x, int y, float escala, String nombre) {
 		cargar(client);
-		ResourceLocation tex;
+		Identifier tex;
 		int alto;
 		boolean delgado;
 		if (textura != null) {
@@ -57,10 +59,10 @@ public final class Personaje {
 			alto = altoTextura;
 			delgado = "slim".equals(RataLand.skinModelo);
 		} else {
-			PlayerSkin skin = client.getSkinManager().getInsecureSkin(client.getGameProfile());
-			tex = skin.texture();
+			PlayerSkin skin = client.getSkinManager().createLookup(client.getGameProfile(), false).get();
+			tex = skin.body().texturePath();
 			alto = 64;
-			delgado = skin.model() == PlayerSkin.Model.SLIM;
+			delgado = skin.model() == PlayerModelType.SLIM;
 		}
 		boolean moderna = alto == 64;
 		int brazo = delgado ? 3 : 4;
@@ -70,11 +72,9 @@ public final class Personaje {
 		int pie = y + Math.round(32 * escala);
 		context.fill(x + ancho / 8, pie - 2, x + ancho - ancho / 8, pie + 2, 0x55000000);
 		context.fill(x + ancho / 4, pie + 2, x + ancho - ancho / 4, pie + 4, 0x33000000);
-
-		RenderSystem.enableBlend();
-		context.pose().pushPose();
-		context.pose().translate(x, y, 0f);
-		context.pose().scale(escala, escala, 1f);
+		context.pose().pushMatrix();
+		context.pose().translate(x, y);
+		context.pose().scale(escala, escala);
 		pieza(context, tex, alto, 8, 8, 8, 8, 4, 0);
 		pieza(context, tex, alto, 20, 20, 8, 12, 4, 8);
 		pieza(context, tex, alto, 44, 20, brazo, 12, 4 - brazo, 8);
@@ -90,36 +90,33 @@ public final class Personaje {
 			pieza(context, tex, alto, 4, 36, 4, 12, 4, 20);
 			pieza(context, tex, alto, 4, 52, 4, 12, 8, 20);
 		}
-		context.pose().popPose();
-		RenderSystem.disableBlend();
+		context.pose().popMatrix();
 
 		// El nombre, como lo ves sobre los jugadores
 		int anchoNombre = fuente.width(nombre);
 		int nx = x + ancho / 2 - anchoNombre / 2;
 		int ny = y - 14;
 		context.fill(nx - 3, ny - 2, nx + anchoNombre + 2, ny + 9, 0x60000000);
-		context.drawString(fuente, nombre, nx, ny, 0xFFFFFFFF, false);
+		context.text(fuente, nombre, nx, ny, 0xFFFFFFFF, false);
 	}
 
 	/** Tu cara (con el gorro de la capa exterior) de `tam`×`tam`, para la barra de abajo del menú. */
-	public static void cara(GuiGraphics context, Minecraft client, int x, int y, int tam) {
+	public static void cara(GuiGraphicsExtractor context, Minecraft client, int x, int y, int tam) {
 		cargar(client);
-		ResourceLocation tex;
+		Identifier tex;
 		int alto;
 		if (textura != null) {
 			tex = textura;
 			alto = altoTextura;
 		} else {
-			tex = client.getSkinManager().getInsecureSkin(client.getGameProfile()).texture();
+			tex = client.getSkinManager().createLookup(client.getGameProfile(), false).get().body().texturePath();
 			alto = 64;
 		}
-		RenderSystem.enableBlend();
-		context.blit(tex, x, y, tam, tam, 8, 8, 8, 8, 64, alto);
-		context.blit(tex, x, y, tam, tam, 40, 8, 8, 8, 64, alto);
-		RenderSystem.disableBlend();
+		context.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 8, 8, tam, tam, 8, 8, 64, alto);
+		context.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 40, 8, tam, tam, 8, 8, 64, alto);
 	}
 
-	private static void pieza(GuiGraphics context, ResourceLocation tex, int altoTextura, int u, int v, int w, int h, int dx, int dy) {
-		context.blit(tex, dx, dy, u, v, w, h, 64, altoTextura);
+	private static void pieza(GuiGraphicsExtractor context, Identifier tex, int altoTextura, int u, int v, int w, int h, int dx, int dy) {
+		context.blit(RenderPipelines.GUI_TEXTURED, tex, dx, dy, u, v, w, h, 64, altoTextura);
 	}
 }

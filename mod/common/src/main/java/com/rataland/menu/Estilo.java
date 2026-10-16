@@ -1,7 +1,12 @@
 package com.rataland.menu;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.achievement.StatsScreen;
+import net.minecraft.client.gui.screens.options.OptionsSubScreen;
+import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 
 /**
  * El estilo del launcher llevado al juego: colores, paneles con esquinas en escalón, el marco de
@@ -33,7 +38,7 @@ public final class Estilo {
 	public static final int PELIGRO = 0xFF2B2230;
 
 	/** Rectángulo con las esquinas recortadas un píxel (como .px en el launcher). */
-	public static void escalon(GuiGraphics g, int x, int y, int w, int h, int color) {
+	public static void escalon(GuiGraphicsExtractor g, int x, int y, int w, int h, int color) {
 		if (w < 3 || h < 3) {
 			g.fill(x, y, x + w, y + h, color);
 			return;
@@ -44,7 +49,7 @@ public final class Estilo {
 	}
 
 	/** Borde de un píxel que sigue las esquinas en escalón. */
-	public static void bordeEscalon(GuiGraphics g, int x, int y, int w, int h, int color) {
+	public static void bordeEscalon(GuiGraphicsExtractor g, int x, int y, int w, int h, int color) {
 		g.fill(x + 1, y, x + w - 1, y + 1, color);
 		g.fill(x + 1, y + h - 1, x + w - 1, y + h, color);
 		g.fill(x, y + 1, x + 1, y + h - 1, color);
@@ -52,29 +57,29 @@ public final class Estilo {
 	}
 
 	/** Panel oscuro del launcher: fondo casi opaco y un filo claro muy suave. */
-	public static void panel(GuiGraphics g, int x, int y, int w, int h) {
+	public static void panel(GuiGraphicsExtractor g, int x, int y, int w, int h) {
 		escalon(g, x, y, w, h, PANEL);
 		bordeEscalon(g, x, y, w, h, LINEA);
 	}
 
 	/** Panel con marco de queso (la cuenta atrás, los avisos importantes). */
-	public static void marcoQueso(GuiGraphics g, int x, int y, int w, int h) {
+	public static void marcoQueso(GuiGraphicsExtractor g, int x, int y, int w, int h) {
 		escalon(g, x, y, w, h, PANEL);
 		bordeEscalon(g, x, y, w, h, QUESO);
-		g.renderOutline(x + 2, y + 2, w - 4, h - 4, 0x40F6C445);
+		g.outline(x + 2, y + 2, w - 4, h - 4, 0x40F6C445);
 	}
 
 	/** Etiqueta con borde de queso, como la de la temporada. Devuelve su ancho. */
-	public static int etiqueta(GuiGraphics g, Font fuente, int x, int y, String texto) {
+	public static int etiqueta(GuiGraphicsExtractor g, Font fuente, int x, int y, String texto) {
 		int w = fuente.width(texto) + 12;
 		g.fill(x, y, x + w, y + 15, 0x990D1424);
-		g.renderOutline(x, y, w, 15, QUESO);
-		g.drawString(fuente, texto, x + 6, y + 4, QUESO);
+		g.outline(x, y, w, 15, QUESO);
+		g.text(fuente, texto, x + 6, y + 4, QUESO);
 		return w;
 	}
 
 	/** Icono pixel de 8×8 (filas de '#' y '.'), cada píxel del icono de `p`×`p`. */
-	public static void icono(GuiGraphics g, String[] filas, int x, int y, int p, int color) {
+	public static void icono(GuiGraphicsExtractor g, String[] filas, int x, int y, int p, int color) {
 		for (int fy = 0; fy < filas.length; fy++) {
 			String fila = filas[fy];
 			int fx = 0;
@@ -92,7 +97,7 @@ public final class Estilo {
 	}
 
 	/** Cuadradito de estado (verde, queso o rojo) con su halo. */
-	public static void punto(GuiGraphics g, int x, int y, int color) {
+	public static void punto(GuiGraphicsExtractor g, int x, int y, int color) {
 		g.fill(x - 1, y - 1, x + 6, y + 6, (color & 0x00FFFFFF) | 0x40000000);
 		g.fill(x, y, x + 5, y + 5, color);
 	}
@@ -101,7 +106,7 @@ public final class Estilo {
 	 * Botón de piedra del launcher (relieve arriba y abajo, borde oscuro). Con el foco del teclado
 	 * se marca con el borde de queso, como en el launcher.
 	 */
-	public static void botonPiedra(GuiGraphics g, int x, int y, int w, int h, int fondo, boolean encima, boolean foco, boolean activo) {
+	public static void botonPiedra(GuiGraphicsExtractor g, int x, int y, int w, int h, int fondo, boolean encima, boolean foco, boolean activo) {
 		int base = !activo ? PIEDRA_APAGADA : encima && fondo == PIEDRA ? PIEDRA_ENCIMA : fondo;
 		g.fill(x, y, x + w, y + h, foco && activo ? QUESO : BORDE_BOTON);
 		g.fill(x + 1, y + 1, x + w - 1, y + h - 1, base);
@@ -112,6 +117,12 @@ public final class Estilo {
 		} else {
 			g.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, 0x40000000);
 		}
+	}
+
+	/** ¿Las listas de la pantalla de ahora van con el estilo de RataLand? (Opciones, Paquetes y Estadísticas) */
+	public static boolean listaConEstilo() {
+		Screen pantalla = Minecraft.getInstance().gui.screen();
+		return pantalla instanceof OptionsSubScreen || pantalla instanceof PackSelectionScreen || pantalla instanceof StatsScreen;
 	}
 
 	/** Recorta el texto con «…» para que quepa en `ancho`. */
@@ -139,7 +150,7 @@ public final class Estilo {
 	}
 
 	/** Dibuja «68%» con dígitos pixel, con sombra; cada píxel de `p`×`p`. */
-	public static void porcentaje(GuiGraphics g, int valor, int x, int y, int p, int color) {
+	public static void porcentaje(GuiGraphicsExtractor g, int valor, int x, int y, int p, int color) {
 		String texto = String.valueOf(valor);
 		for (int pasada = 0; pasada < 2; pasada++) {
 			int c = pasada == 0 ? ((color >>> 24) / 2) << 24 : color;

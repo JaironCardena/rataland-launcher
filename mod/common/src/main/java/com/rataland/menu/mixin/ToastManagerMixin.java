@@ -4,7 +4,7 @@ import com.rataland.menu.RataLand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.components.toasts.Toast;
-import net.minecraft.client.gui.components.toasts.ToastComponent;
+import net.minecraft.client.gui.components.toasts.ToastManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * En el servidor de la serie no sale el aviso de "Mensajes de chat no verificados": el servidor
  * admite cuentas sin premium, que no pueden firmar el chat, así que ese aviso saldría siempre.
  */
-@Mixin(ToastComponent.class)
+@Mixin(ToastManager.class)
 public abstract class ToastManagerMixin {
 	@Inject(method = "addToast", at = @At("HEAD"), cancellable = true)
 	private void rataland$sinAvisoDeChat(Toast aviso, CallbackInfo ci) {

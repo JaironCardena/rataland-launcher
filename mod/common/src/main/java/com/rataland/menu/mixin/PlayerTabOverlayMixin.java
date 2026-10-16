@@ -3,10 +3,11 @@ package com.rataland.menu.mixin;
 import com.rataland.menu.MuertesTab;
 import com.rataland.menu.TablaJugadores;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.NumberFormat;
 import net.minecraft.network.chat.numbers.StyledFormat;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -53,8 +54,8 @@ public abstract class PlayerTabOverlayMixin {
 	@Shadow
 	public abstract Component getNameForDisplay(PlayerInfo info);
 
-	@Inject(method = "render", at = @At("HEAD"), cancellable = true)
-	private void rataland$tabla(GuiGraphics g, int ancho, Scoreboard marcador, @Nullable Objective objetivo, CallbackInfo ci) {
+	@Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
+	private void rataland$tabla(GuiGraphicsExtractor g, int ancho, Scoreboard marcador, @Nullable Objective objetivo, CallbackInfo ci) {
 		ci.cancel();
 		UUID yo = this.minecraft.player != null ? this.minecraft.player.getUUID() : null;
 		boolean conCorazones = objetivo != null && objetivo.getRenderType() == ObjectiveCriteria.RenderType.HEARTS;
@@ -67,15 +68,16 @@ public abstract class PlayerTabOverlayMixin {
 				if (conCorazones) {
 					if (valor != null) vida = valor.value();
 				} else {
-					puntos = ReadOnlyScoreInfo.safeFormatValue(valor, objetivo.numberFormatOrDefault(StyledFormat.PLAYER_LIST_DEFAULT));
+					NumberFormat formato = objetivo.numberFormatOrDefault(StyledFormat.PLAYER_LIST_DEFAULT);
+					puntos = valor != null ? valor.formatValue(formato) : formato.format(0);
 				}
 			}
 			if (vida < 0 && this.minecraft.level != null) {
-				Player jugador = this.minecraft.level.getPlayerByUUID(info.getProfile().getId());
+				Player jugador = this.minecraft.level.getPlayerByUUID(info.getProfile().id());
 				if (jugador != null) vida = Mth.ceil(jugador.getHealth() + jugador.getAbsorptionAmount());
 			}
 			filas.add(new TablaJugadores.Fila(this.getNameForDisplay(info), info.getSkin(), info.getLatency(),
-					info.getGameMode() == GameType.SPECTATOR, info.getProfile().getId().equals(yo), puntos, vida,
+					info.getGameMode() == GameType.SPECTATOR, info.getProfile().id().equals(yo), puntos, vida,
 					MuertesTab.deJugador(marcador, ScoreHolder.fromGameProfile(info.getProfile()))));
 		}
 		TablaJugadores.dibujar(g, this.minecraft.font, ancho, this.header, this.footer, filas);

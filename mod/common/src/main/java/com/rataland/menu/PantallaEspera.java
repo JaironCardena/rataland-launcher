@@ -1,7 +1,7 @@
 package com.rataland.menu;
 
-import net.minecraft.Util;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Util;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -45,7 +45,7 @@ public class PantallaEspera extends Screen {
 		}
 		if (SalaEspera.esperado() >= SalaEspera.MAXIMO) {
 			SalaEspera.terminar();
-			this.minecraft.setScreen(new PantallaDesconectado(this.razon, true));
+			this.minecraft.gui.setScreen(new PantallaDesconectado(this.razon, true));
 		} else if (ahora - this.desde >= SalaEspera.CADA) {
 			this.intentando = true;
 			this.intentoDesde = ahora;
@@ -55,21 +55,21 @@ public class PantallaEspera extends Screen {
 	}
 
 	@Override
-	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float delta) {
-		super.renderBackground(g, mouseX, mouseY, delta);
+	public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+		super.extractBackground(g, mouseX, mouseY, delta);
 		int falta = (int) Math.ceil((SalaEspera.CADA - (Util.getMillis() - this.desde)) / 1000.0);
 		SalaEspera.dibujar(g, this.font, this.width, this.height, this.intentando ? -1 : Math.max(1, falta));
 	}
 
 	@Override
-	public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
-		super.render(g, mouseX, mouseY, delta);
+	public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+		super.extractRenderState(g, mouseX, mouseY, delta);
 		if (RataLand.MODO_CAPTURA && ++this.fotogramas == 80) Prueba.esperando(this);
 	}
 
 	@Override
 	public void onClose() {
 		SalaEspera.terminar();
-		this.minecraft.setScreen(new MenuRataLand());
+		this.minecraft.gui.setScreen(new MenuRataLand());
 	}
 }

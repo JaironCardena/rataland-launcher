@@ -1,13 +1,11 @@
 package com.rataland.menu.mixin;
 
-import com.rataland.menu.Estadisticas;
 import com.rataland.menu.Estilo;
 import com.rataland.menu.Fondo;
 import com.rataland.menu.Prueba;
 import com.rataland.menu.RataLand;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -42,14 +40,16 @@ public abstract class ScreenMixin {
 	@Unique
 	private int rataland$fotogramas;
 
-	@Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
-	private void rataland$fondo(GuiGraphics context, float delta, CallbackInfo ci) {
+	@Inject(method = "extractPanorama", at = @At("HEAD"), cancellable = true)
+	private void rataland$fondo(GuiGraphicsExtractor context, float delta, CallbackInfo ci) {
 		Fondo.dibujar(context, this.width, this.height);
+		// El desenfoque de los menús solo afecta a lo que va en una capa anterior (como el panorama de Minecraft)
+		context.nextStratum();
 		ci.cancel();
 	}
 
-	@Inject(method = "renderBackground", at = @At("TAIL"))
-	private void rataland$franjas(GuiGraphics g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+	@Inject(method = "extractBackground", at = @At("TAIL"))
+	private void rataland$franjas(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		Object pantalla = this;
 		int arriba = 0;
 		int abajo = 0;
@@ -60,10 +60,13 @@ public abstract class ScreenMixin {
 			// La cabecera de Opciones también lleva el campo de visión: la franja, solo tras el título
 			arriba = 26;
 			abajo = 33;
-		} else if (pantalla instanceof StatsScreen) {
-			// Las alturas de su cabecera y su pie (con las pestañas General, Objetos y Criaturas)
-			arriba = 33;
-			abajo = 58;
+		} else if (pantalla instanceof StatsScreen estadisticas) {
+			// Arriba van las pestañas General, Objetos y Criaturas
+			HeaderAndFooterLayout disposicion = ((StatsScreenAccessor) estadisticas).rataland$disposicion();
+			arriba = disposicion.getHeaderHeight();
+			abajo = disposicion.getFooterHeight();
+			// Sus listas no pintan fondo: el mismo oscuro que las de Opciones
+			g.fill(0, arriba, this.width, this.height - abajo, 0x99080D1A);
 		} else if (pantalla instanceof AdvancementsScreen) {
 			arriba = 33;
 			abajo = 33;
@@ -84,30 +87,26 @@ public abstract class ScreenMixin {
 		}
 	}
 
-	@Inject(method = "render", at = @At("TAIL"))
-	private void rataland$captura(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-		if ((Object) this instanceof StatsScreen estadisticas) {
-			ObjectSelectionList<?> lista = ((StatsScreenAccessor) estadisticas).rataland$listaActiva();
-			Estadisticas.marcarPestana(context, estadisticas, lista, lista == null ? 0 : ((AbstractSelectionListAccessor) lista).rataland$altoFila());
-			if (RataLand.MODO_CAPTURA && lista != null && ++this.rataland$fotogramas == 40) {
-				Prueba.alSiguienteTick("rataland-estadisticas.png", Prueba::despuesDeLaPausa);
-			}
+	@Inject(method = "extractRenderState", at = @At("TAIL"))
+	private void rataland$captura(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+		if ((Object) this instanceof StatsScreen && RataLand.MODO_CAPTURA && ++this.rataland$fotogramas == 40) {
+			Prueba.alSiguienteTick("rataland-estadisticas.png", Prueba::despuesDeLaPausa);
 		}
 		if (!RataLand.MODO_CAPTURA) return;
 		Minecraft client = Minecraft.getInstance();
 		if ((Object) this instanceof OptionsScreen opciones && ++this.rataland$fotogramas == 80) {
 			// Opciones, luego una de sus listas (Gráficos) y Paquetes de recursos
-			Prueba.alSiguienteTick("rataland-opciones.png", () -> client.setScreen(new VideoSettingsScreen(opciones, client, client.options)));
+			Prueba.alSiguienteTick("rataland-opciones.png", () -> client.gui.setScreen(new VideoSettingsScreen(opciones, client, client.options)));
 		} else if ((Object) this instanceof VideoSettingsScreen && ++this.rataland$fotogramas == 40) {
-			Prueba.alSiguienteTick("rataland-graficos.png", () -> client.setScreen(new PackSelectionScreen(client.getResourcePackRepository(), (r) -> {},
+			Prueba.alSiguienteTick("rataland-graficos.png", () -> client.gui.setScreen(new PackSelectionScreen(client.getResourcePackRepository(), (r) -> {},
 					client.getResourcePackDirectory(), Component.translatable("resourcePack.title"))));
 		} else if ((Object) this instanceof PackSelectionScreen && ++this.rataland$fotogramas == 40) {
 			Prueba.alSiguienteTick("rataland-paquetes.png", () -> {
-				client.setScreen(new JoinMultiplayerScreen(new TitleScreen()));
-				RataLand.LOG.info("Prueba: al abrir Multijugador se muestra {}", client.screen.getClass().getSimpleName());
+				client.gui.setScreen(new JoinMultiplayerScreen(new TitleScreen()));
+				RataLand.LOG.info("Prueba: al abrir Multijugador se muestra {}", client.gui.screen().getClass().getSimpleName());
 				// Sigue con el menú de pausa; PausaRataLand hace su captura y sigue con la conexión.
-				client.setScreen(new PauseScreen(true));
-				RataLand.LOG.info("Prueba: al pausar se muestra {}", client.screen.getClass().getSimpleName());
+				client.gui.setScreen(new PauseScreen(true));
+				RataLand.LOG.info("Prueba: al pausar se muestra {}", client.gui.screen().getClass().getSimpleName());
 			});
 		}
 	}

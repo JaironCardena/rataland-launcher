@@ -1,6 +1,6 @@
 package com.rataland.menu;
 
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementType;
 import net.minecraft.client.Minecraft;
@@ -10,7 +10,7 @@ import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Items;
 
 import java.time.Instant;
@@ -51,7 +51,7 @@ public final class Avisos {
 		String titulo = minutos == 1 ? "¡Falta 1 minuto!" : "¡Faltan " + minutos + " minutos!";
 		String evento = RataLand.eventoTitulo.isEmpty() ? "El próximo evento" : RataLand.eventoTitulo;
 		String hora = HORA.format(Instant.ofEpochMilli(RataLand.eventoInicio).atZone(ZoneId.systemDefault()));
-		juego.getToasts().addToast(AvisoRataLand.queso(titulo, evento + " a las " + hora));
+		juego.gui.toastManager().addToast(AvisoRataLand.queso(titulo, evento + " a las " + hora));
 	}
 
 	/** Al terminar de entrar a un servidor. */
@@ -75,28 +75,33 @@ public final class Avisos {
 			if (entrada.profile() == null || (juego.player != null && entrada.profileId().equals(juego.player.getUUID()))) continue;
 			Long quitado = quitados.remove(entrada.profileId());
 			if (quitado != null && Util.getMillis() - quitado < REAPARECE) continue;
-			String nombre = entrada.profile().getName();
+			String nombre = entrada.profile().name();
 			int total = red.getListedOnlinePlayers().size();
 			String texto = "Ya sois " + total + " en " + RataLand.nombre;
-			juego.getToasts().addToast(AvisoRataLand.jugador(nombre + " ha entrado", texto, entrada.profileId(), nombre));
+			juego.gui.toastManager().addToast(AvisoRataLand.jugador(nombre + " ha entrado", texto, entrada.profileId(), nombre));
 		}
 	}
 
 	/** La skin elegida en el launcher se está poniendo (sin premium, con SkinRestorer). */
 	public static void skin() {
-		Minecraft.getInstance().getToasts().addToast(AvisoRataLand.listo("Poniendo tu skin", "Los demás la verán en unos segundos"));
+		Minecraft.getInstance().gui.toastManager().addToast(AvisoRataLand.listo("Poniendo tu skin", "Los demás la verán en unos segundos"));
 	}
 
 	/** Solo en las pruebas: un aviso de cada tipo, para verlos en la captura de la pausa. */
 	public static void ejemplos() {
 		Minecraft juego = Minecraft.getInstance();
-		juego.getToasts().addToast(AvisoRataLand.queso("¡Faltan 5 minutos!", "Episodio 2 a las 20:30"));
-		juego.getToasts().addToast(AvisoRataLand.jugador("Rata_Gamer ha entrado", "Ya sois 5 en " + RataLand.nombre, null, "Rata_Gamer"));
-		juego.getToasts().addToast(AvisoRataLand.listo("Poniendo tu skin", "Los demás la verán en unos segundos"));
-		juego.getToasts().addToast(new AdvancementToast(Advancement.Builder.advancement()
-				.display(Items.GOLDEN_PICKAXE, Component.literal("Minero de queso"), Component.empty(), null, AdvancementType.GOAL, true, false, false)
-				.build(ResourceLocation.fromNamespaceAndPath(RataLand.MOD_ID, "prueba"))));
-		juego.getToasts().addToast(new SystemToast(SystemToast.SystemToastId.PERIODIC_NOTIFICATION, Component.literal("Paquete de recursos"),
+		juego.gui.toastManager().addToast(AvisoRataLand.queso("¡Faltan 5 minutos!", "Episodio 2 a las 20:30"));
+		juego.gui.toastManager().addToast(AvisoRataLand.jugador("Rata_Gamer ha entrado", "Ya sois 5 en " + RataLand.nombre, null, "Rata_Gamer"));
+		juego.gui.toastManager().addToast(AvisoRataLand.listo("Poniendo tu skin", "Los demás la verán en unos segundos"));
+		try {
+			juego.gui.toastManager().addToast(new AdvancementToast(Advancement.Builder.advancement()
+					.display(Items.GOLDEN_PICKAXE, Component.literal("Minero de queso"), Component.empty(), AdvancementType.GOAL, true, false, false)
+					.build(Identifier.fromNamespaceAndPath(RataLand.MOD_ID, "prueba"))));
+		} catch (RuntimeException e) {
+			// Desde 26.1 los objetos (el icono del logro) solo existen dentro de un mundo
+			RataLand.LOG.info("Prueba: el aviso de logro necesita un mundo; se carga sin dibujarlo ({})", AdvancementToast.class.getSimpleName());
+		}
+		juego.gui.toastManager().addToast(new SystemToast(SystemToast.SystemToastId.PERIODIC_NOTIFICATION, Component.literal("Paquete de recursos"),
 				Component.literal("El servidor recomienda uno")));
 		// El de recetas necesita un mundo para dibujarse: al menos se carga, para ver que el mixin encaja
 		RataLand.LOG.info("Prueba: aviso de recetas cargado ({})", RecipeToast.class.getSimpleName());

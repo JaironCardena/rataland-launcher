@@ -1,21 +1,21 @@
 package com.rataland.menu;
 
+import net.minecraft.client.renderer.RenderPipelines;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.rataland.menu.fondo.MotorFondo;
 import com.rataland.menu.fondo.Pincel;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.resources.Identifier;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import org.joml.Matrix3x2fStack;
 
 /**
  * Lo que se mueve en los fondos animados (estrellas, nubes, agua, farol…), encima de la imagen fija.
@@ -52,36 +52,36 @@ public final class FondoAnimado {
 	}
 
 	/** rataland:textures/gui/fondo_pesca_nubes.png */
-	private static ResourceLocation textura(String escena, String capa) {
-		return ResourceLocation.fromNamespaceAndPath(RataLand.MOD_ID, "textures/gui/fondo_" + escena + "_" + capa + ".png");
+	private static Identifier textura(String escena, String capa) {
+		return Identifier.fromNamespaceAndPath(RataLand.MOD_ID, "textures/gui/fondo_" + escena + "_" + capa + ".png");
 	}
 
 	/** Dibuja lo que se mueve sobre el fondo, que ocupa (x, y, ancho, alto) en la pantalla. */
-	public static void dibujar(GuiGraphics context, int x, int y, int ancho, int alto) {
+	public static void dibujar(GuiGraphicsExtractor context, int x, int y, int ancho, int alto) {
 		MotorFondo m = motor();
 		if (m == null) return;
 		double t = (Util.getMillis() - INICIO) / 1000.0;
 
-		PoseStack matrices = context.pose();
-		matrices.pushPose();
-		matrices.translate(x, y, 0);
-		matrices.scale(ancho / (float) m.ancho(), alto / (float) m.alto(), 1);
+		Matrix3x2fStack matrices = context.pose();
+		matrices.pushMatrix();
+		matrices.translate(x, y);
+		matrices.scale(ancho / (float) m.ancho(), alto / (float) m.alto());
 		PincelJuego pincel = new PincelJuego(context, m);
 		m.dibujar(pincel, t);
 		pincel.terminar();
-		matrices.popPose();
+		matrices.popMatrix();
 	}
 
 	/**
-	 * Pinta en el juego. Los rectángulos se juntan y se dibujan de una vez (mucho más rápido que
-	 * uno a uno); antes de cada capa de imagen se vacían para respetar el orden.
+	 * Pinta en el juego. Los rectángulos se guardan y se mandan antes de cada capa de imagen, para
+	 * respetar el orden (el juego ya junta los que van seguidos en una sola tanda).
 	 */
 	private static final class PincelJuego implements Pincel {
-		private final GuiGraphics context;
+		private final GuiGraphicsExtractor context;
 		private final MotorFondo motor;
 		private final List<int[]> pendientes = new ArrayList<>();
 
-		PincelJuego(GuiGraphics context, MotorFondo motor) {
+		PincelJuego(GuiGraphicsExtractor context, MotorFondo motor) {
 			this.context = context;
 			this.motor = motor;
 		}
@@ -98,20 +98,12 @@ public final class FondoAnimado {
 			terminar();
 			int tw = w * motor.escala();
 			int th = h * motor.escala();
-			RenderSystem.enableBlend();
-			RenderSystem.defaultBlendFunc();
-			context.blit(textura(motor.clave(), nombre), x, y, w, h, 0, 0, tw, th, tw, th);
-			RenderSystem.disableBlend();
+			context.blit(RenderPipelines.GUI_TEXTURED, textura(motor.clave(), nombre), x, y, 0, 0, w, h, tw, th, tw, th);
 		}
 
-		@SuppressWarnings("deprecation")
 		void terminar() {
-			if (pendientes.isEmpty()) return;
-			List<int[]> lote = new ArrayList<>(pendientes);
+			for (int[] r : pendientes) context.fill(r[0], r[1], r[2], r[3], r[4]);
 			pendientes.clear();
-			context.drawManaged(() -> {
-				for (int[] r : lote) context.fill(r[0], r[1], r[2], r[3], r[4]);
-			});
 		}
 	}
 }

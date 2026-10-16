@@ -1,16 +1,19 @@
 package com.rataland.menu.mixin;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.renderer.RenderPipelines;
 import com.rataland.menu.Estilo;
 import com.rataland.menu.Fondo;
 import com.rataland.menu.RataLand;
 import com.rataland.menu.TexturaDelMod;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.LoadingOverlay;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.texture.TextureManager;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import net.minecraft.util.ARGB;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,7 +41,7 @@ public abstract class SplashOverlayMixin {
 
 	@Shadow
 	@Final
-	static ResourceLocation MOJANG_STUDIOS_LOGO_LOCATION;
+	static Identifier MOJANG_STUDIOS_LOGO_LOCATION;
 
 	@Shadow
 	private float currentProgress;
@@ -49,6 +52,11 @@ public abstract class SplashOverlayMixin {
 	private long fadeInStart;
 	@Shadow
 	private long fadeOutStart;
+
+	/** Los dos trozos del logo de Mojang Studios (blit con color). */
+	@Unique
+	private static final String BLIT_LOGO = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;"
+			+ "Lnet/minecraft/resources/Identifier;IIFFIIIIIII)V";
 
 	@Unique
 	private static long rataland$inicio;
@@ -61,8 +69,8 @@ public abstract class SplashOverlayMixin {
 	}
 
 	@Inject(method = "registerTextures", at = @At("TAIL"))
-	private static void rataland$texturas(Minecraft client, CallbackInfo ci) {
-		TexturaDelMod.registrar(client.getTextureManager(), MOJANG_STUDIOS_LOGO_LOCATION);
+	private static void rataland$texturas(TextureManager texturas, CallbackInfo ci) {
+		TexturaDelMod.registrar(texturas, MOJANG_STUDIOS_LOGO_LOCATION);
 	}
 
 	/** Lo opaca que se ve la pantalla de carga ahora (igual que calcula Minecraft al aparecer y al irse). */
@@ -92,41 +100,35 @@ public abstract class SplashOverlayMixin {
 	}
 
 	/** Paisaje y logo, justo antes de donde Minecraft dibujaría el suyo. */
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;disableDepthTest()V", ordinal = 0))
-	private void rataland$fondoYLogo(GuiGraphics g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+	@Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = BLIT_LOGO, ordinal = 0))
+	private void rataland$fondoYLogo(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		int ancho = g.guiWidth();
 		int alto = g.guiHeight();
 		float opacidad = rataland$opacidad();
 		if (opacidad <= 0f) return;
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-		g.setColor(1f, 1f, 1f, opacidad);
 		// Mientras aparece o se va, el paisaje fijo; del todo visible, también lo que se mueve
-		Fondo.dibujar(g, ancho, alto, opacidad >= 0.999f);
-		g.setColor(1f, 1f, 1f, 1f);
+		Fondo.dibujar(g, ancho, alto, opacidad >= 0.999f, opacidad);
 		g.fill(0, 0, ancho, alto, (Math.round(opacidad * 0x9E) << 24) | 0x080D1A);
 
 		float escala = rataland$escalaLogo(ancho, alto);
 		int w = Math.round(RataLand.LOGO_ANCHO * escala);
-		g.setColor(1f, 1f, 1f, opacidad);
-		g.pose().pushPose();
-		g.pose().translate((ancho - w) / 2f, rataland$arribaLogo(alto, escala), 0f);
-		g.pose().scale(escala, escala, 1f);
-		g.blit(RataLand.LOGO, 0, 0, 0f, 0f, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO);
-		g.pose().popPose();
-		g.setColor(1f, 1f, 1f, 1f);
-		RenderSystem.disableBlend();
+		g.pose().pushMatrix();
+		g.pose().translate((ancho - w) / 2f, rataland$arribaLogo(alto, escala));
+		g.pose().scale(escala, escala);
+		g.blit(RenderPipelines.GUI_TEXTURED, RataLand.LOGO, 0, 0, 0f, 0f, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO, RataLand.LOGO_ANCHO, RataLand.LOGO_ALTO,
+				ARGB.white(opacidad));
+		g.pose().popMatrix();
 	}
 
 	/** El logo de Mojang Studios ya no se dibuja (va el de RataLand, con su color). */
-	@Redirect(method = "render", at = @At(value = "INVOKE",
-			target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIFFIIII)V"))
-	private void rataland$sinLogoDeMojang(GuiGraphics g, ResourceLocation textura, int x, int y, int w, int h, float u, float v, int uw, int vh, int tw, int th) {
+	@Redirect(method = "extractRenderState", at = @At(value = "INVOKE", target = BLIT_LOGO))
+	private void rataland$sinLogoDeMojang(GuiGraphicsExtractor g, RenderPipeline tuberia, Identifier textura, int x, int y, float u, float v, int w, int h,
+			int uw, int vh, int tw, int th, int color) {
 	}
 
 	/** Barra de carga de queso bajo el logo, con la rata corriendo por encima y el porcentaje. */
-	@Inject(method = "drawProgressBar", at = @At("HEAD"), cancellable = true)
-	private void rataland$barraDeQueso(GuiGraphics context, int minX, int minY, int maxX, int maxY, float opacidad, CallbackInfo ci) {
+	@Inject(method = "extractProgressBar", at = @At("HEAD"), cancellable = true)
+	private void rataland$barraDeQueso(GuiGraphicsExtractor context, int minX, int minY, int maxX, int maxY, float opacidad, CallbackInfo ci) {
 		ci.cancel();
 		int a = Math.round(opacidad * 255f) << 24;
 		if (a == 0) return;
@@ -154,11 +156,7 @@ public abstract class SplashOverlayMixin {
 				context.fill(hx, hy, hx + 2, hy + 2, a | 0xB8701A);
 			}
 		}
-
-		RenderSystem.enableBlend();
-		context.setColor(1f, 1f, 1f, opacidad);
-		context.blit(RataLand.RATA, x0 + relleno - 12, y0 - 10, 0, 0, 16, 10, 16, 10);
-		context.setColor(1f, 1f, 1f, 1f);
+		context.blit(RenderPipelines.GUI_TEXTURED, RataLand.RATA, x0 + relleno - 12, y0 - 10, 0, 0, 16, 10, 16, 10, ARGB.white(opacidad));
 
 		// Porcentaje con dígitos pixel, debajo a la derecha
 		int porcentaje = Math.round(progreso * 100f);
@@ -167,13 +165,13 @@ public abstract class SplashOverlayMixin {
 		Estilo.porcentaje(context, porcentaje, x0 + ancho - anchoTexto, y0 + alto + 6, p, a | 0xF6C445);
 	}
 
-	@Inject(method = "render", at = @At("TAIL"))
-	private void rataland$captura(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+	@Inject(method = "extractRenderState", at = @At("TAIL"))
+	private void rataland$captura(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		if (!RataLand.MODO_CAPTURA || rataland$capturado) return;
 		if (rataland$inicio == 0) rataland$inicio = System.currentTimeMillis();
 		if (System.currentTimeMillis() - rataland$inicio < 1500) return;
 		rataland$capturado = true;
 		Minecraft client = Minecraft.getInstance();
-		Screenshot.grab(client.gameDirectory, "rataland-carga.png", client.getMainRenderTarget(), t -> {});
+		Screenshot.grab(client.gameDirectory, "rataland-carga.png", client.gameRenderer.mainRenderTarget(), 1, t -> {});
 	}
 }

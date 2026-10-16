@@ -1,9 +1,9 @@
 package com.rataland.menu;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.Util;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.util.Util;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.util.Mth;
@@ -57,7 +57,7 @@ public final class TarjetaEntrando {
 		return 2;
 	}
 
-	public static void dibujar(GuiGraphics g, Font fuente, int ancho, int alto, int paso, boolean conBoton) {
+	public static void dibujar(GuiGraphicsExtractor g, Font fuente, int ancho, int alto, int paso, boolean conBoton) {
 		// Algo más oscuro el paisaje, para que la tarjeta destaque
 		g.fill(0, 0, ancho, alto, 0x66080D1A);
 		int[] c = caja(ancho, alto, conBoton);
@@ -67,11 +67,11 @@ public final class TarjetaEntrando {
 		Estilo.escalon(g, x, y, w, c[3], 0xEB0D1424);
 		Estilo.bordeEscalon(g, x, y, w, c[3], Estilo.LINEA);
 
-		g.pose().pushPose();
-		g.pose().translate(x + 14, y + 12, 0f);
-		g.pose().scale(1.5f, 1.5f, 1f);
-		g.drawString(fuente, "Entrando en " + RataLand.nombre, 0, 0, Estilo.TEXTO);
-		g.pose().popPose();
+		g.pose().pushMatrix();
+		g.pose().translate(x + 14, y + 12);
+		g.pose().scale(1.5f, 1.5f);
+		g.text(fuente, "Entrando en " + RataLand.nombre, 0, 0, Estilo.TEXTO);
+		g.pose().popMatrix();
 
 		String[] nombres = {paso > 1 ? "Servidor encontrado" : "Buscando el servidor", "Conectando", "Cargando el mundo"};
 		int fy = y + 34;
@@ -79,13 +79,13 @@ public final class TarjetaEntrando {
 			String texto = nombres[i - 1];
 			if (i < paso) {
 				Estilo.icono(g, IconosPixel.HECHO, x + 14, fy, 1, Estilo.HIERBA_LUZ);
-				g.drawString(fuente, texto, x + 28, fy, Estilo.TEXTO);
+				g.text(fuente, texto, x + 28, fy, Estilo.TEXTO);
 			} else if (i == paso) {
 				g.fill(x + 14, fy + 1, x + 20, fy + 7, Estilo.QUESO);
-				g.drawString(fuente, texto + puntos(), x + 28, fy, Estilo.QUESO);
+				g.text(fuente, texto + puntos(), x + 28, fy, Estilo.QUESO);
 			} else {
-				g.renderOutline(x + 15, fy + 1, 6, 6, Estilo.MUY_TENUE);
-				g.drawString(fuente, texto, x + 28, fy, Estilo.MUY_TENUE);
+				g.outline(x + 15, fy + 1, 6, 6, Estilo.MUY_TENUE);
+				g.text(fuente, texto, x + 28, fy, Estilo.MUY_TENUE);
 			}
 			fy += 12;
 		}
@@ -95,7 +95,7 @@ public final class TarjetaEntrando {
 	}
 
 	/** Barra de queso con la rata corriendo, llena hasta base (y un poco arriba y abajo, para que se mueva). */
-	static void barra(GuiGraphics g, int bx, int by, int bw, float base) {
+	static void barra(GuiGraphicsExtractor g, int bx, int by, int bw, float base) {
 		float avance = Mth.clamp(base + 0.04f * Mth.sin((Util.getMillis() % 4000L) / 4000f * Mth.TWO_PI), 0f, 1f);
 		int lleno = Math.round(bw * avance);
 		g.fill(bx, by, bx + bw, by + 6, 0xFF0A0F1C);
@@ -104,13 +104,11 @@ public final class TarjetaEntrando {
 		g.fill(bx + 1, by + 1, bx + lleno, by + 2, Estilo.QUESO_LUZ);
 		g.fill(bx + 1, by + 4, bx + lleno, by + 5, Estilo.QUESO_SOMBRA);
 		int salto = (Util.getMillis() / 150) % 2 == 0 ? 0 : 1;
-		RenderSystem.enableBlend();
-		g.blit(RataLand.RATA, bx + lleno - 12, by - 10 + salto, 0, 0, 16, 10, 16, 10);
-		RenderSystem.disableBlend();
+		g.blit(RenderPipelines.GUI_TEXTURED, RataLand.RATA, bx + lleno - 12, by - 10 + salto, 0, 0, 16, 10, 16, 10);
 	}
 
 	/** El consejo, debajo de la tarjeta (en `cy`), si cabe. */
-	static void dibujarConsejo(GuiGraphics g, Font fuente, int ancho, int alto, int cy) {
+	static void dibujarConsejo(GuiGraphicsExtractor g, Font fuente, int ancho, int alto, int cy) {
 		int cw = Math.min(380, ancho - 40);
 		int chipAncho = fuente.width("Consejo") + 12;
 		java.util.List<net.minecraft.util.FormattedCharSequence> lineas = fuente.split(Component.literal(consejo), cw - chipAncho - 20);
@@ -122,7 +120,7 @@ public final class TarjetaEntrando {
 			Estilo.etiqueta(g, fuente, cx + 6, cy + (ch - 15) / 2, "Consejo");
 			int ty = cy + (ch - lineas.size() * 10) / 2 + 1;
 			for (net.minecraft.util.FormattedCharSequence linea : lineas) {
-				g.drawString(fuente, linea, cx + 6 + chipAncho + 8, ty, Estilo.CLARO);
+				g.text(fuente, linea, cx + 6 + chipAncho + 8, ty, Estilo.CLARO);
 				ty += 10;
 			}
 		}
