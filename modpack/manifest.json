@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-16T01:18:47.405Z",
+  "generado": "2026-10-16T05:48:36.036Z",
   "minecraft": "26.3",
   "loader": {
     "tipo": "fabric",
@@ -269,19 +269,6 @@
         "numero": "10.1.8",
         "nombre": "BSL Shaders",
         "icono": "https://cdn.modrinth.com/data/Q1vvjJYV/2a611a3cb434fb52fb81fa5dace13c5d8b67e55d_96.webp"
-      }
-    },
-    {
-      "ruta": "mods/UndeadNights-2.2.6-Fabric-mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/g0mmcQV2/versions/yfdKZWca/UndeadNights-2.2.6-Fabric-mc26.3.jar",
-      "sha1": "9f79cdd01a7536ef4e0f570f08c30729934c8344",
-      "tamano": 1396317,
-      "modrinth": {
-        "proyecto": "g0mmcQV2",
-        "version": "yfdKZWca",
-        "numero": "2.2.6-Fabric-mc26.3",
-        "nombre": "Undead Nights - Zombie Horde Nights / Hordes",
-        "icono": "https://cdn.modrinth.com/data/g0mmcQV2/ffe0efa6bb67afec6f6e1e0d2d3e883ee18d8757_96.webp"
       }
     },
     {

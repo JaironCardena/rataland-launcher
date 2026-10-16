@@ -261,19 +261,6 @@
       }
     },
     {
-      "ruta": "mods/UndeadNights-2.2.6-Fabric-mc26.3.jar",
-      "url": "https://cdn.modrinth.com/data/g0mmcQV2/versions/yfdKZWca/UndeadNights-2.2.6-Fabric-mc26.3.jar",
-      "sha1": "9f79cdd01a7536ef4e0f570f08c30729934c8344",
-      "tamano": 1396317,
-      "modrinth": {
-        "proyecto": "g0mmcQV2",
-        "version": "yfdKZWca",
-        "numero": "2.2.6-Fabric-mc26.3",
-        "nombre": "Undead Nights - Zombie Horde Nights / Hordes",
-        "icono": "https://cdn.modrinth.com/data/g0mmcQV2/ffe0efa6bb67afec6f6e1e0d2d3e883ee18d8757_96.webp"
-      }
-    },
-    {
       "ruta": "mods/journeymap-fabric-26.3-6.0.10.jar",
       "url": "https://cdn.modrinth.com/data/lfHFW1mp/versions/2zmj8ela/journeymap-fabric-26.3-6.0.10.jar",
       "sha1": "8fb9d3039e0acca2e1d5f5ced71ab5aaac22fdf8",
