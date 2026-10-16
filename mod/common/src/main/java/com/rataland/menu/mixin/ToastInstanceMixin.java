@@ -1,5 +1,6 @@
 package com.rataland.menu.mixin;
 
+import com.rataland.menu.AvisoRataLand;
 import com.rataland.menu.Avisos;
 import net.minecraft.client.gui.components.toasts.Toast;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +24,8 @@ public abstract class ToastInstanceMixin {
 
 	@Redirect(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/toasts/Toast;yPos(I)F"))
 	private float rataland$arriba(Toast aviso, int hueco) {
-		float sitio = Avisos.arriba() + aviso.yPos(hueco);
+		// Uno debajo de otro, con un hueco pequeño (las tarjetas miden 24; los de varias líneas ocupan más huecos)
+		float sitio = Avisos.arriba() + hueco * AvisoRataLand.PASO;
 		return sitio - (1f - this.visiblePortion) * (sitio + aviso.height());
 	}
 }

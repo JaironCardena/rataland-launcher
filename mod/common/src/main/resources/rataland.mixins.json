@@ -34,7 +34,6 @@
     "StatsScreenMixin",
     "SystemToastMixin",
     "ToastInstanceMixin",
-    "ToastManagerAccessor",
     "ToastManagerMixin",
     "TutorialToastMixin",
     "WindowMixin"

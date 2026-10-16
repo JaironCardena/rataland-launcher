@@ -173,7 +173,6 @@ public final class Prueba {
 		@Override
 		public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
 			super.extractRenderState(g, mouseX, mouseY, delta);
-			Logros.dibujar(g, this.width, this.height, true);
 			if (++this.fotogramas == 50) alSiguienteTick("rataland-logro.png", Prueba::progresos);
 		}
 	}
