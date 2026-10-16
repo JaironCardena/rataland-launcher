@@ -129,6 +129,32 @@
         "nombre": "BSL Shaders",
         "icono": "https://cdn.modrinth.com/data/Q1vvjJYV/2a611a3cb434fb52fb81fa5dace13c5d8b67e55d_96.webp"
       }
+    },
+    {
+      "ruta": "mods/worldreset-0.2.2+26.3.jar",
+      "url": "https://cdn.modrinth.com/data/wDzF9EIN/versions/WCQngVMa/worldreset-0.2.2%2B26.3.jar",
+      "sha1": "0e20d146615328ad5fff8dc420af11595407a4ec",
+      "tamano": 2279186,
+      "modrinth": {
+        "proyecto": "wDzF9EIN",
+        "version": "WCQngVMa",
+        "numero": "0.2.2+26.3",
+        "nombre": "World Reset",
+        "icono": "https://cdn.modrinth.com/data/wDzF9EIN/94d0ddd612a710fc30d02e0da14f5a3358c11ca1.png"
+      }
+    },
+    {
+      "ruta": "mods/fabric-language-kotlin-1.14.2+kotlin.2.4.21.jar",
+      "url": "https://cdn.modrinth.com/data/Ha28R6CL/versions/SKW1BTL3/fabric-language-kotlin-1.14.2%2Bkotlin.2.4.21.jar",
+      "sha1": "f1d4ab6ecd54d9782521333a87eb50724ecb03e0",
+      "tamano": 8142878,
+      "modrinth": {
+        "proyecto": "Ha28R6CL",
+        "version": "SKW1BTL3",
+        "numero": "1.14.2+kotlin.2.4.21",
+        "nombre": "Fabric Language Kotlin",
+        "icono": "https://cdn.modrinth.com/data/Ha28R6CL/72c3d74aeb665e45aea93a945a01474cbce3b7da_96.webp"
+      }
     }
   ],
   "packsActivos": [
