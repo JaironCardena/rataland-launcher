@@ -1,5 +1,5 @@
 {
-  "generado": "2026-10-16T18:31:45.888Z",
+  "generado": "2026-10-16T18:57:41.632Z",
   "minecraft": "26.3",
   "loader": {
     "tipo": "fabric",
@@ -114,11 +114,11 @@
       "git": "a68935c5975659c4561524866a0dfacdb684e718"
     },
     {
-      "ruta": "mods/rataland-menu-fabric-26.3-2.4.0.jar",
-      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-fabric-26.3-2.4.0.jar",
-      "sha1": "3f783c67fa095bdb670d370e10248186bf485748",
-      "tamano": 250441,
-      "git": "68af10abc0cf68c8427159550358523ebb251a4d"
+      "ruta": "mods/rataland-menu-fabric-26.3-2.5.0.jar",
+      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-fabric-26.3-2.5.0.jar",
+      "sha1": "f0d7609f132144f233c2faf4b40fad9f34349793",
+      "tamano": 269688,
+      "git": "04ec49110e70a61f0de5af4b6f44113780cd3495"
     },
     {
       "ruta": "mods/skinrestorer-2.11.0+26.3-fabric.jar",
