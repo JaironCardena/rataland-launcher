@@ -1,6 +1,6 @@
 {
-  "generado": "2026-10-16T17:39:31.753Z",
-  "minecraft": "26.3",
+  "generado": "2026-10-16T17:41:24.098Z",
+  "minecraft": "1.21.11",
   "loader": {
     "tipo": "fabric",
     "version": "0.19.5"
@@ -32,17 +32,10 @@
     "resourcepacks/SodiumTranslations.zip",
     "resourcepacks/LowOnFire v26.2§8.zip",
     "resourcepacks/Low Shield.zip",
-    "resourcepacks/Faithful 64x - Release 15.zip",
+    "resourcepacks/Faithful 64x - December 2025 Release.zip",
     "resourcepacks/UndeadNights-Espanol-RataLand.zip"
   ],
   "archivos": [
-    {
-      "ruta": "mods/rataland-menu-fabric-26.3-2.3.0.jar",
-      "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/mods/rataland-menu-fabric-26.3-2.3.0.jar",
-      "sha1": "242b3badf6758c6386ece8a15d321d0887f35106",
-      "tamano": 248564,
-      "git": "a0752885b425675d091c0ba0996ab9c0d957b496"
-    },
     {
       "ruta": "resourcepacks/UndeadNights-Espanol-RataLand.zip",
       "url": "https://raw.githubusercontent.com/JaironCardena/rataland-launcher/main/modpack/resourcepacks/UndeadNights-Espanol-RataLand.zip",
@@ -90,14 +83,14 @@
       }
     },
     {
-      "ruta": "resourcepacks/Faithful 64x - Release 15.zip",
-      "url": "https://cdn.modrinth.com/data/r4GILswZ/versions/6QfM0mZq/Faithful%2064x%20-%20Release%2015.zip",
-      "sha1": "b0e02f10d2e45151832360557fc84ddcc2b052e9",
-      "tamano": 19411638,
+      "ruta": "resourcepacks/Faithful 64x - December 2025 Release.zip",
+      "url": "https://cdn.modrinth.com/data/r4GILswZ/versions/vyty9ijM/Faithful%2064x%20-%20December%202025%20Release.zip",
+      "sha1": "62f9e6170fac846648ade2a1873ad5c65e19d658",
+      "tamano": 16053919,
       "modrinth": {
         "proyecto": "r4GILswZ",
-        "version": "6QfM0mZq",
-        "numero": "Release-15-Wilderness-Bound-Drop",
+        "version": "vyty9ijM",
+        "numero": "Release-12",
         "nombre": "Faithful 64x",
         "icono": "https://cdn.modrinth.com/data/r4GILswZ/9ff7d3c66d6a263c158c2ef034b0361fdfbf354b.png"
       }
