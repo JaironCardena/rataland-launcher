@@ -12,7 +12,8 @@ Launcher propio (Electron) para la serie RataLand:
   - sustituye el menú principal por una portada: el logo y la cuenta atrás del próximo episodio arriba, el paisaje en medio, y abajo el estado del servidor (y quién está dentro), **Jugar** (entra al servidor), **Opciones**, **Discord** y **Salir**; tu personaje está de pie en el paisaje y tu cuenta arriba a la derecha,
   - sustituye el menú de pausa (Esc): **Volver al juego**, **Progresos**, **Estadísticas**, **Opciones**, **Discord** y **Volver a RataLand**, con los jugadores conectados, tu ping y la cuenta atrás,
   - muestra «Entrando en RataLand» con los pasos al conectar; si el servidor está dormido y el hosting aún no deja pasar, espera en «Despertando RataLand» y vuelve a intentarlo solo cada 10 s (hasta 10 minutos); y si no se puede entrar o te echan, explica en español qué pasó (sin internet, lleno, baneado…) con **Reintentar**,
-  - avisa cuando falta poco para el episodio, cuando entra alguien y cuando se pone tu skin, y los avisos de Minecraft (logros, recetas nuevas, avisos del sistema y consejos) salen con ese mismo estilo,
+  - avisa cuando falta poco para el episodio, cuando entra alguien y cuando se pone tu skin, y los avisos de Minecraft (recetas nuevas, avisos del sistema y consejos) salen con ese mismo estilo,
+  - los logros de todos (los tuyos y los de los demás) salen en un cartel arriba en el centro, con el objeto del logro, quién lo consiguió y su descripción, en vez de en el chat y arriba a la derecha (donde tapaban el minimapa); con una pantalla abierta esperan a que se cierre,
   - cambia la pantalla de muerte (con la puntuación y dónde has muerto) y la lista de jugadores del Tab (cara, nombre, corazones, muertes y ping) por unas al estilo de la serie; las muertes se muestran solo al abrir Tab, sin contador en el HUD ni avisos, y la vida y las muertes se configuran una vez en el servidor como se explica más abajo,
   - da a los botones, deslizadores y listas de Opciones (y de Paquetes de recursos) el estilo del launcher y usa el paisaje de RataLand como fondo (algunos se mueven),
   - pone Progresos (ventana, pestañas y el recuadro de cada logro) y Estadísticas (lista, filas y pestañas) con el estilo de la serie,
@@ -104,7 +105,7 @@ La próxima vez que cada jugador pulse *Jugar*, el launcher deja sus mods igual 
 
 ### Undead Nights en español
 
-`modpack/resourcepacks/UndeadNights-Espanol-RataLand.zip` traduce los avisos de noches y hordas, criaturas, objetos, efectos y opciones de Undead Nights **2.1.1** para Minecraft **1.21–1.21.1**. Incluye las variantes de español de España, Ecuador, México, Argentina, Chile, Uruguay y Venezuela. Está incluido en `packsActivos` para que el launcher lo active cuando se publique el modpack.
+`modpack/resourcepacks/UndeadNights-Espanol-RataLand.zip` traduce los avisos de noches y hordas, criaturas, objetos, efectos y opciones de Undead Nights **2.2.6** para Minecraft **26.3** (formato de recursos 97). Incluye las variantes de español de España, Ecuador, México, Argentina, Chile, Uruguay y Venezuela. Está incluido en `packsActivos` para que el launcher lo active cuando se publique el modpack.
 
 Para instalarlo manualmente, copia el ZIP a la carpeta `resourcepacks` de tu instalación y actívalo en **Opciones → Paquetes de recursos**, por encima de los demás. El juego debe estar en español. Si Minecraft ya estaba abierto, vuelve a entrar a esa pantalla para que detecte el archivo nuevo.
 

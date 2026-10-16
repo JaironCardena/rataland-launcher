@@ -108,7 +108,7 @@ public final class Prueba {
 					fila("QuesoMaster", 64, true, false, 20),
 					fila("Ratatouille", 140, false, false, -1)),
 					"rataland-tab.png", () -> Minecraft.getInstance().gui.setScreen(new Tabla(muchos(), "rataland-tab-lleno.png",
-							SOLO_TAB ? () -> Minecraft.getInstance().stop() : Prueba::progresos)));
+							SOLO_TAB ? () -> Minecraft.getInstance().stop() : () -> Minecraft.getInstance().gui.setScreen(new Logro()))));
 		}
 
 		private Tabla(List<TablaJugadores.Fila> filas, String captura, Runnable despues) {
@@ -147,6 +147,34 @@ public final class Prueba {
 		private static TablaJugadores.Fila fila(String nombre, int ping, boolean espectador, boolean yo, int vida) {
 			Integer muertes = vida < 0 ? null : yo ? 7 : espectador ? 0 : ping / 20;
 			return new TablaJugadores.Fila(Component.literal(nombre), DefaultPlayerSkin.get(UUIDUtil.createOfflinePlayerUUID(nombre)), ping, espectador, yo, null, vida, muertes);
+		}
+	}
+
+	/** El cartel de logros del centro, con un desafío de otro jugador llegado por el chat, sobre el paisaje. */
+	public static final class Logro extends Screen {
+		private int fotogramas;
+
+		public Logro() {
+			super(Component.literal("Prueba del cartel de logros"));
+		}
+
+		@Override
+		protected void init() {
+			this.minecraft.gui.toastManager().clear();
+			Logros.ejemplo();
+		}
+
+		@Override
+		public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+			// Como en el juego: el mundo detrás, sin desenfocar
+			Fondo.dibujar(g, this.width, this.height);
+		}
+
+		@Override
+		public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+			super.extractRenderState(g, mouseX, mouseY, delta);
+			Logros.dibujar(g, this.width, this.height, true);
+			if (++this.fotogramas == 50) alSiguienteTick("rataland-logro.png", Prueba::progresos);
 		}
 	}
 
