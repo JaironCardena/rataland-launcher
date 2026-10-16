@@ -5,6 +5,7 @@ import com.rataland.menu.Conexion;
 import com.rataland.menu.EstadoServidor;
 import com.rataland.menu.Prueba;
 import com.rataland.menu.RataLand;
+import com.rataland.menu.Reinicio;
 import com.rataland.menu.SkinPendiente;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,6 +23,7 @@ public abstract class MinecraftClientMixin {
 		EstadoServidor.tick();
 		Conexion.tick(juego);
 		Avisos.tick(juego);
+		Reinicio.tick(juego);
 		if (RataLand.MODO_CAPTURA) Prueba.tick(juego);
 	}
 

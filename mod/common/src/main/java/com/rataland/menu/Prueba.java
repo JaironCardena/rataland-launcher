@@ -22,10 +22,12 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.toasts.TutorialToast;
 import net.minecraft.client.gui.screens.ConnectScreen;
+import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.achievement.StatsScreen;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.client.multiplayer.LevelLoadTracker;
 import net.minecraft.client.telemetry.TelemetryEventSender;
 import net.minecraft.client.telemetry.WorldSessionTelemetryManager;
 import net.minecraft.network.protocol.game.ClientboundUpdateAdvancementsPacket;
@@ -62,6 +64,8 @@ public final class Prueba {
 	private static final String RECHAZA = "127.0.0.1:1";
 
 	private static int fase;
+	/** La pantalla de Reinicio de prueba: 1 y 2, la captura de cada fase que falta. */
+	private static int reinicio;
 	private static String capturaPendiente;
 	private static Runnable despuesDeCapturar;
 
@@ -76,6 +80,16 @@ public final class Prueba {
 
 	/** Cada tick del juego (solo hace algo en las pruebas). */
 	public static void tick(Minecraft juego) {
+		if (reinicio == 1 && Reinicio.transcurrido() > 1200) {
+			reinicio = 2;
+			alSiguienteTick("rataland-reinicio-1.png", null);
+		} else if (reinicio == 2 && capturaPendiente == null && Reinicio.transcurrido() > 4900) {
+			reinicio = 0;
+			alSiguienteTick("rataland-reinicio-2.png", () -> {
+				Reinicio.terminar();
+				progresos();
+			});
+		}
 		if (capturaPendiente == null) return;
 		Screenshot.grab(juego.gameDirectory, capturaPendiente, juego.gameRenderer.mainRenderTarget(), 1, t -> {});
 		capturaPendiente = null;
@@ -173,8 +187,51 @@ public final class Prueba {
 		@Override
 		public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
 			super.extractRenderState(g, mouseX, mouseY, delta);
-			if (++this.fotogramas == 50) alSiguienteTick("rataland-logro.png", Prueba::progresos);
+			if (++this.fotogramas == 50) alSiguienteTick("rataland-logro.png", () -> this.minecraft.gui.setScreen(new Muerte()));
 		}
+	}
+
+	/** El cartel de la muerte de otro jugador sobre el mundo, con la cuenta atrás de World Reset arriba. */
+	public static final class Muerte extends Screen {
+		private long desde;
+
+		public Muerte() {
+			super(Component.literal("Prueba del cartel de muerte"));
+		}
+
+		@Override
+		protected void init() {
+			this.minecraft.gui.toastManager().clear();
+			Muertes.ejemplo();
+			RataLand.LOG.info("Prueba: la cuenta atrás de World Reset {} va al aviso", Reinicio.deEncima(Component.literal("04:59")) ? "sí" : "NO");
+			this.desde = net.minecraft.util.Util.getMillis();
+		}
+
+		@Override
+		public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+			Fondo.dibujar(g, this.width, this.height);
+		}
+
+		@Override
+		public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
+			super.extractRenderState(g, mouseX, mouseY, delta);
+			if (this.desde != 0 && net.minecraft.util.Util.getMillis() - this.desde > 1000) {
+				this.desde = 0;
+				alSiguienteTick("rataland-muerte-cartel.png", Prueba::reinicio);
+			}
+		}
+	}
+
+	/** World Reset regenera el mundo tras esa muerte: la pantalla de carga de verdad, con la de Reinicio. */
+	public static void reinicio() {
+		Minecraft juego = Minecraft.getInstance();
+		juego.gui.toastManager().clear();
+		Muertes.ejemplo();
+		Reinicio.ejemplo();
+		RataLand.LOG.info("Prueba: la carga del terreno de World Reset {} va a la barra",
+				Reinicio.deEncima(Component.translatable("worldreset.world.loading_terrain", 300, 441)) ? "sí" : "NO");
+		juego.gui.setScreen(new LevelLoadingScreen(new LevelLoadTracker(), LevelLoadingScreen.Reason.OTHER));
+		reinicio = 1;
 	}
 
 	/** Progresos con logros de ejemplo: dos pestañas, unos conseguidos y otros no. */

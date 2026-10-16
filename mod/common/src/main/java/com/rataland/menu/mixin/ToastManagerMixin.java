@@ -1,8 +1,10 @@
 package com.rataland.menu.mixin;
 
 import com.rataland.menu.Logros;
+import com.rataland.menu.Muertes;
 import com.rataland.menu.RataLand;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.AdvancementToast;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.components.toasts.Toast;
@@ -15,7 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Los avisos de Minecraft: en el servidor de la serie no sale el de "Mensajes de chat no verificados"
  * (el servidor admite cuentas sin premium, que no pueden firmar el chat, así que saldría siempre), y
- * tus logros salen con la tarjeta de logros de RataLand (Logros) en vez del aviso de Minecraft.
+ * tus logros salen con la tarjeta de logros de RataLand (Logros) en vez del aviso de Minecraft. Después
+ * de los avisos va el cartel de la muerte de un jugador (Muertes), encima de todo el juego.
  */
 @Mixin(ToastManager.class)
 public abstract class ToastManagerMixin {
@@ -31,5 +34,10 @@ public abstract class ToastManagerMixin {
 			RataLand.LOG.info("Aviso de chat no verificado oculto (servidor de la serie)");
 			ci.cancel();
 		}
+	}
+
+	@Inject(method = "extractRenderState", at = @At("TAIL"))
+	private void rataland$muerte(GuiGraphicsExtractor g, CallbackInfo ci) {
+		Muertes.dibujar(g, g.guiWidth(), g.guiHeight());
 	}
 }
